@@ -1,0 +1,64 @@
+
+<ng-container *ngIf="(!tournamentsLoaded)">
+  <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  <span class="sr-only">Load Tournaments...</span>
+</ng-container>
+
+<ng-container *ngIf="(tournamentsLoaded)">
+  <p-dataTable [value]="tournaments"
+               (onEditComplete)="editTournament($event)"
+               [editable]="true"
+               [responsive]="true">
+    <p-header>Tournaments</p-header>
+    <p-footer>
+      <div style="text-align: left">SelectTournament: {{selectedTournament?.name}}</div>
+    </p-footer>
+    <p-column field="name" header="Name" [editable]="true"></p-column>
+    <p-column field="gameSystem" header="GameSystem" [editable]="true">
+      <ng-template let-col let-tournament="rowData" pTemplate="editor">
+        <p-dropdown [(ngModel)]="tournament[col.field]"
+                    [options]="availableGameSystems"
+                    (onChange)="changeTournamentGameSystem($event, tournament)"
+                    [autoWidth]="false"
+                    [style]="{'width':'100%'}"
+                    required="true"
+                    appendTo="body">
+        </p-dropdown>
+      </ng-template>
+    </p-column>
+    <p-column styleClass="col-button">
+      <ng-template pTemplate="header">
+        Actions
+      </ng-template>
+      <ng-template let-tournament="rowData" pTemplate="body">
+        <button type="button" pButton (click)="showTournament(tournament)" icon="fa-eye" label="Show"></button>
+        <button type="button" pButton (click)="showTournamentAsOrganizer(tournament)" icon="fa-superpowers" label="Orga"></button>
+      </ng-template>
+    </p-column>
+  </p-dataTable>
+</ng-container>
+
+
+<ng-container *ngIf="selectedTournament">
+
+  <h2>Tournament {{selectedTournament.name}} </h2>
+  <h2>Participants</h2>
+  <div class="ui-inputgroup">
+    <input type="text" pInputText placeholder="participantName" [(ngModel)]="newParticipantName" required>
+  </div>
+  <button pButton type="button" (click)="addParticipant()" label="New Participant"></button>
+  <button pButton type="button" (click)="deleteAllParticipant()" label="Delete ALL Participant"></button>
+  <button pButton type="button" (click)="add200Participant()" label="ADD 200"></button>
+  <button pButton type="button" (click)="deleteAndAdd()" label="DELETE & ADD"></button>
+
+  <ul>
+    <li *ngFor="let participant of participants">
+      {{participant.firstName}}
+      {{participant.nickName}}
+      {{participant.lastName}}
+      <button pButton type="button" (click)="deleteParticipant(participant)" label="Delete"></button>
+    </li>
+  </ul>
+
+</ng-container>
+

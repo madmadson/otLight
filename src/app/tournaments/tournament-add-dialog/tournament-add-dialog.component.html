@@ -1,0 +1,52 @@
+<form class="dialog-form" [formGroup]="tournamentForm" (ngSubmit)="onSubmit()">
+  <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-4">
+        GameSystem:
+      </div>
+      <div class="ui-grid-col-8">
+        <input pInputText type="text" title="gameSystem" formControlName="gameSystem"/>
+      </div>
+    </div>
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-4">
+        Name*:
+      </div>
+      <div class="ui-grid-col-8">
+        <input pInputText type="text" class="ngprime-input" formControlName="name" placeholder="Name"/>
+      </div>
+    </div>
+    <div class="ui-grid-row" *ngIf="!tournamentForm.controls['name'].valid && tournamentForm.controls['name'].dirty">
+      <div class="ui-grid-col-12">
+        <div class="ui-message ui-messages-error ui-corner-all">
+          <i class="fa fa-close"></i>
+          Name is required
+        </div>
+      </div>
+    </div>
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-4">
+        Orga Password:
+      </div>
+      <div class="ui-grid-col-8">
+        <input pInputText type="text" formControlName="password" placeholder="Orga password"/>
+      </div>
+    </div>
+    <div class="ui-grid-row"
+         *ngIf="!tournamentForm.controls['password'].valid && tournamentForm.controls['password'].dirty">
+      <div class="ui-grid-col-12">
+        <div class="ui-message ui-messages-error ui-corner-all">
+          <i class="fa fa-close"></i>
+          Must be longer than 6 characters
+        </div>
+      </div>
+    </div>
+    <div class="ui-grid-row bottom-button">
+      <div class="ui-grid-col-12">
+        <button pButton type="submit" class="full-width" label="Save Tournament"
+                [disabled]="!tournamentForm.valid"></button>
+      </div>
+    </div>
+  </div>
+</form>
+
