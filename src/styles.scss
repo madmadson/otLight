@@ -1,0 +1,44 @@
+$six_tick: 72px;
+$five_tick: 60px;
+$quad_tick: 48px;
+$tripel_tick: 36px;
+$double_tick: 24px;
+$main_tick: 12px;
+$halve_tick: 6px;
+$quarter_tick: 3px;
+
+
+
+$light_success_color: #8bd683;
+$success_color: #388E3C;
+$light_fail_color: #ff9489;
+$fail_color: #ff4846;
+$color_info: deepskyblue;
+
+
+$hover_color: #0078a3;
+$color_dark_primary: #333333;
+$color_primary: #000000;
+$color_secondary: #f58400;
+
+$color_text: #ffffff;
+$color_secondary_text: #cccccc;
+
+.dialog-form{
+  height: 100%;
+}
+
+.full-width{
+  width: 100%;
+}
+
+.bottom-button{
+  position: absolute;
+  bottom: $quad_tick;
+  width: 97%;
+}
+
+
+input.ng-invalid.ng-dirty{
+  background-color: $color_secondary !important;
+}
