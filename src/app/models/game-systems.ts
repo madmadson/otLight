@@ -4,13 +4,13 @@ import {SelectItem} from "primeng/primeng";
 
 export function getGameSystems(): SelectItem[] {
   return  [{
-    value: 'wmho', label: 'WM/HO'
+    value: 'WmHo', label: 'WmHo'
   }, {
-    value: 'guildball', label: 'GuildBall'
+    value: 'GuildBall', label: 'GuildBall'
   }];
 }
 
 export interface AllGameSystems {
-  wmho: boolean;
-  guildball: boolean;
+  WmHo: boolean;
+  GuildBall: boolean;
 }

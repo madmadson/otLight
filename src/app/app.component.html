@@ -85,6 +85,7 @@
   <p-header>
     New Player
   </p-header>
-  <app-player-add-dialog>
+  <app-player-add-dialog
+    (onPlayerSaved)="handlePlayerSaved($event)">
   </app-player-add-dialog>
 </p-dialog>

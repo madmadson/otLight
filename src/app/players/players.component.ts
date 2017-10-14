@@ -7,6 +7,7 @@ import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 
 import * as _ from 'lodash';
+import {getGameSystems} from "../models/game-systems";
 
 @Component({
   selector: 'app-players',
@@ -26,6 +27,9 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   constructor(private afs: AngularFirestore,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
+
+    const gameSystems = getGameSystems();
+    this.selectedGameSystem = gameSystems[0].value;
   }
 
   ngOnInit() {
@@ -65,6 +69,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
             const player: Player = {
               id: change.doc.id,
               name: change.doc.data().name,
+              location: change.doc.data().location,
               gameSystems: change.doc.data().gameSystems,
             };
 
@@ -78,6 +83,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
             const player: Player = {
               id: change.doc.id,
               name: change.doc.data().name,
+              location: change.doc.data().location,
               gameSystems: change.doc.data().gameSystems,
             };
 

@@ -24,6 +24,7 @@ import {SidebarModule} from "primeng/components/sidebar/sidebar";
 import { PlayersComponent } from './players/players.component';
 import {GameSystemService} from "./services/game-system.service";
 import { PlayerAddDialogComponent } from './players/player-add-dialog/player-add-dialog.component';
+import { TournamentComponent } from './tournament/tournament.component';
 
 export const firebaseConfig = environment.firebaseConfig;
 
@@ -34,7 +35,8 @@ export const firebaseConfig = environment.firebaseConfig;
     TournamentsComponent,
     TournamentAddDialogComponent,
     PlayersComponent,
-    PlayerAddDialogComponent
+    PlayerAddDialogComponent,
+    TournamentComponent
   ],
   imports: [
     BrowserAnimationsModule,

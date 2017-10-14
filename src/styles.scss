@@ -24,6 +24,24 @@ $color_secondary: #f58400;
 $color_text: #ffffff;
 $color_secondary_text: #cccccc;
 
+
+.heading {
+  text-align: center;
+  font-size: 2.0em;
+  font-weight: bold;
+  margin-top: $main_tick;
+  line-height: $tripel_tick ;
+}
+
+.loading-spinner-container {
+
+  display: flex;
+  justify-content: center;
+  margin-top: $double_tick;
+  margin-bottom: $double_tick;
+}
+
+
 .dialog-form{
   height: 100%;
 }

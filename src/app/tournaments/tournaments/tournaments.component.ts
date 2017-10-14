@@ -13,6 +13,8 @@ import 'rxjs/add/observable/from';
 import {GameSystemService} from "../../services/game-system.service";
 import {Subscription} from "rxjs/Subscription";
 import {getGameSystems} from "../../models/game-systems";
+import {SelectItem} from "primeng/primeng";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-tournaments',
@@ -20,7 +22,6 @@ import {getGameSystems} from "../../models/game-systems";
   styleUrls: ['./tournaments.component.scss']
 })
 export class TournamentsComponent implements OnInit, OnDestroy {
-
 
   protected selectedTournament: Tournament;
 
@@ -36,18 +37,17 @@ export class TournamentsComponent implements OnInit, OnDestroy {
 
   protected tournamentsColRef: CollectionReference;
   protected tournamentsUnsubscribeFunction: () => void;
-  private gameSystemSubscription: Subscription;
+  protected gameSystemSubscription: Subscription;
+  protected gameSystems: SelectItem[];
 
-
-
-
-  constructor(private afs: AngularFirestore,
+  constructor(protected afs: AngularFirestore,
+              protected router: Router,
               protected gameSystemService: GameSystemService) {
 
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
 
-    const gameSystems = getGameSystems();
-    this.selectedGameSystem = gameSystems[0].value;
+     this.gameSystems = getGameSystems();
+    this.selectedGameSystem = this.gameSystems[0].value;
   }
 
   ngOnInit() {
@@ -300,8 +300,6 @@ export class TournamentsComponent implements OnInit, OnDestroy {
 
     this.tournamentsUnsubscribeFunction = this.tournamentsColRef
       .where('gameSystem', '==', this.selectedGameSystem)
-      .where('name', '==', 'olk')
-      .where('test.test', '==', '13')
       .onSnapshot(function (snapshot) {
 
         snapshot.docChanges.forEach(function (change) {

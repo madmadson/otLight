@@ -65,6 +65,11 @@ export class AppComponent {
     this.addTournamentDialogVisibility = false;
   }
 
+  handlePlayerSaved() {
+    this.addPlayerDialogVisibility = false;
+  }
+
+
   gameSystemChanged(event: any) {
 
     this.gameSystemService.setGameSystem(event.value);
