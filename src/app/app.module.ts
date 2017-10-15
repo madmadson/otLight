@@ -13,6 +13,7 @@ import {AngularFirestoreModule} from "angularfire2/firestore";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputTextModule, MessagesModule, MultiSelectModule,
+  PanelModule,
   SelectButtonModule,
   SharedModule
 } from "primeng/primeng";
@@ -58,7 +59,8 @@ export const firebaseConfig = environment.firebaseConfig;
     GrowlModule,
     MessagesModule,
     SidebarModule,
-    MultiSelectModule
+    MultiSelectModule,
+    PanelModule
   ],
   providers: [TournamentsService, MessageService, GameSystemService],
   bootstrap: [AppComponent]
