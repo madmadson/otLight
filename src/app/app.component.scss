@@ -55,7 +55,19 @@ body {
   line-height: inherit;
 }
 
-.logo {
+.logo-container {
+  display: flex;
+  justify-content: center;
+}
+
+.logo-topbar {
+  margin-top: 15px;
+  img {
+    height: 42px;
+  }
+}
+
+.logo-sidebar {
   margin-left: 77px;
   margin-top: 15px;
   display: inline-block;
@@ -65,10 +77,11 @@ body {
 }
 
 .topbar-menu {
-  display: inline-block;
+  position: absolute;
   list-style-type: none;
-  float: right;
-  margin: 0 60px 0 0;
+  top: 0;
+  right: 0;
+  margin: 0 $double_tick 0 0;
   padding: 0;
   height: 100%;
 }

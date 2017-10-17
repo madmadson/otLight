@@ -1,27 +1,38 @@
 import {Injectable} from '@angular/core';
 import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
+import {getGameSystems} from "../models/game-systems";
+
 
 @Injectable()
 export class GameSystemService {
 
-  private stream: Subject<String>;
+  private gameSystemStream: Subject<String>;
+  private gameSystem: string;
+  private allGameSystems: string[];
 
   constructor() {
 
-     this.stream = new Subject<String>();
+    this.allGameSystems = getGameSystems();
+
+     this.gameSystemStream = new Subject<String>();
+  }
+
+  getGameSystem(): string {
+    return this.gameSystem ? this.gameSystem : this.allGameSystems[0];
   }
 
 
-  getGameSystem(): Observable<string> {
+  getGameSystemAsStream(): Observable<string> {
 
-    return this.stream;
+    return this.gameSystemStream;
   }
 
   setGameSystem(gameSystem: string) {
 
+    this.gameSystem = gameSystem;
 
-    this.stream.next(gameSystem);
+    this.gameSystemStream.next(gameSystem);
   }
 
 }

@@ -1,12 +1,20 @@
 
 
 
-import {Participant} from "./Participant";
-
 export interface Tournament {
   id?: string;
   name: string;
   gameSystem: string;
   password?: string;
-  participants?: Participant[];
+  actualRound: number;
+}
+
+export function getTournamentForJSON(id: string, json: any): Tournament {
+  return {
+    id: id,
+    name: json.name,
+    gameSystem: json.gameSystem,
+    password: json.password ? json.password : '',
+    actualRound: json.actualRound ? json.actualRound : 0,
+  };
 }

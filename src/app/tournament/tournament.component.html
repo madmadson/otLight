@@ -1,36 +1,10 @@
-<ng-container *ngIf="(!tournamentLoaded)">
-  <div class="heading">Load Tournament...</div>
-  <div class="centered-content-container">
-    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-  </div>
-</ng-container>
-
-<ng-container *ngIf="(tournamentLoaded)">
-  <div class="heading">{{tournament?.name}}</div>
-  <div *ngIf="isOrga" class="heading">Hello Organizer</div>
-
-  <div class="centered-content-container">
-    <button pButton label="Orga View" (click)="orgaDialogVisibility = true"></button>
-  </div>
-
-  <p-panel header="Orga Panel" [toggleable]="true" class="orga-panel">
-    The story begins as Don Vito Corleone, the head of a New York Mafia family, oversees his daughter's wedding.
-    His beloved son Michael has just come home from the war, but does not intend to become part of his father's
-    business.
-    Through Michael's life the nature of the family business becomes clear. The business of the family is just like the
-    head of the family,
-    kind and benevolent to those who give respect, but given to ruthless violence whenever anything stands against the
-    good of the family.
-  </p-panel>
-</ng-container>
-
 <p-dialog [(visible)]="orgaDialogVisibility"
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
           [width]="400"
           [height]="180">
   <p-header>
-   Organizer password required
+    Organizer password required
   </p-header>
   <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
     <div class="ui-grid-row">
@@ -38,7 +12,7 @@
         Password:
       </div>
       <div class="ui-grid-col-8">
-        <input type="password" pPassword [(ngModel)]="orgaPassword"/>
+        <input tabindex="1" type="password" pPassword [(ngModel)]="orgaPassword"/>
       </div>
     </div>
     <div class="ui-grid-row"
@@ -51,10 +25,228 @@
     </div>
     <div class="ui-grid-row bottom-button">
       <div class="ui-grid-col-12">
-        <button pButton class="full-width" label="Orga access"
-          (click)="checkIfPasswordCorrect()">
+        <button tabindex="2" pButton class="full-width" label="Orga access"
+                (click)="checkIfPasswordCorrect()">
         </button>
       </div>
     </div>
   </div>
 </p-dialog>
+
+<ng-container *ngIf="(!tournamentLoaded)">
+  <div class="heading">Load Tournament...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="(tournamentLoaded)">
+  <p-panel  header="{{tournament?.name}}" [toggleable]="true">
+    <div class="sub-heading">ActualRound {{tournament?.actualRound}}</div>
+    <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
+
+    <div class="centered-content-container">
+      <button pButton label="Last Round" (click)="showLastRound()" class="ui-button-info"></button>
+      <button  *ngIf="!isOrga" pButton label="Orga View" (click)="showOrgaDialog()" class="ui-button-success"></button>
+      <button pButton label="Next Round" (click)="showNextRound()" class="ui-button-info"></button>
+    </div>
+  </p-panel>
+
+  <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
+    <div class="orga-panel-container" *ngIf="tournament?.actualRound === 0">
+
+      <p-autoComplete [(ngModel)]="playerToAdd"
+                      [suggestions]="possiblePlayersToAdd"
+                      (completeMethod)="filteredParticipants($event)"
+                      field="name"
+                      [size]="30"
+                      placeholder="Search for potential participant"
+                      forceSelection="true"
+                      class="action-element"
+                      [minLength]="1">
+      </p-autoComplete>
+      <button pButton type="button"
+              [disabled]="!playerToAdd"
+              class="action-elemen ui-button-success"
+              (click)="addParticipant()"
+              label="Add Participant">
+      </button>
+    </div>
+    <div class="orga-panel-container" *ngIf="false">
+      <button pButton type="button"
+              class="action-element"
+              (click)="deleteAllParticipants()"
+              label="Delete ALL Participant">
+      </button>
+      <button pButton type="button"
+              class="action-element"
+              (click)="add20ParticipantsBatch()"
+              label="ADD 20">
+      </button>
+      <button pButton type="button"
+              class="action-element"
+              (click)="deleteAndAdd()"
+              label="DELETE ALL & ADD 20">
+      </button>
+    </div>
+    <div class="orga-panel-container">
+      <button *ngIf="tournament?.actualRound === 0"
+              pButton type="button"
+              class="action-element ui-button-success"
+              (click)="createFirstRound()"
+              label="Start Tournament"></button>
+      <button *ngIf="tournament?.actualRound > 0"
+              pButton type="button"
+              class="action-element ui-button-success"
+
+              label="New Round"></button>
+      <button *ngIf="tournament?.actualRound > 0"
+              pButton type="button"
+              class="action-element ui-button-warning"
+              label="Delete Round"></button>
+    </div>
+  </p-panel>
+  <p-panel header="Participants" [toggleable]="true" [collapsed]="shownRound !== 0">
+
+    <ng-container *ngIf="(!participantsLoaded)">
+      <div class="heading">Load Participants...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <p-dataTable *ngIf="(participantsLoaded)"
+                 [value]="participants"
+                 [editable]="isOrga"
+                 [responsive]="true"
+                 [rows]="10"
+                 [paginator]="true"
+                 [pageLinks]="3"
+                 [rowsPerPageOptions]="[5,10,20]">
+      <p-header>{{participants?.length}} Participants</p-header>
+
+      <p-column [editable]="isOrga && tournament?.actualRound === 0"
+                styleClass="{{isOrga ? 'editable-column' : ''}}"
+                field="name"
+                header="Name"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+      </p-column>
+      <p-column [editable]="isOrga && tournament?.actualRound === 0"
+                styleClass="{{isOrga ? 'editable-column' : ''}}"
+                field="location"
+                header="Location"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+      </p-column>
+
+      <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
+        <p-column [editable]="isOrga && tournament?.actualRound === 0"
+                  styleClass="{{isOrga ? 'editable-column' : ''}}"
+                  field="{{participantField.field}}"
+                  header="{{participantField.field}}"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+          <ng-template let-col let-participant="rowData" pTemplate="editor">
+            <p-dropdown *ngIf="participantField.type === 'dropDown'"
+                        [(ngModel)]="participant[col.field]"
+                        [options]="participantField.fieldValues"
+                        (onChange)="changeParticipant(participant)"
+                        [autoWidth]="false"
+                        [style]="{'width':'100%'}">
+            </p-dropdown>
+            <p-multiSelect *ngIf="participantField.type === 'multiSelect'"
+                           [(ngModel)]="participant[col.field]"
+                           [options]="participantField.fieldValues"
+                           (onChange)="changeParticipant(participant)"
+                           [showToggleAll]=false
+                           [style]="{'width':'100%'}">
+            </p-multiSelect>
+          </ng-template>
+        </p-column>
+      </ng-container>
+      <p-column styleClass="col-button">
+        <ng-template pTemplate="header">
+          Score
+        </ng-template>
+        <ng-template let-participant="rowData" pTemplate="body">
+          {{getScore(participant)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTooltip(participant)}}"></i>
+        </ng-template>
+      </p-column>
+
+      <p-column styleClass="col-button">
+        <ng-template pTemplate="header">
+          Actions
+        </ng-template>
+        <ng-template let-participant="rowData" pTemplate="body">
+          <button *ngIf="isOrga && tournament?.actualRound === 0"
+                  type="button" pButton (click)="deleteParticipant(participant)" icon="fa-trash" label="Delete">
+          </button>
+        </ng-template>
+      </p-column>
+    </p-dataTable>
+  </p-panel>
+  <p-panel *ngIf="shownRound > 0" header="Pairings Round {{shownRound}}" [toggleable]="true">
+
+    <ng-container *ngIf="(!roundLoaded)">
+      <div class="heading">Load Round...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <p-dataTable *ngIf="(roundLoaded)"
+                 [value]="roundMatches"
+                 [editable]="isOrga"
+                 [responsive]="true"
+                 [rows]="10"
+                 [paginator]="true"
+                 [pageLinks]="3"
+                 [rowsPerPageOptions]="[5,10,20]">
+      <p-header>{{roundMatches?.length}} Matches</p-header>
+      <p-column field="participantOne.name"
+                header="Participant1"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+      </p-column>
+      <p-column styleClass="col-winner">
+        <ng-template pTemplate="header"></ng-template>
+        <ng-template pTemplate="body" let-roundMatch="rowData">
+          <button type="button" class="ui-button-success"
+                  pButton (click)="participantOneWin(roundMatch)"
+                  label="P1 WIN">
+
+          </button>
+        </ng-template>
+      </p-column>
+      <p-column styleClass="col-vs">
+        <ng-template pTemplate="header"></ng-template>
+        <ng-template pTemplate="body">
+          <span>VS</span>
+        </ng-template>
+      </p-column>
+      <p-column styleClass="col-winner">
+        <ng-template pTemplate="header"></ng-template>
+        <ng-template pTemplate="body" let-roundMatch="rowData">
+          <button type="button" class="ui-button-success"
+                  pButton (click)="participantTwoWin(roundMatch)"
+                  label="P2 WIN">
+          </button>
+        </ng-template>
+      </p-column>
+      <p-column field="participantTwo.name"
+                header="Participant2"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+      </p-column>
+    </p-dataTable>
+  </p-panel>
+
+</ng-container>
+
+

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import {AngularFirestore} from "angularfire2/firestore";
-import {getGameSystems} from "./models/game-systems";
+import {getGameSystems, getGameSystemsAsSelectItems} from "./models/game-systems";
 import {Message, SelectItem} from "primeng/primeng";
 import {GameSystemService} from "./services/game-system.service";
 
@@ -23,11 +23,9 @@ export class AppComponent {
   constructor(private afs: AngularFirestore,
               protected gameSystemService: GameSystemService) {
 
-    this.gameSystems = getGameSystems();
+    this.gameSystems = getGameSystemsAsSelectItems();
     this.selectedGameSystem = this.gameSystems[0].value;
     this.gameSystemService.setGameSystem(this.selectedGameSystem);
-
-
 
     afs.firestore.enablePersistence()
       .then(function() {

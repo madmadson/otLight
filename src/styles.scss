@@ -30,8 +30,18 @@ $color_secondary_text: #cccccc;
   font-size: 2.0em;
   font-weight: bold;
   margin-top: $main_tick;
+  margin-bottom: $main_tick;
   line-height: $tripel_tick ;
 }
+
+.sub-heading {
+  text-align: center;
+  font-size: 1.6em;
+  margin-top: $halve_tick;
+  margin-bottom: $halve_tick;
+  line-height: $double_tick ;
+}
+
 
 .centered-content-container {
 
@@ -59,4 +69,24 @@ $color_secondary_text: #cccccc;
 
 input.ng-invalid.ng-dirty{
   background-color: $color_secondary !important;
+}
+
+.editable-column {
+  box-shadow: inset 0 0 10px $color_secondary;
+
+}
+
+.editable-column:hover {
+  cursor: pointer;
+  background-color: $hover_color;
+}
+
+.col-vs {
+  width: 5%;
+  text-align: center;
+}
+
+.col-winner {
+  width: 10%;
+  text-align: center;
 }

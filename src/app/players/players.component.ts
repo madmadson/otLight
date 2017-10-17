@@ -7,7 +7,8 @@ import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 
 import * as _ from 'lodash';
-import {getGameSystems} from "../models/game-systems";
+import {GameSystemConfig, getGameSystemConfig} from "../models/game-systems";
+
 
 @Component({
   selector: 'app-players',
@@ -18,25 +19,26 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
   protected players: Player[] = [];
   protected playersLoaded: boolean;
-  private gameSystemSubscription: Subscription;
-  private selectedGameSystem: string;
-  private playersColRef: CollectionReference;
-  private playersUnsubscribeFunction: (() => void);
-
+  protected gameSystemSubscription: Subscription;
+  protected selectedGameSystem: string;
+  protected playersColRef: CollectionReference;
+  protected playersUnsubscribeFunction: (() => void);
+  protected gameSystemConfig: GameSystemConfig;
 
   constructor(private afs: AngularFirestore,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
 
-    const gameSystems = getGameSystems();
-    this.selectedGameSystem = gameSystems[0].value;
+    this.selectedGameSystem = this.gameSystemService.getGameSystem();
+
+    this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem);
   }
 
   ngOnInit() {
 
     this.subscribeOnPlayers();
 
-    this.gameSystemSubscription = this.gameSystemService.getGameSystem().subscribe(gameSystem => {
+    this.gameSystemSubscription = this.gameSystemService.getGameSystemAsStream().subscribe(gameSystem => {
       console.log("gameSystem updated: " + gameSystem);
       this.selectedGameSystem = gameSystem;
       this.subscribeOnPlayers();
@@ -71,6 +73,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
               name: change.doc.data().name,
               location: change.doc.data().location,
               gameSystems: change.doc.data().gameSystems,
+              MainFaction: change.doc.data().MainFaction,
+              ArmyLists: change.doc.data().ArmyLists,
             };
 
             newPlayers.push(player);
@@ -85,6 +89,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
               name: change.doc.data().name,
               location: change.doc.data().location,
               gameSystems: change.doc.data().gameSystems,
+              MainFaction: change.doc.data().MainFaction,
+              ArmyLists: change.doc.data().ArmyLists,
             };
 
             const index = _.findIndex(newPlayers, ['id', change.doc.id]);
@@ -104,5 +110,18 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
         that.playersLoaded = true;
       });
+  }
+
+  changePlayerField(player: Player) {
+
+    console.log('save player: ' + JSON.stringify(player));
+
+    const playerDocRef = this.playersColRef.doc(player.id);
+
+    playerDocRef.update(player).then(function () {
+      console.log("Player dyn1 updated: " + JSON.stringify(player));
+    }).catch(function (error) {
+      console.error("Error updating player: ", error);
+    });
   }
 }

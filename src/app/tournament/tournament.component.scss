@@ -1,5 +1,15 @@
 @import '../../styles';
 
-.orga-panel{
-  margin-bottom: $main_tick;
+
+.orga-panel-container{
+  display: flex;
+  justify-content: center;
 }
+
+.action-element {
+  margin: $halve_tick;
+  padding: $halve_tick;
+}
+
+
+

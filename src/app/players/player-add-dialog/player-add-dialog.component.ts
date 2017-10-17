@@ -3,7 +3,7 @@ import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {SelectItem} from "primeng/primeng";
 import {MessageService} from "primeng/components/common/messageservice";
 import {AngularFirestore} from "angularfire2/firestore";
-import {getGameSystems} from "../../models/game-systems";
+import {getGameSystemsAsSelectItems} from "../../models/game-systems";
 import {Player} from "../../models/Player";
 import * as _ from 'lodash';
 import * as firebase from "firebase/app";
@@ -29,7 +29,7 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
               private afs: AngularFirestore) {
-    this.gameSystems = getGameSystems();
+    this.gameSystems = getGameSystemsAsSelectItems();
     this.playersColRef = this.afs.firestore.collection('players');
   }
 
@@ -46,9 +46,6 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
           location: doc.data().location,
           gameSystems: doc.data().gameSystems,
         };
-
-        console.log('player: ' + JSON.stringify(player));
-
         that.allPlayersToCheck.push(player);
       });
     });
@@ -75,7 +72,8 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
       location: this.playerForm.value.location,
       gameSystems: {
         WmHo: _.includes(this.playerForm.value.gameSystems, 'WmHo'),
-        GuildBall: _.includes(this.playerForm.value.gameSystems, 'GuildBall')
+        GuildBall: _.includes(this.playerForm.value.gameSystems, 'GuildBall'),
+        Judgement: _.includes(this.playerForm.value.gameSystems, 'Judgement'),
       }
     };
 

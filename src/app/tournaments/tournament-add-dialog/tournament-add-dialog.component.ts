@@ -1,13 +1,14 @@
 import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
-import {getGameSystems} from "../../models/game-systems";
+
 import {SelectItem} from "primeng/primeng";
-import {Tournament} from "../../models/Tournament";
+import {getTournamentForJSON, Tournament} from "../../models/Tournament";
 import {AngularFirestore} from "angularfire2/firestore";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MessageService} from "primeng/components/common/messageservice";
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 import * as _ from 'lodash';
+import {getGameSystems} from "../../models/game-systems";
 
 @Component({
   selector: 'app-tournament-add-dialog',
@@ -19,8 +20,6 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   @Input() gameSystem: string;
   @Output() onTournamentSaved = new EventEmitter<any>();
 
-
-  protected gameSystems: SelectItem[];
   protected tournamentForm: FormGroup;
 
   protected allTournamentsToCheck: Tournament[] = [];
@@ -29,9 +28,9 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   protected tournamentNameAlreadyTaken: boolean;
 
   constructor(private fb: FormBuilder,
-              private  messageService: MessageService,
+              private messageService: MessageService,
               private afs: AngularFirestore) {
-    this.gameSystems = getGameSystems();
+
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
   }
 
@@ -42,12 +41,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
     this.tournamentsUnsubscribeFunction = this.tournamentsColRef.onSnapshot(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
 
-          const tournament: Tournament = {
-            id: doc.id,
-            name: doc.data().name,
-            gameSystem: doc.data().gameSystem,
-            password: doc.data().password
-          };
+          const tournament: Tournament = getTournamentForJSON(doc.id, doc.data());
           that.allTournamentsToCheck.push(tournament);
         });
       });
@@ -73,7 +67,8 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
     const tournament: Tournament = {
       name: this.tournamentForm.value.name,
       password: this.tournamentForm.value.password,
-      gameSystem: this.gameSystem
+      gameSystem: this.gameSystem,
+      actualRound: 0,
     };
 
     _.forEach(this.allTournamentsToCheck, function (tournamentToCheck: Tournament) {

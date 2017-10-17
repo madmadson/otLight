@@ -12,10 +12,11 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AngularFirestoreModule} from "angularfire2/firestore";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
+  AutoCompleteModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputTextModule, MessagesModule, MultiSelectModule,
   PanelModule,
   SelectButtonModule,
-  SharedModule
+  SharedModule, TooltipModule
 } from "primeng/primeng";
 import {ButtonModule} from "primeng/components/button/button";
 import {TournamentsService} from "./services/tournaments.service";
@@ -26,6 +27,8 @@ import { PlayersComponent } from './players/players.component';
 import {GameSystemService} from "./services/game-system.service";
 import { PlayerAddDialogComponent } from './players/player-add-dialog/player-add-dialog.component';
 import { TournamentComponent } from './tournament/tournament.component';
+import {RoundMatchService} from "./services/round-match.service";
+
 
 export const firebaseConfig = environment.firebaseConfig;
 
@@ -60,9 +63,16 @@ export const firebaseConfig = environment.firebaseConfig;
     MessagesModule,
     SidebarModule,
     MultiSelectModule,
-    PanelModule
+    PanelModule,
+    AutoCompleteModule,
+    TooltipModule,
   ],
-  providers: [TournamentsService, MessageService, GameSystemService],
+  providers: [
+    TournamentsService,
+    MessageService,
+    GameSystemService,
+    RoundMatchService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

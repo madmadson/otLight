@@ -10,4 +10,7 @@ export interface Player {
   gameSystems: AllGameSystems;
   password?: string;
 
+  MainFaction?: string;
+  ArmyLists?: string[];
+
 }
