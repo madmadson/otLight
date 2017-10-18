@@ -49,7 +49,8 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
     this.tournamentForm = this.fb.group({
       'name': new FormControl('', Validators.required),
       'gameSystem': new FormControl({value: this.gameSystem, disabled: true}, Validators.required),
-      'password': new FormControl('', Validators.minLength(6))
+      'password': new FormControl('', Validators.minLength(6)),
+      'type': new FormControl('solo'),
     });
 
   }
@@ -68,6 +69,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
       name: this.tournamentForm.value.name,
       password: this.tournamentForm.value.password,
       gameSystem: this.gameSystem,
+      type: this.tournamentForm.value.type,
       actualRound: 0,
     };
 

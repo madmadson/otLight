@@ -3,6 +3,7 @@ import {getWmHoFieldConfig} from "./game-systems/WmHo";
 import {Participant} from "./Participant";
 
 import * as _ from 'lodash';
+import {Tournament} from "./Tournament";
 
 export function getGameSystemsAsSelectItems(): SelectItem[] {
   return [{
@@ -27,21 +28,29 @@ export interface AllGameSystems {
 export interface GameSystemConfig {
   playerFields: FieldValues[];
   participantFields: FieldValues[];
+  scoreFields: FieldValues[];
+  standingFields: FieldValues[];
 }
 export interface FieldValues {
   type: string;
   field: string;
-  fieldValues: SelectItem[];
+  fieldPlayerOne?: string;
+  fieldPlayerTwo?: string;
+  fieldValues?: SelectItem[];
+  min?: number;
+  max?: number;
 }
 
-export function getGameSystemConfig(gameSystem: string): GameSystemConfig {
+export function getGameSystemConfig(system: string, tournamentType: string): GameSystemConfig {
 
-  if (gameSystem === 'WmHo') {
-    return getWmHoFieldConfig();
+  if (system === 'WmHo') {
+    return getWmHoFieldConfig(tournamentType);
   } else {
     return {
       participantFields: [],
-      playerFields: []
+      playerFields: [],
+      scoreFields: [],
+      standingFields: [],
     };
   }
 }
@@ -55,12 +64,18 @@ export function orderParticipantsForGameSystem(gameSystem: string, participants:
   }
 }
 
-export function getScoreByGameSystem(gameSystem: string): number {
+/**
+ * first win score, second loose score, third draw
+ *
+ * @param {string} gameSystem
+ * @returns {number[]}
+ */
+export function getScoreByGameSystem(gameSystem: string): number[] {
 
   if (gameSystem === 'WmHo') {
-    return 1;
+    return [1, 0, 0];
   } else {
-    return 1;
+    return [1, 0, 0];
   }
 }
 

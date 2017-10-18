@@ -31,7 +31,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
     this.selectedGameSystem = this.gameSystemService.getGameSystem();
 
-    this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem);
+    this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem, '');
   }
 
   ngOnInit() {

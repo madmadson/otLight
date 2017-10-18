@@ -8,11 +8,12 @@ import * as _ from 'lodash';
 import {getParticipantForJSON, Participant} from "../models/Participant";
 import CollectionReference = firebase.firestore.CollectionReference;
 import {Player} from "../models/Player";
-import {GameSystemConfig, getGameSystemConfig, getScoreByGameSystem} from "../models/game-systems";
+import {FieldValues, GameSystemConfig, getGameSystemConfig, getScoreByGameSystem} from "../models/game-systems";
 import {MessageService} from "primeng/components/common/messageservice";
 import {UUID} from "angular2-uuid";
 import {getRoundMatchForJSON, RoundMatch} from "../models/RoundMatch";
 import {RoundMatchService} from "../services/round-match.service";
+import {SelectItem} from "primeng/primeng";
 
 @Component({
   selector: 'app-tournament',
@@ -50,6 +51,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected roundMatches: RoundMatch[] = [];
   protected roundUnsubscribeFunction: () => void;
 
+
+  protected winningOptions: SelectItem[] = [
+    {value: 'p1', label: 'P1 WON'},
+    {value: 'p2', label: 'P2 WON'},
+    {value: 'draw', label: 'DRAW'},
+  ];
+
   constructor(protected afs: AngularFirestore,
               private messageService: MessageService,
               private activeRouter: ActivatedRoute,
@@ -63,6 +71,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     this.subscribeOnParticipants();
 
+    this.isOrga = true;
   }
 
   ngOnInit() {
@@ -76,7 +85,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       that.subscribeOnRound(that.shownRound);
 
-      that.gameSystemConfig = getGameSystemConfig(that.tournament.gameSystem);
+      that.gameSystemConfig = getGameSystemConfig(that.tournament.gameSystem, that.tournament.type);
 
       that.tournamentLoaded = true;
 
@@ -238,14 +247,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       const participant: Participant = {
         name: this.playerToAdd.name,
-        location: this.playerToAdd.location ? this.playerToAdd.location : "",
+        location: this.playerToAdd.location ? this.playerToAdd.location : '',
+        type: 'single',
         opponentParticipantsNames: [],
         roundScores: []
       };
 
       that.playerToAdd = undefined;
 
-      this.participantsColRef.add(participant).then(function (participantDocRef) {
+      that.participantsColRef.add(participant).then(function (participantDocRef) {
         console.log("Participant written with ID: ", participantDocRef.id);
         that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
       }).catch(function (error) {
@@ -295,6 +305,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       const participant: Participant = {
         name: 'Player ' + nextPlayerNumber,
+        type: 'single',
         location: 'blub',
         opponentParticipantsNames: [],
         roundScores: [],
@@ -332,7 +343,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     }
   }
 
-  deleteAndAdd() {
+  deleteAndAddParticipants() {
 
     const nextPlayerNumber = this.participants.length + 1;
 
@@ -356,29 +367,16 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   createFirstRound() {
 
-    this.shownRound = this.shownRound + 1;
-
-    this.subscribeOnRound(this.shownRound);
 
     this.tournament.actualRound = 1;
     this.tournamentDocRef.update(this.tournament);
 
     this.roundMatchService.createFirstRound(this.tournament, this.participants);
+
+    this.showNextRound();
   }
 
 
-  participantOneWin(roundMatch: RoundMatch) {
-
-    console.log('parti1 win in match: ' + JSON.stringify(roundMatch));
-
-    roundMatch.participantOne.roundScores[roundMatch.round - 1] = getScoreByGameSystem(this.tournament.gameSystem);
-  }
-
-  participantTwoWin(roundMatch: RoundMatch) {
-    console.log('parti2 win in match: ' + JSON.stringify(roundMatch));
-
-    roundMatch.participantTwo.roundScores[roundMatch.round - 1] = getScoreByGameSystem(this.tournament.gameSystem);
-  }
 
   getScore(participant: Participant) {
 
@@ -396,5 +394,94 @@ export class TournamentComponent implements OnInit, OnDestroy {
         'Round' + (index + 1) + ': ' + score + ' VS ' + participant.opponentParticipantsNames[index] + '\n');
     });
     return scoreTooltip;
+  }
+
+  getScoreFieldValue(scoreField: FieldValues, participant: Participant) {
+    let scoreFieldSum = 0;
+    _.forEach(participant[scoreField.field], function (score: number) {
+      scoreFieldSum = scoreFieldSum + score;
+    });
+    return scoreFieldSum;
+  }
+
+  deleteRound() {
+    const that = this;
+
+    this.roundMatchService.deleteRound(this.tournament, this.roundMatches).then(function () {
+      console.log('delete Round');
+      that.tournament.actualRound = (that.tournament.actualRound - 1);
+      that.tournamentDocRef.update(that.tournament);
+
+      that.showLastRound();
+      that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Round deleted'});
+
+    }).catch(function (error) {
+      console.error("Error delete round: ", error);
+    });
+  }
+
+
+  changeWinner(event: any, roundMatch: RoundMatch) {
+
+
+    console.log('Match winner changed: ' + event.value);
+
+    if (event.value === 'p1') {
+
+      this.roundMatchService.playerOneWon(this.tournament, roundMatch, this.participants);
+
+      if (roundMatch.finished) {
+        this.roundMatchService.playerTwoLost(this.tournament, roundMatch, this.participants);
+      }
+    }
+
+    if (event.value === 'p2') {
+
+      this.roundMatchService.playerTwoWon(this.tournament, roundMatch, this.participants);
+
+      if (roundMatch.finished) {
+        this.roundMatchService.playerOneLost(this.tournament, roundMatch, this.participants);
+      }
+    }
+
+    if (event.value === 'draw') {
+      this.roundMatchService.playerOneDraw(this.tournament, roundMatch, this.participants);
+      this.roundMatchService.playerTwoDraw(this.tournament, roundMatch, this.participants);
+    }
+  }
+
+  getStyleForMatchesRow(rowData: RoundMatch, rowIndex: any) {
+
+    return rowData.finished ? 'row-finished' : '';
+  }
+
+  changeScoringForPlayerOne(roundMatch: RoundMatch) {
+
+
+
+  }
+
+  changeScoringPlayerTwo(roundMatch: RoundMatch, field: string, value: number) {
+
+    const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+      return par.id === roundMatch.participantTwo.id;
+    });
+
+    participantToUpdate[field][this.shownRound - 1] = value;
+
+    const participantDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
+    participantDocRef.update(participantToUpdate).then(function () {
+      console.log('hurray');
+    }).catch(function (error) {
+      console.error("Error", error);
+    });
+
+
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
+    matchDocRef.update(roundMatch).then(function () {
+      console.log('hurray');
+    }).catch(function (error) {
+      console.error("Error", error);
+    });
   }
 }

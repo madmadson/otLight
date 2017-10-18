@@ -50,6 +50,27 @@
         </div>
       </div>
     </div>
+
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-4">
+        Type:
+      </div>
+      <div class="ui-grid-col-8">
+         <p-radioButton name="typeGroup" value="solo" label="Solo" formControlName="type"></p-radioButton>
+         <p-radioButton name="typeGroup" value="team" label="Team" formControlName="type"></p-radioButton>
+      </div>
+    </div>
+
+    <div class="ui-grid-row"
+         *ngIf="!tournamentForm.controls['password'].valid && tournamentForm.controls['password'].dirty">
+      <div class="ui-grid-col-12">
+        <div class="ui-message ui-messages-error ui-corner-all">
+          <i class="fa fa-close"></i>
+          Must be longer than 6 characters
+        </div>
+      </div>
+    </div>
+
     <div class="ui-grid-row bottom-button">
       <div class="ui-grid-col-12">
         <button pButton type="submit" class="full-width" label="Save Tournament"

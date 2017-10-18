@@ -14,9 +14,9 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
   AutoCompleteModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputTextModule, MessagesModule, MultiSelectModule,
-  PanelModule,
+  PanelModule, RadioButton, RadioButtonModule,
   SelectButtonModule,
-  SharedModule, TooltipModule
+  SharedModule, SpinnerModule, TooltipModule
 } from "primeng/primeng";
 import {ButtonModule} from "primeng/components/button/button";
 import {TournamentsService} from "./services/tournaments.service";
@@ -66,6 +66,8 @@ export const firebaseConfig = environment.firebaseConfig;
     PanelModule,
     AutoCompleteModule,
     TooltipModule,
+    RadioButtonModule,
+    SpinnerModule
   ],
   providers: [
     TournamentsService,
