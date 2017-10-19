@@ -7,19 +7,23 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
   const gameConfig: GameSystemConfig = {playerFields: [], participantFields: [], scoreFields: [], standingFields: []};
 
   gameConfig.playerFields.push({
+    defaultValue: '',
     type: 'dropDown',
     field: 'Faction',
     fieldValues: getWmHoFactionsAsSelectItems()
   }, {
+    defaultValue: [],
     type: 'multiSelect',
     field: 'ArmyLists',
     fieldValues: getWmHoCasterAsSelectItem()
   });
   gameConfig.participantFields.push({
+    defaultValue: '',
     type: 'dropDown',
     field: 'Faction',
     fieldValues: getWmHoFactionsAsSelectItems()
   }, {
+    defaultValue: [],
     type: 'multiSelect',
     field: 'ArmyLists',
     fieldValues: getWmHoCasterAsSelectItem()
@@ -27,25 +31,30 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
 
   if (type === 'solo') {
     gameConfig.standingFields.push({
+      defaultValue: 0,
       type: 'number',
       field: 'sos',
     });
   } else if (type === 'team') {
     gameConfig.standingFields.push({
+      defaultValue: 0,
       type: 'number',
       field: 'sgw',
     });
   }
 
   gameConfig.standingFields.push({
+    defaultValue: 0,
     type: 'number',
     field: 'cp',
   }, {
+    defaultValue: 0,
     type: 'number',
     field: 'vp',
   });
 
   gameConfig.scoreFields.push({
+    defaultValue: 0,
     type: 'number',
     field: 'cp',
     fieldPlayerOne: 'cpParticipantOne',
@@ -53,6 +62,7 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
     min: 0,
     max: 30
   }, {
+    defaultValue: 0,
     type: 'number',
     field: 'vp',
     fieldPlayerOne: 'vpParticipantOne',

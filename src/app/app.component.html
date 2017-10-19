@@ -71,10 +71,10 @@
           [width]="600"
           [height]="400">
   <p-header>
-    New Tournament
+    New Tournament {{selectedGameSystem}}
   </p-header>
   <app-tournament-add-dialog
-    [gameSystem]="this.selectedGameSystem"
+    [gameSystem]="selectedGameSystem"
     (onTournamentSaved)="handleTournamentSaved($event)">
   </app-tournament-add-dialog>
 </p-dialog>

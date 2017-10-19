@@ -47,8 +47,8 @@ $color_secondary_text: #cccccc;
 
   display: flex;
   justify-content: center;
-  margin-top: $double_tick;
-  margin-bottom: $double_tick;
+  margin-top: $main_tick;
+  margin-bottom: $main_tick;
 }
 
 
@@ -79,6 +79,11 @@ input.ng-invalid.ng-dirty{
 .editable-column:hover {
   cursor: pointer;
   background-color: $hover_color;
+}
+
+.col-actions{
+  width: 20%;
+  text-align: center;
 }
 
 .col-vs {

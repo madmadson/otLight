@@ -12,7 +12,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AngularFirestoreModule} from "angularfire2/firestore";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
-  AutoCompleteModule,
+  AutoCompleteModule, DataListModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputTextModule, MessagesModule, MultiSelectModule,
   PanelModule, RadioButton, RadioButtonModule,
   SelectButtonModule,

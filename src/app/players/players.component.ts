@@ -1,13 +1,17 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {AngularFirestore} from "angularfire2/firestore";
 import {GameSystemService} from "../services/game-system.service";
-import {Player} from "../models/Player";
+import {getPlayerForJSON, Player} from "../models/Player";
 import {Subscription} from "rxjs/Subscription";
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 
 import * as _ from 'lodash';
-import {GameSystemConfig, getGameSystemConfig} from "../models/game-systems";
+import {
+  FieldValues, GameSystemConfig, getGameSystemConfig, getGameSystems,
+  getGameSystemsAsSelectItems
+} from "../models/game-systems";
+import {SelectItem} from "primeng/primeng";
 
 
 @Component({
@@ -24,6 +28,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   protected playersColRef: CollectionReference;
   protected playersUnsubscribeFunction: (() => void);
   protected gameSystemConfig: GameSystemConfig;
+  protected gameSystemsAsSelectItems: SelectItem[];
+  protected gameSystems: string[];
 
   constructor(private afs: AngularFirestore,
               protected gameSystemService: GameSystemService) {
@@ -32,6 +38,9 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     this.selectedGameSystem = this.gameSystemService.getGameSystem();
 
     this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem, '');
+
+    this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
+    this.gameSystems = getGameSystems();
   }
 
   ngOnInit() {
@@ -41,6 +50,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     this.gameSystemSubscription = this.gameSystemService.getGameSystemAsStream().subscribe(gameSystem => {
       console.log("gameSystem updated: " + gameSystem);
       this.selectedGameSystem = gameSystem;
+      this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem, '');
       this.subscribeOnPlayers();
     });
   }
@@ -68,14 +78,19 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
             const newPlayers = _.cloneDeep(that.players);
 
-            const player: Player = {
-              id: change.doc.id,
-              name: change.doc.data().name,
-              location: change.doc.data().location,
-              gameSystems: change.doc.data().gameSystems,
-              MainFaction: change.doc.data().MainFaction,
-              ArmyLists: change.doc.data().ArmyLists,
-            };
+            const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
+
+            _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
+
+              const fieldValue = change.doc.data()[playerField.field] ? change.doc.data()[playerField.field] : playerField.defaultValue;
+              player[playerField.field] = fieldValue;
+            });
+            player.myGameSystems = [];
+            _.forEach(that.gameSystems, function (gameSystem: string) {
+              if (player.gameSystems[gameSystem]) {
+                player.myGameSystems.push(gameSystem);
+              }
+            });
 
             newPlayers.push(player);
             that.players = newPlayers;
@@ -84,14 +99,18 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
             const newPlayers = _.cloneDeep(that.players);
 
-            const player: Player = {
-              id: change.doc.id,
-              name: change.doc.data().name,
-              location: change.doc.data().location,
-              gameSystems: change.doc.data().gameSystems,
-              MainFaction: change.doc.data().MainFaction,
-              ArmyLists: change.doc.data().ArmyLists,
-            };
+            const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
+
+            _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
+              const fieldValue = change.doc.data()[playerField.field] ? change.doc.data()[playerField.field] : playerField.defaultValue;
+              player[playerField.field] = fieldValue;
+            });
+            player.myGameSystems = [];
+            _.forEach(that.gameSystems, function (gameSystem: string) {
+              if (player.gameSystems[gameSystem]) {
+                player.myGameSystems.push(gameSystem);
+              }
+            });
 
             const index = _.findIndex(newPlayers, ['id', change.doc.id]);
             newPlayers[index] = player;
@@ -117,9 +136,45 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     console.log('save player: ' + JSON.stringify(player));
 
     const playerDocRef = this.playersColRef.doc(player.id);
+    delete player.myGameSystems;
 
     playerDocRef.update(player).then(function () {
-      console.log("Player dyn1 updated: " + JSON.stringify(player));
+      console.log("Player updated");
+    }).catch(function (error) {
+      console.error("Error updating player: ", error);
+    });
+  }
+
+  onEditPlayer(event: any) {
+    console.log(event.data);
+
+    const playerDocRef = this.playersColRef.doc(event.data.id);
+
+    const player: Player = getPlayerForJSON(event.data.id, event.data);
+
+    delete player.myGameSystems;
+
+    playerDocRef.update(player).then(function () {
+      console.log("Player updated");
+    }).catch(function (error) {
+      console.error("Error updating player: ", error);
+    });
+  }
+
+  changeGameSystems(event: any, player: Player) {
+
+    console.log("changeGameSystems: " + event.value);
+
+    const playerDocRef = this.playersColRef.doc(player.id);
+
+    _.forEach(this.gameSystems, function (gameSystem: string) {
+      player.gameSystems[gameSystem] = !!_.includes(event.value, gameSystem);
+    });
+    delete player.myGameSystems;
+
+
+    playerDocRef.update(player).then(function () {
+      console.log("Player GameSystems updated");
     }).catch(function (error) {
       console.error("Error updating player: ", error);
     });

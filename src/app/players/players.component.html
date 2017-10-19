@@ -12,8 +12,9 @@
                [rows]="10"
                [paginator]="true"
                [pageLinks]="3"
+               (onEditComplete)="onEditPlayer($event)"
                [rowsPerPageOptions]="[5,10,20]">
-    <p-header>{{selectedGameSystem}} Players</p-header  >
+    <p-header>{{selectedGameSystem}} Players</p-header>
     <p-column field="name"
               [editable]="true"
               styleClass="{{'editable-column'}}"
@@ -31,6 +32,27 @@
               filterPlaceholder="Search">
     </p-column>
 
+    <p-column styleClass="{{'editable-column'}}"
+              [sortable]="true"
+              [filter]="true"
+              filterPlaceholder="Search">
+      <ng-template pTemplate="header">
+        GameSystems
+      </ng-template>
+      <ng-template  let-player="rowData" pTemplate="body">
+        <p-multiSelect placeholder="None"
+                       [(ngModel)]="player.myGameSystems"
+                       [options]="gameSystemsAsSelectItems"
+                       (onChange)="changeGameSystems($event, player)"
+                       [showToggleAll]=false
+                       [maxSelectedLabels]=3
+                       [displaySelectedLabel]=true
+                       [selectedItemsLabel]="'{0} Gamesystems'"
+                       [style]="{'width':'100%'}">
+        </p-multiSelect>
+      </ng-template>
+    </p-column>
+
     <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
       <p-column [editable]="true"
                 styleClass="{{'editable-column'}}"
@@ -39,33 +61,26 @@
                 [sortable]="true"
                 [filter]="true"
                 filterPlaceholder="Search">
-        <ng-template  let-col let-player="rowData" pTemplate="editor">
-          <p-dropdown  *ngIf="playerField.type === 'dropDown'"
-                       [(ngModel)]="player[col.field]"
+        <ng-template let-col let-player="rowData" pTemplate="editor">
+          <p-dropdown *ngIf="playerField.type === 'dropDown'"
+                      placeholder="None"
+                      [(ngModel)]="player[col.field]"
                       [options]="playerField.fieldValues"
                       (onChange)="changePlayerField(player)"
                       [autoWidth]="false"
                       [style]="{'width':'100%'}">
           </p-dropdown>
           <p-multiSelect *ngIf="playerField.type === 'multiSelect'"
-                       [(ngModel)]="player[col.field]"
-                       [options]="playerField.fieldValues"
-                       (onChange)="changePlayerField(player)"
-                       [showToggleAll]=false
-                       [maxSelectedLabels]="3"
-                       [style]="{'width':'100%'}">
+                         placeholder="None"
+                         [(ngModel)]="player[col.field]"
+                         [options]="playerField.fieldValues"
+                         (onChange)="changePlayerField(player)"
+                         [showToggleAll]=false
+                         [maxSelectedLabels]=3
+                         [style]="{'width':'100%'}">
           </p-multiSelect>
         </ng-template>
       </p-column>
     </ng-container>
-
-    <p-column styleClass="col-button">
-      <ng-template pTemplate="header">
-        Actions
-      </ng-template>
-      <ng-template let-tournament="rowData" pTemplate="body">
-        <button type="button" pButton icon="fa-eye" label="Show"></button>
-      </ng-template>
-    </p-column>
   </p-dataTable>
 </ng-container>

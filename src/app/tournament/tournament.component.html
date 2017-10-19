@@ -41,9 +41,8 @@
 </ng-container>
 
 <ng-container *ngIf="(tournamentLoaded)">
-  <p-panel [style]="{'text-align':'center'}" header="{{tournament?.name}} - {{tournament?.type}} Tournament"
+  <p-panel [style]="{'text-align':'center'}" header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament - ActualRound {{tournament?.actualRound}}"
            [toggleable]="true">
-    <div class="sub-heading">ActualRound {{tournament?.actualRound}}</div>
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
     <div class="centered-content-container">
@@ -54,24 +53,44 @@
   </p-panel>
 
   <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
-    <div class="orga-panel-container" *ngIf="tournament?.actualRound === 0">
 
-      <p-autoComplete [(ngModel)]="playerToAdd"
-                      [suggestions]="possiblePlayersToAdd"
-                      (completeMethod)="filteredParticipants($event)"
-                      field="name"
-                      [size]="30"
-                      placeholder="Search for potential participant"
-                      forceSelection="true"
-                      class="action-element"
-                      [minLength]="1">
-      </p-autoComplete>
-      <button pButton type="button"
-              [disabled]="!playerToAdd"
-              class="action-elemen ui-button-success"
-              (click)="addParticipant()"
-              label="Add Participant">
-      </button>
+    <ng-container *ngIf="(addingPlayer)">
+      <div class="heading">Add Player...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <div *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
+      <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with GameSytem in menu *NEW PLAYER*
+    </div>
+
+    <div class="orga-panel-container" *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
+      <p-dataTable [value]="possiblePlayersToAdd"
+                   [paginator]="true"
+                   [rows]="5">
+        <p-header>List of Players</p-header>
+        <p-column field="name"
+                  header="Name"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column field="location"
+                  header="Location"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column styleClass="col-actions">
+          <ng-template pTemplate="header">
+            Actions
+          </ng-template>
+          <ng-template let-player="rowData" pTemplate="body">
+            <button type="button" pButton (click)="addParticipant(player)"  icon="fa-plus" label="Add Player"></button>
+          </ng-template>
+        </p-column>
+      </p-dataTable>
     </div>
     <div class="orga-panel-container" *ngIf="false">
       <button pButton type="button"
@@ -91,7 +110,7 @@
       </button>
     </div>
     <div class="orga-panel-container">
-      <button *ngIf="tournament?.actualRound === 0"
+      <button *ngIf="tournament?.actualRound === 0 && participants?.length >= 2"
               pButton type="button"
               class="action-element ui-button-success"
               (click)="createFirstRound()"
@@ -108,7 +127,7 @@
               label="Delete Round"></button>
     </div>
   </p-panel>
-  <p-panel header="Players" [toggleable]="true" [collapsed]="shownRound !== 0">
+  <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true" [collapsed]="shownRound !== 0">
 
     <ng-container *ngIf="(!participantsLoaded)">
       <div class="heading">Load Players...</div>
@@ -117,26 +136,32 @@
       </div>
     </ng-container>
 
-    <p-dataTable *ngIf="(participantsLoaded)"
+    <ng-container *ngIf="(removingPlayer)">
+      <div class="heading">Remove Player...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <p-dataTable *ngIf="(participantsLoaded) && !(removingPlayer)"
                  [value]="participants"
                  [editable]="isOrga"
+                 (onEditComplete)="onEditParticipant($event)"
                  [responsive]="true"
                  [rows]="10"
                  [paginator]="true"
                  [pageLinks]="3"
                  [rowsPerPageOptions]="[5,10,20]">
-      <p-header>{{participants?.length}} Players</p-header>
+      <p-header>{{participants?.length}} Players in Tournament</p-header>
 
-      <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga ? 'editable-column' : ''}}"
-                field="name"
+      <p-column field="name"
                 header="Name"
                 [sortable]="true"
                 [filter]="true"
                 filterPlaceholder="Search">
       </p-column>
       <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga ? 'editable-column' : ''}}"
+                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}"
                 field="location"
                 header="Location"
                 [sortable]="true"
@@ -146,7 +171,7 @@
 
       <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
         <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                  styleClass="{{isOrga ? 'editable-column' : ''}}"
+                  styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}"
                   field="{{participantField.field}}"
                   header="{{participantField.field}}"
                   [sortable]="true"
@@ -154,6 +179,7 @@
                   filterPlaceholder="Search">
           <ng-template let-col let-participant="rowData" pTemplate="editor">
             <p-dropdown *ngIf="participantField.type === 'dropDown'"
+                        placeholder="None"
                         [(ngModel)]="participant[col.field]"
                         [options]="participantField.fieldValues"
                         (onChange)="changeParticipant(participant)"
@@ -170,7 +196,7 @@
           </ng-template>
         </p-column>
       </ng-container>
-      <p-column>
+      <p-column sortable="custom" (sortFunction)="sortByScore($event)">
         <ng-template pTemplate="header">
           Score
         </ng-template>
@@ -186,17 +212,18 @@
           </ng-template>
           <ng-template let-participant="rowData" pTemplate="body">
             {{getScoreFieldValue(scoreField, participant)}}
+            <i class="fa fa-info-circle" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"></i>
           </ng-template>
         </p-column>
       </ng-container>
 
-      <p-column>
+      <p-column styleClass="col-actions">
         <ng-template pTemplate="header">
           Actions
         </ng-template>
         <ng-template let-participant="rowData" pTemplate="body">
           <button *ngIf="isOrga && tournament?.actualRound === 0"
-                  type="button" pButton (click)="deleteParticipant(participant)" icon="fa-trash" label="Delete">
+                  type="button" pButton (click)="deleteParticipant(participant)" icon="fa-trash" label="Remove Player">
           </button>
         </ng-template>
       </p-column>
@@ -224,7 +251,7 @@
       <p-column styleClass="col-result" *ngIf="isOrga">
         <ng-template pTemplate="header">Result</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <p-dropdown placeholder="Not Finished"
+          <p-dropdown placeholder="Unfinished"
                       [(ngModel)]="roundMatch['result']"
                       [options]="winningOptions"
                       (onChange)="changeWinner($event, roundMatch)">
@@ -276,10 +303,14 @@
             {{scoreField.field}}
           </ng-template>
           <ng-template let-col let-roundMatch="rowData" pTemplate="body">
-            P1<p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]" [min]="scoreField.min" [max]="scoreField.max">
+            P1
+            <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
+                       [min]="scoreField.min" [max]="scoreField.max"
+                       (onBlur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])">
 
             </p-spinner>
-            P2<p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
+            P2
+            <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
                        [min]="scoreField.min" [max]="scoreField.max"
                        (onBlur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])">
             </p-spinner>

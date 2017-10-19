@@ -8,6 +8,7 @@ export interface Participant {
   type: string;
 
   opponentParticipantsNames: string[];
+  opponentParticipantsIds: string[];
   roundScores: number[];
 
   // WARMACHINE
@@ -29,14 +30,7 @@ export function getParticipantForJSON(id: string, json: any): Participant {
     type: json.type ? json.type : '',
 
     opponentParticipantsNames: json.opponentParticipantsNames ? json.opponentParticipantsNames : [],
+    opponentParticipantsIds: json.opponentParticipantsIds ? json.opponentParticipantsIds : [],
     roundScores: json.roundScores ? json.roundScores : [],
-
-    sgw: json.sgw ? json.sgw : [],
-    sos: json.sos ? json.sos : [],
-    cp: json.cp ? json.cp : [],
-    vp: json.vp ? json.vp : [],
-
-    MainFaction: json.MainFaction ? json.MainFaction : '',
-    ArmyLists: json.ArmyLists ? json.ArmyLists : [],
   };
 }

@@ -12,17 +12,20 @@ export function getGameSystemsAsSelectItems(): SelectItem[] {
     value: 'GuildBall', label: 'GuildBall'
   }, {
     value: 'Judgement', label: 'Judgement'
+  }, {
+    value: 'XWing', label: 'XWing'
   }];
 }
 export function getGameSystems(): string[] {
-  return ['WmHo', 'GuildBall', 'Judgement'];
+  return ['WmHo', 'GuildBall', 'Judgement', 'XWing'];
 }
 
 
 export interface AllGameSystems {
-  WmHo: boolean;
-  GuildBall: boolean;
-  Judgement: boolean;
+  WmHo?: boolean;
+  GuildBall?: boolean;
+  Judgement?: boolean;
+  XWing?: boolean;
 }
 
 export interface GameSystemConfig {
@@ -32,6 +35,7 @@ export interface GameSystemConfig {
   standingFields: FieldValues[];
 }
 export interface FieldValues {
+  defaultValue: any;
   type: string;
   field: string;
   fieldPlayerOne?: string;
@@ -42,7 +46,7 @@ export interface FieldValues {
 }
 
 export function getGameSystemConfig(system: string, tournamentType: string): GameSystemConfig {
-
+  console.log("getGameSystem: " + system);
   if (system === 'WmHo') {
     return getWmHoFieldConfig(tournamentType);
   } else {

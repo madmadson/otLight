@@ -7,8 +7,8 @@ import {getTournamentForJSON, Tournament} from "../models/Tournament";
 import * as _ from 'lodash';
 import {getParticipantForJSON, Participant} from "../models/Participant";
 import CollectionReference = firebase.firestore.CollectionReference;
-import {Player} from "../models/Player";
-import {FieldValues, GameSystemConfig, getGameSystemConfig, getScoreByGameSystem} from "../models/game-systems";
+import {getPlayerForJSON, Player} from "../models/Player";
+import {FieldValues, GameSystemConfig, getGameSystemConfig} from "../models/game-systems";
 import {MessageService} from "primeng/components/common/messageservice";
 import {UUID} from "angular2-uuid";
 import {getRoundMatchForJSON, RoundMatch} from "../models/RoundMatch";
@@ -36,12 +36,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected shownRound: number;
 
   protected participantsLoaded: boolean;
+  protected addingPlayer: boolean;
+  protected removingPlayer: boolean;
   protected participants: Participant[] = [];
   protected participantsNameList: string[] = [];
   protected participantsColRef: CollectionReference;
   protected participantsUnsubscribeFunction: () => void;
 
-  protected playerToAdd: Player;
   protected possiblePlayersToAdd: Player[] = [];
   protected allPlayers: Player[] = [];
   protected gameSystemConfig: GameSystemConfig;
@@ -69,8 +70,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participants');
     this.roundsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
 
-    this.subscribeOnParticipants();
-
     this.isOrga = true;
   }
 
@@ -87,22 +86,30 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       that.gameSystemConfig = getGameSystemConfig(that.tournament.gameSystem, that.tournament.type);
 
+      that.subscribeOnParticipants();
+
       that.tournamentLoaded = true;
 
       that.afs.firestore.collection('players')
         .where('gameSystems.' + that.tournament.gameSystem, '==', true)
-        .get().then(function (playerCol) {
+        .onSnapshot(function (playerCol) {
+          that.allPlayers = [];
+          that.possiblePlayersToAdd = [];
 
-        playerCol.forEach(function (playerDoc) {
-          const player: Player = {
-            id: playerDoc.id,
-            name: playerDoc.data().name,
-            location: playerDoc.data().location,
-            gameSystems: playerDoc.data().gameSystems,
-          };
-          that.allPlayers.push(player);
+          playerCol.forEach(function (playerDoc) {
+            const player: Player = getPlayerForJSON(playerDoc.id, playerDoc.data());
+
+            _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
+              player[playerField.field] = playerDoc.data()[playerField.field];
+            });
+
+            that.allPlayers.push(player);
+
+            if (!_.includes(that.participantsNameList, player.name.toLowerCase())) {
+              that.possiblePlayersToAdd.push(player);
+            }
+          });
         });
-      });
     });
   }
 
@@ -142,6 +149,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
             const newParticipants = _.cloneDeep(that.participants);
             const participant = getParticipantForJSON(change.doc.id, change.doc.data());
 
+            _.forEach(that.gameSystemConfig.participantFields, function (playerField: FieldValues) {
+              participant[playerField.field] = change.doc.data()[playerField.field];
+            });
+
+            _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+              participant[standingValue.field] = change.doc.data()[standingValue.field];
+            });
+
             newParticipants.push(participant);
             that.participants = newParticipants;
 
@@ -151,6 +166,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             const newParticipants = _.cloneDeep(that.participants);
             const participant = getParticipantForJSON(change.doc.id, change.doc.data());
+
+            _.forEach(that.gameSystemConfig.participantFields, function (playerField: FieldValues) {
+              participant[playerField.field] = change.doc.data()[playerField.field];
+            });
+
+            _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+              participant[standingValue.field] = change.doc.data()[standingValue.field];
+            });
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
             newParticipants[index] = participant;
@@ -223,68 +246,116 @@ export class TournamentComponent implements OnInit, OnDestroy {
       });
   }
 
-  filteredParticipants(event: any) {
-    const query = event.query;
+  sortByScore(event: any) {
 
     const that = this;
 
-    this.possiblePlayersToAdd = [];
+    const newParticipants = _.cloneDeep(this.participants);
 
-    _.forEach(this.allPlayers, function (player: Player) {
+    newParticipants.sort((part1, part2) => {
 
-      if (player.name.toLowerCase().indexOf(query.toLowerCase()) === 0 &&
-        !_.includes(that.participantsNameList, player.name.toLowerCase())) {
-        that.possiblePlayersToAdd.push(player);
+      let result = 0;
+
+      if (that.getScore(part1) < that.getScore(part2)) {
+        result = -1;
+      } else if (that.getScore(part1) > that.getScore(part2))  {
+        result = 1;
       }
+      return result * event.order;
     });
+
+    this.participants = newParticipants;
   }
 
-  addParticipant() {
+  addParticipant(playerToAdd: Player) {
 
     const that = this;
 
-    if (this.playerToAdd) {
+    this.addingPlayer = true
 
-      const participant: Participant = {
-        name: this.playerToAdd.name,
-        location: this.playerToAdd.location ? this.playerToAdd.location : '',
-        type: 'single',
-        opponentParticipantsNames: [],
-        roundScores: []
-      };
+    const participant: Participant = {
+      name: playerToAdd.name,
+      location: playerToAdd.location ? playerToAdd.location : '',
+      type: 'single',
+      opponentParticipantsNames: [],
+      opponentParticipantsIds: [],
+      roundScores: []
+    };
 
-      that.playerToAdd = undefined;
+    console.log("this.playerToAdd: ", playerToAdd);
 
-      that.participantsColRef.add(participant).then(function (participantDocRef) {
-        console.log("Participant written with ID: ", participantDocRef.id);
-        that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
-      }).catch(function (error) {
-        console.error("Error writing participant: ", error);
-      });
-    }
+    _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
+      participant[participantField.field] = playerToAdd[participantField.field];
+    });
+
+    _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+      participant[standingValue.field] = [0];
+    });
+
+    that.participantsColRef.add(participant).then(function (participantDocRef) {
+      console.log("Participant written with ID: ", participantDocRef.id);
+      that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
+
+      const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
+      const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
+      newPossiblePlayersToAdd.splice(index, 1);
+      that.possiblePlayersToAdd = newPossiblePlayersToAdd;
+
+      that.addingPlayer = false;
+    }).catch(function (error) {
+      console.error("Error writing participant: ", error);
+      that.addingPlayer = false;
+    });
+
   }
 
   deleteParticipant(participant: Participant) {
     const that = this;
+    this.removingPlayer = true;
+
     const participantsDocRef = this.participantsColRef.doc(participant.id);
 
     participantsDocRef.delete().then(function () {
       console.log("Participant successfully deleted!");
-      that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Participant deleted'});
+      that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Player removed'});
+
+      const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
+      const index = _.findIndex(that.allPlayers, ['name', participant.name]);
+      newPossiblePlayersToAdd.push(that.allPlayers[index]);
+      that.possiblePlayersToAdd = newPossiblePlayersToAdd;
+      that.removingPlayer = false;
     }).catch(function (error) {
-      console.error("Error removing document: ", error);
+      console.error("Error removing player: ", error);
+      that.removingPlayer = false;
+    });
+  }
+
+  onEditParticipant(event: any) {
+
+    console.log(event.data);
+
+    const participantDocRef = this.participantsColRef.doc(event.data.id)
+
+    const participant: Participant = getParticipantForJSON(event.data.id, event.data);
+
+    participantDocRef.update(participant).then(function () {
+      console.log("Participant updated");
+    }).catch(function (error) {
+      console.error("Error updating participant: ", error);
     });
   }
 
   changeParticipant(participant: Participant) {
-    const that = this;
-    const playerDocRef = this.participantsColRef.doc(participant.id);
 
-    playerDocRef.update(participant).then(function () {
-      console.log("Participant updated: " + JSON.stringify(participant));
-      that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant changed'});
+    const participantDocRef = this.participantsColRef.doc(participant.id);
+
+    console.log("change data : " + JSON.stringify(participant));
+
+    participantDocRef.update(participant).then(function () {
+      console.log("Participant updated: ");
+
     }).catch(function (error) {
-      console.error("Error updating player: ", error);
+      console.error("Error updating participant: ", error);
     });
   }
 
@@ -308,6 +379,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
         type: 'single',
         location: 'blub',
         opponentParticipantsNames: [],
+        opponentParticipantsIds: [],
         roundScores: [],
       };
       batch.set(newParticipantDocRef, participant);
@@ -377,7 +449,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
   }
 
 
-
   getScore(participant: Participant) {
 
     let scoreSum = 0;
@@ -404,10 +475,19 @@ export class TournamentComponent implements OnInit, OnDestroy {
     return scoreFieldSum;
   }
 
+  getScoreFieldValueTooltip(scoreField: FieldValues, participant: Participant) {
+    let scoreTooltip = '';
+    _.forEach(participant[scoreField.field], function (score: number, index) {
+      scoreTooltip = scoreTooltip.concat(
+        'Round' + (index + 1) + ': ' + score + '\n');
+    });
+    return scoreTooltip;
+  }
+
   deleteRound() {
     const that = this;
 
-    this.roundMatchService.deleteRound(this.tournament, this.roundMatches).then(function () {
+    this.roundMatchService.deleteRound(this.tournament, this.roundMatches, this.participants).then(function () {
       console.log('delete Round');
       that.tournament.actualRound = (that.tournament.actualRound - 1);
       that.tournamentDocRef.update(that.tournament);
@@ -445,20 +525,25 @@ export class TournamentComponent implements OnInit, OnDestroy {
     }
 
     if (event.value === 'draw') {
-      this.roundMatchService.playerOneDraw(this.tournament, roundMatch, this.participants);
-      this.roundMatchService.playerTwoDraw(this.tournament, roundMatch, this.participants);
+      this.roundMatchService.resultDraw(this.tournament, roundMatch, this.participants);
+
     }
   }
 
-  getStyleForMatchesRow(rowData: RoundMatch, rowIndex: any) {
+  getStyleForMatchesRow(rowData: RoundMatch) {
 
     return rowData.finished ? 'row-finished' : '';
   }
 
-  changeScoringForPlayerOne(roundMatch: RoundMatch) {
+  changeScoringForPlayerOne(roundMatch: RoundMatch, field: string, value: number) {
 
+    const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+      return par.id === roundMatch.participantOne.id;
+    });
 
-
+    participantToUpdate[field][this.shownRound - 1] = value;
+    this.roundMatchService.updateDataForParticipate(this.tournament, participantToUpdate);
+    this.roundMatchService.updateDataForMatch(this.tournament, roundMatch);
   }
 
   changeScoringPlayerTwo(roundMatch: RoundMatch, field: string, value: number) {
@@ -468,20 +553,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     });
 
     participantToUpdate[field][this.shownRound - 1] = value;
-
-    const participantDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
-    participantDocRef.update(participantToUpdate).then(function () {
-      console.log('hurray');
-    }).catch(function (error) {
-      console.error("Error", error);
-    });
-
-
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
-    matchDocRef.update(roundMatch).then(function () {
-      console.log('hurray');
-    }).catch(function (error) {
-      console.error("Error", error);
-    });
+    this.roundMatchService.updateDataForParticipate(this.tournament, participantToUpdate);
+    this.roundMatchService.updateDataForMatch(this.tournament, roundMatch);
   }
 }

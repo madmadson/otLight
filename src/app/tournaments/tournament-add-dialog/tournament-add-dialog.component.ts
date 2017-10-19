@@ -8,7 +8,7 @@ import {MessageService} from "primeng/components/common/messageservice";
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 import * as _ from 'lodash';
-import {getGameSystems} from "../../models/game-systems";
+import { getGameSystemsAsSelectItems} from "../../models/game-systems";
 
 @Component({
   selector: 'app-tournament-add-dialog',
@@ -26,12 +26,15 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   protected tournamentsColRef: CollectionReference;
   protected tournamentsUnsubscribeFunction: () => void;
   protected tournamentNameAlreadyTaken: boolean;
+  protected allGameSystems: SelectItem[];
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
               private afs: AngularFirestore) {
 
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
+
+    this.allGameSystems = getGameSystemsAsSelectItems();
   }
 
   ngOnInit() {
@@ -48,7 +51,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
 
     this.tournamentForm = this.fb.group({
       'name': new FormControl('', Validators.required),
-      'gameSystem': new FormControl({value: this.gameSystem, disabled: true}, Validators.required),
+      'gameSystem': new FormControl(this.gameSystem, Validators.required),
       'password': new FormControl('', Validators.minLength(6)),
       'type': new FormControl('solo'),
     });
@@ -68,7 +71,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
     const tournament: Tournament = {
       name: this.tournamentForm.value.name,
       password: this.tournamentForm.value.password,
-      gameSystem: this.gameSystem,
+      gameSystem: this.tournamentForm.value.gameSystem,
       type: this.tournamentForm.value.type,
       actualRound: 0,
     };

@@ -8,9 +8,21 @@ export interface Player {
   name: string;
   location: string;
   gameSystems: AllGameSystems;
+  myGameSystems?: string[];
   password?: string;
 
-  MainFaction?: string;
+  // WARMACHINE
+  Faction?: string;
   ArmyLists?: string[];
 
+}
+
+export function getPlayerForJSON(id: string, json: any): Player {
+  return {
+    id: id,
+    name: json.name,
+    location: json.location ? json.location : '',
+    gameSystems: json.gameSystems ? json.gameSystems : [],
+    password: json.password ? json.password : '',
+  };
 }
