@@ -11,14 +11,21 @@ export interface Participant {
   opponentParticipantsIds: string[];
   roundScores: number[];
 
-  // WARMACHINE
+  // TEAM
   sgw?: number[];
+
+  // WARMACHINE
+
   sos?: number[];
   cp?: number[];
   vp?: number[];
-
   MainFaction?: string;
   ArmyLists?: string[];
+
+  // JUDGEMENT
+  levels?: number[];
+  souls?: number[];
+  Warband?: string[];
 }
 
 

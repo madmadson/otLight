@@ -4,6 +4,7 @@ import {Participant} from "./Participant";
 
 import * as _ from 'lodash';
 import {Tournament} from "./Tournament";
+import {getJudgementFieldConfig} from "./game-systems/Judgement";
 
 export function getGameSystemsAsSelectItems(): SelectItem[] {
   return [{
@@ -49,6 +50,8 @@ export function getGameSystemConfig(system: string, tournamentType: string): Gam
   console.log("getGameSystem: " + system);
   if (system === 'WmHo') {
     return getWmHoFieldConfig(tournamentType);
+  } else if (system === 'Judgement') {
+    return getJudgementFieldConfig(tournamentType);
   } else {
     return {
       participantFields: [],

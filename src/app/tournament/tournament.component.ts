@@ -47,6 +47,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected allPlayers: Player[] = [];
   protected gameSystemConfig: GameSystemConfig;
 
+  protected stacked: boolean;
   protected roundLoaded: boolean;
   protected roundsColRef: CollectionReference;
   protected roundMatches: RoundMatch[] = [];
@@ -167,12 +168,16 @@ export class TournamentComponent implements OnInit, OnDestroy {
             const newParticipants = _.cloneDeep(that.participants);
             const participant = getParticipantForJSON(change.doc.id, change.doc.data());
 
-            _.forEach(that.gameSystemConfig.participantFields, function (playerField: FieldValues) {
-              participant[playerField.field] = change.doc.data()[playerField.field];
+            _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
+              const fieldValue = change.doc.data()[participantField.field] ?
+                change.doc.data()[participantField.field] : participantField.defaultValue;
+              participant[participantField.field] = fieldValue;
             });
 
             _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-              participant[standingValue.field] = change.doc.data()[standingValue.field];
+              const fieldValue = change.doc.data()[standingValue.field] ?
+                change.doc.data()[standingValue.field] : standingValue.defaultValue;
+              participant[standingValue.field] = fieldValue;
             });
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
@@ -218,6 +223,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             const roundMatch = getRoundMatchForJSON(change.doc.id, change.doc.data());
 
+            _.forEach(that.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+              const fieldPlayerOneValue = change.doc.data()[scoreField.fieldPlayerOne] ?
+                change.doc.data()[scoreField.fieldPlayerOne] : scoreField.defaultValue;
+              roundMatch[scoreField.fieldPlayerOne] = fieldPlayerOneValue;
+              const fieldPlayerTwoValue = change.doc.data()[scoreField.fieldPlayerTwo] ?
+                change.doc.data()[scoreField.fieldPlayerTwo] : scoreField.defaultValue;
+              roundMatch[scoreField.fieldPlayerTwo] = fieldPlayerTwoValue;
+            });
+
             newRoundMatches.push(roundMatch);
             that.roundMatches = newRoundMatches;
 
@@ -228,6 +242,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             const newRoundMatches = _.cloneDeep(that.roundMatches);
             const roundMatch = getRoundMatchForJSON(change.doc.id, change.doc.data());
+
+            _.forEach(that.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+              const fieldPlayerOneValue = change.doc.data()[scoreField.fieldPlayerOne] ?
+                change.doc.data()[scoreField.fieldPlayerOne] : scoreField.defaultValue;
+              roundMatch[scoreField.fieldPlayerOne] = fieldPlayerOneValue;
+              const fieldPlayerTwoValue = change.doc.data()[scoreField.fieldPlayerTwo] ?
+                change.doc.data()[scoreField.fieldPlayerTwo] : scoreField.defaultValue;
+              roundMatch[scoreField.fieldPlayerTwo] = fieldPlayerTwoValue;
+            });
 
             const index = _.findIndex(that.roundMatches, ['id', change.doc.id]);
             newRoundMatches[index] = roundMatch;
@@ -271,7 +294,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const that = this;
 
-    this.addingPlayer = true
+    this.addingPlayer = true;
 
     const participant: Participant = {
       name: playerToAdd.name,
@@ -285,11 +308,12 @@ export class TournamentComponent implements OnInit, OnDestroy {
     console.log("this.playerToAdd: ", playerToAdd);
 
     _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
-      participant[participantField.field] = playerToAdd[participantField.field];
+      const fieldValue = playerToAdd[participantField.field] ? playerToAdd[participantField.field] : participantField.defaultValue;
+      participant[participantField.field] = fieldValue;
     });
 
     _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-      participant[standingValue.field] = [0];
+      participant[standingValue.field] = [standingValue.defaultValue];
     });
 
     that.participantsColRef.add(participant).then(function (participantDocRef) {
@@ -334,7 +358,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     console.log(event.data);
 
-    const participantDocRef = this.participantsColRef.doc(event.data.id)
+    const participantDocRef = this.participantsColRef.doc(event.data.id);
 
     const participant: Participant = getParticipantForJSON(event.data.id, event.data);
 

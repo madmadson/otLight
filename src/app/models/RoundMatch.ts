@@ -11,14 +11,19 @@ export interface RoundMatch {
   participantTwo: Participant;
 
   scoreParticipantOne: number;
-
-  cpParticipantOne?: number;
-  vpParticipantOne?: number;
-
   scoreParticipantTwo: number;
 
+  // WARMACHINE
+  cpParticipantOne?: number;
+  vpParticipantOne?: number;
   cpParticipantTwo?: number;
   vpParticipantTwo?: number;
+
+  // JUDGEMENT
+  soulsParticipantOne?: number;
+  levelsParticipantOne?: number;
+  soulsParticipantTwo?: number;
+  levelsParticipantTwo?: number;
 
   result: string;
   finished: boolean;
@@ -33,16 +38,7 @@ export function getRoundMatchForJSON(id: string, json: any): RoundMatch {
     participantTwo: json.participantTwo,
 
     scoreParticipantOne: json.scoreParticipantOne,
-
-    // WARMACHINE
-    cpParticipantOne: json.cpParticipantOne ? json.cpParticipantOne : 0,
-    vpParticipantOne: json.vpParticipantOne ? json.vpParticipantOne : 0,
-
     scoreParticipantTwo: json.scoreParticipantTwo,
-
-    // WARMACHINE
-    cpParticipantTwo: json.cpParticipantTwo ? json.cpParticipantTwo : 0,
-    vpParticipantTwo: json.vpParticipantTwo ? json.vpParticipantTwo : 0,
 
     result: json.result ? json.result : '',
     finished: json.finished ? json.finished : false

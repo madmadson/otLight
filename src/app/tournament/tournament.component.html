@@ -41,7 +41,8 @@
 </ng-container>
 
 <ng-container *ngIf="(tournamentLoaded)">
-  <p-panel [style]="{'text-align':'center'}" header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament - ActualRound {{tournament?.actualRound}}"
+  <p-panel [style]="{'text-align':'center'}"
+           header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament - ActualRound {{tournament?.actualRound}}"
            [toggleable]="true">
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
@@ -62,10 +63,12 @@
     </ng-container>
 
     <div *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
-      <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with GameSytem in menu *NEW PLAYER*
+      <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
+      GameSytem in menu *NEW PLAYER*
     </div>
 
-    <div class="orga-panel-container" *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
+    <div class="orga-panel-container"
+         *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
       <p-dataTable [value]="possiblePlayersToAdd"
                    [paginator]="true"
                    [rows]="5">
@@ -87,7 +90,7 @@
             Actions
           </ng-template>
           <ng-template let-player="rowData" pTemplate="body">
-            <button type="button" pButton (click)="addParticipant(player)"  icon="fa-plus" label="Add Player"></button>
+            <button type="button" pButton (click)="addParticipant(player)" icon="fa-plus" label="Add Player"></button>
           </ng-template>
         </p-column>
       </p-dataTable>
@@ -127,7 +130,8 @@
               label="Delete Round"></button>
     </div>
   </p-panel>
-  <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true" [collapsed]="shownRound !== 0">
+  <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true"
+           [collapsed]="shownRound !== 0">
 
     <ng-container *ngIf="(!participantsLoaded)">
       <div class="heading">Load Players...</div>
@@ -238,6 +242,8 @@
       </div>
     </ng-container>
 
+    <button pButton type="button" (click)="stacked = !stacked"  label="Toggle" icon="fa-list"></button>
+
     <p-dataTable *ngIf="(roundLoaded)"
                  [value]="roundMatches"
                  [editable]="isOrga"
@@ -246,12 +252,14 @@
                  [rows]="10"
                  [paginator]="true"
                  [pageLinks]="3"
+                 [stacked]="stacked"
                  [rowsPerPageOptions]="[5,10,20]">
       <p-header>{{roundMatches?.length}} Matches</p-header>
       <p-column styleClass="col-result" *ngIf="isOrga">
         <ng-template pTemplate="header">Result</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <p-dropdown placeholder="Unfinished"
+          <p-dropdown 
+                      placeholder="Undone"
                       [(ngModel)]="roundMatch['result']"
                       [options]="winningOptions"
                       (onChange)="changeWinner($event, roundMatch)">
@@ -264,20 +272,32 @@
                 filterPlaceholder="Search">
         <ng-template pTemplate="header">Player 1</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <span [ngClass]="{
+          <div  style="text-align: center"
+                [ngClass]="{
                    'winner-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
                 }">
-                {{roundMatch.participantOne.name}}
-                ({{roundMatch.participantOne.roundScores[shownRound - 1] ? roundMatch.participantOne.roundScores[shownRound - 1] : '0'}})
-          </span>
+            <span class="big-text">
+              {{roundMatch.participantOne.name}}
+              ({{roundMatch.participantOne.roundScores[shownRound - 1] ? roundMatch.participantOne.roundScores[shownRound - 1] : '0'}})
+            </span>
+
+          </div>
+          <div  style="text-align: center" *ngIf="isOrga">
+            Choose played
+          </div>
+
         </ng-template>
       </p-column>
       <p-column styleClass="col-vs">
         <ng-template pTemplate="header"></ng-template>
         <ng-template pTemplate="body">
-          <span>VS</span>
+          <div style="text-align: center">
+            <i class="fa fa-arrows-v fa-2x" aria-hidden="true" pTooltip="Swap Player1"></i>
+            <span>VS</span>
+            <i class="fa fa-arrows-v fa-2x" aria-hidden="true" pTooltip="Swap Player2"></i>
+          </div>
         </ng-template>
       </p-column>
       <p-column styleClass="col-player"
@@ -286,14 +306,21 @@
                 filterPlaceholder="Search">
         <ng-template pTemplate="header">Player 2</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <span [ngClass]="{
+          <div  style="text-align: center"
+                [ngClass]="{
                    'winner-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
                 }">
-                {{roundMatch.participantTwo.name}}
-                ({{roundMatch.participantTwo.roundScores[shownRound - 1] ? roundMatch.participantTwo.roundScores[shownRound - 1] : '0'}})
-          </span>
+
+            <span class="big-text">
+                  ({{roundMatch.participantTwo.roundScores[shownRound - 1] ? roundMatch.participantTwo.roundScores[shownRound - 1] : '0'}})
+                  {{roundMatch.participantTwo.name}}
+            </span>
+          </div>
+          <div style="text-align: center" *ngIf="isOrga">
+            Choose played
+          </div>
         </ng-template>
       </p-column>
 
