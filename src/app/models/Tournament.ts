@@ -8,6 +8,7 @@ export interface Tournament {
   type: string;
   password?: string;
   actualRound: number;
+  status: string;
 }
 
 export function getTournamentForJSON(id: string, json: any): Tournament {
@@ -18,5 +19,6 @@ export function getTournamentForJSON(id: string, json: any): Tournament {
     type: json.type,
     password: json.password ? json.password : '',
     actualRound: json.actualRound ? json.actualRound : 0,
+    status: json.status ? json.status : 'CREATED',
   };
 }

@@ -5,8 +5,17 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="(playersLoaded)">
+<ng-container *ngIf="(updatePlayer)">
+  <div class="heading">Update Player...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+<button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
+<ng-container *ngIf="(playersLoaded) && !updatePlayer">
   <p-dataTable [value]="players"
+               [stacked]="stacked"
                [editable]="true"
                [responsive]="true"
                [rows]="10"
@@ -34,16 +43,15 @@
 
     <p-column styleClass="{{'editable-column'}}"
               [sortable]="true"
+              [header]="'GameSystems'"
               [filter]="true"
               filterPlaceholder="Search">
-      <ng-template pTemplate="header">
-        GameSystems
-      </ng-template>
       <ng-template  let-player="rowData" pTemplate="body">
         <p-multiSelect placeholder="None"
                        [(ngModel)]="player.myGameSystems"
                        [options]="gameSystemsAsSelectItems"
                        (onChange)="changeGameSystems($event, player)"
+                       (onPanelHide)="savePlayer()"
                        [showToggleAll]=false
                        [maxSelectedLabels]=3
                        [displaySelectedLabel]=true
@@ -67,6 +75,7 @@
                       [(ngModel)]="player[col.field]"
                       [options]="playerField.fieldValues"
                       (onChange)="changePlayerField(player)"
+                      (onBlur)="savePlayer()"
                       [autoWidth]="false"
                       [style]="{'width':'100%'}">
           </p-dropdown>
@@ -75,9 +84,9 @@
                          [(ngModel)]="player[col.field]"
                          [options]="playerField.fieldValues"
                          (onChange)="changePlayerField(player)"
+                         (onPanelHide)="savePlayer()"
                          [showToggleAll]=false
-                         [maxSelectedLabels]=3
-                         [style]="{'width':'100%'}">
+                         [maxSelectedLabels]=3>
           </p-multiSelect>
         </ng-template>
       </p-column>

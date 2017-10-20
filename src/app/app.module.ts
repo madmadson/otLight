@@ -28,6 +28,8 @@ import {GameSystemService} from "./services/game-system.service";
 import { PlayerAddDialogComponent } from './players/player-add-dialog/player-add-dialog.component';
 import { TournamentComponent } from './tournament/tournament.component';
 import {RoundMatchService} from "./services/round-match.service";
+import {WindowRefService} from "./services/window-ref-service";
+import {ConnectivityService} from "./services/connectivity-service";
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -70,6 +72,8 @@ export const firebaseConfig = environment.firebaseConfig;
     SpinnerModule
   ],
   providers: [
+    WindowRefService,
+    ConnectivityService,
     TournamentsService,
     MessageService,
     GameSystemService,

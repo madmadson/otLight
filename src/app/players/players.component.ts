@@ -12,6 +12,8 @@ import {
   getGameSystemsAsSelectItems
 } from "../models/game-systems";
 import {SelectItem} from "primeng/primeng";
+import {ConnectivityService} from "../services/connectivity-service";
+import {MessageService} from "primeng/components/common/messageservice";
 
 
 @Component({
@@ -21,17 +23,23 @@ import {SelectItem} from "primeng/primeng";
 })
 export class PlayersComponent implements OnInit, OnDestroy  {
 
+  stacked: boolean;
+  playersLoaded: boolean;
+  updatePlayer: boolean;
+  selectedGameSystem: string;
+
   protected players: Player[] = [];
-  protected playersLoaded: boolean;
   protected gameSystemSubscription: Subscription;
-  protected selectedGameSystem: string;
   protected playersColRef: CollectionReference;
   protected playersUnsubscribeFunction: (() => void);
   protected gameSystemConfig: GameSystemConfig;
   protected gameSystemsAsSelectItems: SelectItem[];
   protected gameSystems: string[];
+  protected playerToChange: Player;
 
   constructor(private afs: AngularFirestore,
+              private conService: ConnectivityService,
+              private messageService: MessageService,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
 
@@ -133,50 +141,97 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
   changePlayerField(player: Player) {
 
-    console.log('save player: ' + JSON.stringify(player));
+    console.log('change Player: ' + JSON.stringify(player));
 
-    const playerDocRef = this.playersColRef.doc(player.id);
-    delete player.myGameSystems;
+    this.playerToChange = player;
+  }
 
-    playerDocRef.update(player).then(function () {
-      console.log("Player updated");
-    }).catch(function (error) {
-      console.error("Error updating player: ", error);
-    });
+  savePlayer() {
+
+    const that = this;
+
+    if (this.playerToChange) {
+      this.updatePlayer = true;
+      console.log('save player: ' + JSON.stringify(this.playerToChange));
+      delete this.playerToChange.myGameSystems;
+
+      const playerDocRef = this.playersColRef.doc(this.playerToChange.id);
+
+      if (this.conService.isOnline()) {
+        playerDocRef.update(this.playerToChange).then(function () {
+          console.log("Player updated");
+          that.updatePlayer = false;
+          that.playerToChange = undefined;
+        }).catch(function (error) {
+          console.error("Error updating player: ", error);
+          that.updatePlayer = false;
+          that.playerToChange = undefined;
+        });
+      } else {
+
+        playerDocRef.update(this.playerToChange).then(function () {
+          // offline ignored :(
+        }).catch(function () {
+        });
+
+        console.log("Player updated");
+        that.updatePlayer = false;
+        that.playerToChange = undefined;
+        that.messageService.add(
+          {
+            severity: 'success',
+            summary: 'Update',
+            detail: 'ATTENTION Player updated offline! Go online to sync data'
+          }
+        );
+      }
+    }
   }
 
   onEditPlayer(event: any) {
     console.log(event.data);
+    const that = this;
+
+    this.updatePlayer = true;
 
     const playerDocRef = this.playersColRef.doc(event.data.id);
-
     const player: Player = getPlayerForJSON(event.data.id, event.data);
-
     delete player.myGameSystems;
 
-    playerDocRef.update(player).then(function () {
+    if (this.conService.isOnline()) {
+      playerDocRef.update(player).then(function () {
+        console.log("Player updated");
+        that.updatePlayer = false;
+      }).catch(function (error) {
+        console.error("Error updating player: ", error);
+        that.updatePlayer = false;
+      });
+    } else {
+      playerDocRef.update(player).then(function () {
+        // offline ignored :(
+      }).catch(function () {
+      });
+
       console.log("Player updated");
-    }).catch(function (error) {
-      console.error("Error updating player: ", error);
-    });
+      that.updatePlayer = false;
+      that.messageService.add(
+        {
+          severity: 'success',
+          summary: 'Update',
+          detail: 'ATTENTION Player updated offline! Go online to sync data'
+        }
+      );
+    }
   }
 
   changeGameSystems(event: any, player: Player) {
 
     console.log("changeGameSystems: " + event.value);
 
-    const playerDocRef = this.playersColRef.doc(player.id);
-
     _.forEach(this.gameSystems, function (gameSystem: string) {
       player.gameSystems[gameSystem] = !!_.includes(event.value, gameSystem);
     });
-    delete player.myGameSystems;
 
-
-    playerDocRef.update(player).then(function () {
-      console.log("Player GameSystems updated");
-    }).catch(function (error) {
-      console.error("Error updating player: ", error);
-    });
+    this.playerToChange = player;
   }
 }

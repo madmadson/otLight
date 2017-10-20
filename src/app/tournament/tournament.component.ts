@@ -14,6 +14,7 @@ import {UUID} from "angular2-uuid";
 import {getRoundMatchForJSON, RoundMatch} from "../models/RoundMatch";
 import {RoundMatchService} from "../services/round-match.service";
 import {SelectItem} from "primeng/primeng";
+import {ConnectivityService} from "../services/connectivity-service";
 
 @Component({
   selector: 'app-tournament',
@@ -25,17 +26,17 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected tournamentDocRef: DocumentReference;
 
   protected tournament: Tournament;
-  protected tournamentLoaded: boolean;
+  tournamentLoaded: boolean;
 
-  protected orgaDialogVisibility: boolean;
+  orgaDialogVisibility: boolean;
 
-  protected orgaPassword: string;
-  protected isOrga: boolean;
-  protected passwordWrong: boolean;
+  orgaPassword: string;
+  isOrga: boolean;
+  passwordWrong: boolean;
 
-  protected shownRound: number;
+  shownRound: number;
 
-  protected participantsLoaded: boolean;
+  participantsLoaded: boolean;
   protected addingPlayer: boolean;
   protected removingPlayer: boolean;
   protected participants: Participant[] = [];
@@ -43,12 +44,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected participantsColRef: CollectionReference;
   protected participantsUnsubscribeFunction: () => void;
 
+
   protected possiblePlayersToAdd: Player[] = [];
   protected allPlayers: Player[] = [];
   protected gameSystemConfig: GameSystemConfig;
+  protected playersUnsubscribeFunction: () => void;
 
-  protected stacked: boolean;
-  protected roundLoaded: boolean;
+  stacked: boolean;
+  roundLoaded: boolean;
   protected roundsColRef: CollectionReference;
   protected roundMatches: RoundMatch[] = [];
   protected roundUnsubscribeFunction: () => void;
@@ -63,6 +66,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   constructor(protected afs: AngularFirestore,
               private messageService: MessageService,
               private activeRouter: ActivatedRoute,
+              private conService: ConnectivityService,
               private roundMatchService: RoundMatchService) {
 
     this.tournamentId = this.activeRouter.snapshot.paramMap.get('id');
@@ -91,7 +95,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       that.tournamentLoaded = true;
 
-      that.afs.firestore.collection('players')
+      if (that.playersUnsubscribeFunction) {
+        that.playersUnsubscribeFunction();
+      }
+
+      that.playersUnsubscribeFunction = that.afs.firestore.collection('players')
         .where('gameSystems.' + that.tournament.gameSystem, '==', true)
         .onSnapshot(function (playerCol) {
           that.allPlayers = [];
@@ -316,9 +324,32 @@ export class TournamentComponent implements OnInit, OnDestroy {
       participant[standingValue.field] = [standingValue.defaultValue];
     });
 
-    that.participantsColRef.add(participant).then(function (participantDocRef) {
-      console.log("Participant written with ID: ", participantDocRef.id);
-      that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
+    const uuid = UUID.UUID();
+    participant.id = uuid;
+
+    if (this.conService.isOnline()) {
+
+      that.participantsColRef.doc(uuid).set(participant).then(function () {
+        console.log("Participant written with ID: ", participant.id);
+        that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
+
+        const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
+        const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
+        newPossiblePlayersToAdd.splice(index, 1);
+        that.possiblePlayersToAdd = newPossiblePlayersToAdd;
+
+        that.addingPlayer = false;
+      }).catch(function (error) {
+        console.error("Error writing participant: ", error);
+        that.addingPlayer = false;
+      });
+    }  else {
+      that.participantsColRef.doc(uuid).set(participant).then(function () {
+        // ignored is offline :/
+      }).catch(function () {
+        // ignored is offline :/
+      });
+      console.log("Participant written with ID: ", participant.id);
 
       const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
       const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
@@ -326,11 +357,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
       that.possiblePlayersToAdd = newPossiblePlayersToAdd;
 
       that.addingPlayer = false;
-    }).catch(function (error) {
-      console.error("Error writing participant: ", error);
-      that.addingPlayer = false;
-    });
 
+      that.messageService.add(
+        {
+          severity: 'success',
+          summary: 'Creation',
+          detail: 'ATTENTION Participant added offline! Go online to sync data'
+        }
+      );
+    }
   }
 
   deleteParticipant(participant: Participant) {

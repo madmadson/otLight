@@ -8,7 +8,9 @@ import {MessageService} from "primeng/components/common/messageservice";
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 import * as _ from 'lodash';
-import { getGameSystemsAsSelectItems} from "../../models/game-systems";
+import {getGameSystemsAsSelectItems} from "../../models/game-systems";
+import {UUID} from "angular2-uuid";
+import {ConnectivityService} from "../../services/connectivity-service";
 
 @Component({
   selector: 'app-tournament-add-dialog',
@@ -20,17 +22,19 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   @Input() gameSystem: string;
   @Output() onTournamentSaved = new EventEmitter<any>();
 
-  protected tournamentForm: FormGroup;
+  tournamentForm: FormGroup;
+  tournamentNameAlreadyTaken: boolean;
+  allGameSystems: SelectItem[];
+  tournamentSaving: boolean;
 
   protected allTournamentsToCheck: Tournament[] = [];
   protected tournamentsColRef: CollectionReference;
   protected tournamentsUnsubscribeFunction: () => void;
-  protected tournamentNameAlreadyTaken: boolean;
-  protected allGameSystems: SelectItem[];
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
-              private afs: AngularFirestore) {
+              private afs: AngularFirestore,
+              private conService: ConnectivityService) {
 
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
 
@@ -41,13 +45,13 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
 
     const that = this;
 
-    this.tournamentsUnsubscribeFunction = this.tournamentsColRef.onSnapshot(function(querySnapshot) {
-        querySnapshot.forEach(function(doc) {
+    this.tournamentsUnsubscribeFunction = this.tournamentsColRef.onSnapshot(function (querySnapshot) {
+      querySnapshot.forEach(function (doc) {
 
-          const tournament: Tournament = getTournamentForJSON(doc.id, doc.data());
-          that.allTournamentsToCheck.push(tournament);
-        });
+        const tournament: Tournament = getTournamentForJSON(doc.id, doc.data());
+        that.allTournamentsToCheck.push(tournament);
       });
+    });
 
     this.tournamentForm = this.fb.group({
       'name': new FormControl('', Validators.required),
@@ -65,6 +69,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   onSubmit() {
 
     const that = this;
+    this.tournamentSaving = true;
 
     that.tournamentNameAlreadyTaken = false;
 
@@ -74,6 +79,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
       gameSystem: this.tournamentForm.value.gameSystem,
       type: this.tournamentForm.value.type,
       actualRound: 0,
+      status: 'CREATED',
     };
 
     _.forEach(this.allTournamentsToCheck, function (tournamentToCheck: Tournament) {
@@ -85,15 +91,42 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
 
 
     if (!this.tournamentNameAlreadyTaken) {
-      this.afs.firestore.collection('tournaments').add(tournament).then(function (docRef) {
-        console.log("Tournament written with ID: ", docRef.id);
+
+      const uuid = UUID.UUID();
+      tournament.id = uuid;
+
+      if (this.conService.isOnline()) {
+        this.afs.firestore.doc('tournaments/' + uuid).set(tournament).then(function () {
+          console.log("Tournament written with ID: ", tournament.id);
+
+          that.onTournamentSaved.emit();
+          that.tournamentSaving = false;
+
+          that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Tournament created'});
+        }).catch(function (error) {
+          console.error("Error writing tournament: ", error);
+          that.tournamentSaving = false;
+        });
+      } else {
+        this.afs.firestore.doc('tournaments/' + uuid).set(tournament).then(function () {
+          // ignored is offline :/
+        }).catch(function () {
+          // ignored is offline :/
+        });
+
+        console.log("Tournament written with ID: ", tournament.id);
 
         that.onTournamentSaved.emit();
+        that.tournamentSaving = false;
 
-        that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Tournament created'});
-      }).catch(function (error) {
-        console.error("Error writing tournament: ", error);
-      });
+        that.messageService.add(
+          {
+            severity: 'success',
+            summary: 'Creation',
+            detail: 'ATTENTION Tournament created offline! Go online to sync data'
+          }
+        );
+      }
     }
   }
 

@@ -1,15 +1,18 @@
-import { Component } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {AngularFirestore} from "angularfire2/firestore";
-import {getGameSystems, getGameSystemsAsSelectItems} from "./models/game-systems";
+import { getGameSystemsAsSelectItems} from "./models/game-systems";
 import {Message, SelectItem} from "primeng/primeng";
 import {GameSystemService} from "./services/game-system.service";
+import {Observable} from 'rxjs/Rx';
+import {WindowRefService} from "./services/window-ref-service";
+import {ConnectivityService} from "./services/connectivity-service";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent  implements OnInit, OnDestroy {
 
   sidebarVisible: boolean;
 
@@ -17,17 +20,22 @@ export class AppComponent {
   addTournamentDialogVisibility: boolean;
   addPlayerDialogVisibility: boolean;
 
-  protected selectedGameSystem: string;
-  protected gameSystems: SelectItem[];
+  selectedGameSystem: string;
+
+  gameSystems: SelectItem[];
+  isConnected$: Observable<boolean>;
 
   constructor(private afs: AngularFirestore,
+              private conService: ConnectivityService,
               protected gameSystemService: GameSystemService) {
+
+    conService.subscribe();
 
     this.gameSystems = getGameSystemsAsSelectItems();
     this.selectedGameSystem = this.gameSystems[0].value;
     this.gameSystemService.setGameSystem(this.selectedGameSystem);
 
-    afs.firestore.enablePersistence()
+    this.afs.firestore.enablePersistence()
       .then(function() {
         console.log('offlineMode enabled');
       })
@@ -45,7 +53,14 @@ export class AppComponent {
           console.log('offline not supported');
         }
       });
+  }
 
+  ngOnInit() {
+    this.isConnected$ = this.conService.getConnectionStream();
+  }
+
+  ngOnDestroy() {
+    this.conService.unSubscribe();
   }
 
 

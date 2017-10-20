@@ -6,8 +6,10 @@
   </div>
 </ng-container>
 
+<button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
 <ng-container *ngIf="(tournamentsLoaded)">
   <p-dataTable [value]="tournaments"
+               [stacked]="stacked"
                [responsive]="true"
                [rows]="10"
                [paginator]="true"
@@ -17,6 +19,7 @@
 
     <p-column field="name" header="Name" [sortable]="true" [filter]="true" filterPlaceholder="Search"></p-column>
     <p-column field="gameSystem" header="GameSystem"></p-column>
+    <p-column field="status" header="Status"></p-column>
     <p-column styleClass="col-actions">
       <ng-template pTemplate="header">
         Actions

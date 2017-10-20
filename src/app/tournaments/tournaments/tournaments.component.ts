@@ -22,10 +22,11 @@ import {Router} from "@angular/router";
 })
 export class TournamentsComponent implements OnInit, OnDestroy {
 
-  protected selectedGameSystem: string;
+  stacked: boolean;
+  tournamentsLoaded: boolean;
 
+  protected selectedGameSystem: string;
   protected tournaments: Tournament[] = [];
-  protected tournamentsLoaded: boolean;
 
   protected tournamentsColRef: CollectionReference;
   protected tournamentsUnsubscribeFunction: () => void;

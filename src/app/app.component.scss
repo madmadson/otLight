@@ -61,7 +61,7 @@ body {
 }
 
 .logo-topbar {
-  margin-top: 15px;
+  margin-top: $main_tick;
   img {
     height: 42px;
   }
@@ -69,11 +69,23 @@ body {
 
 .logo-sidebar {
   margin-left: 77px;
-  margin-top: 15px;
+  margin-top: $main_tick;
   display: inline-block;
   img {
     height: 42px;
   }
+}
+
+.online-icon{
+  color: $success_color;
+  margin-top: $main_tick;
+  margin-left: $main_tick;
+}
+
+.offline-icon{
+  color: $fail_color;
+  margin-top: $main_tick;
+  margin-left: $main_tick;
 }
 
 .topbar-menu {

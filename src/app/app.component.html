@@ -8,6 +8,10 @@
       <a class="logo-topbar">
         <img alt="logo" src="../assets/images/logo42.png"/>
       </a>
+      <span>
+        <i *ngIf="(isConnected$ | async)" class="fa fa-wifi fa-2x online-icon" pTooltip="Online"></i>
+        <i *ngIf="(!(isConnected$ | async))" class="fa fa-wifi fa-2x offline-icon" pTooltip="Offline"></i>
+      </span>
     </div>
     <ul class="topbar-menu">
       <li>
@@ -60,7 +64,7 @@
   </p-sidebar>
 
   <div id="layout-content">
-    <p-growl  [life]="5000" [(value)]="messages"></p-growl>
+    <p-growl [life]="5000" [(value)]="messages"></p-growl>
     <router-outlet></router-outlet>
   </div>
 </div>
@@ -75,7 +79,7 @@
   </p-header>
   <app-tournament-add-dialog
     [gameSystem]="selectedGameSystem"
-    (onTournamentSaved)="handleTournamentSaved($event)">
+    (onTournamentSaved)="handleTournamentSaved()">
   </app-tournament-add-dialog>
 </p-dialog>
 
@@ -88,6 +92,6 @@
     New Player
   </p-header>
   <app-player-add-dialog
-    (onPlayerSaved)="handlePlayerSaved($event)">
+    (onPlayerSaved)="handlePlayerSaved()">
   </app-player-add-dialog>
 </p-dialog>

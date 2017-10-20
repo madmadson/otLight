@@ -242,8 +242,7 @@
       </div>
     </ng-container>
 
-    <button pButton type="button" (click)="stacked = !stacked"  label="Toggle" icon="fa-list"></button>
-
+    <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
     <p-dataTable *ngIf="(roundLoaded)"
                  [value]="roundMatches"
                  [editable]="isOrga"
@@ -258,12 +257,14 @@
       <p-column styleClass="col-result" *ngIf="isOrga">
         <ng-template pTemplate="header">Result</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <p-dropdown 
-                      placeholder="Undone"
-                      [(ngModel)]="roundMatch['result']"
-                      [options]="winningOptions"
-                      (onChange)="changeWinner($event, roundMatch)">
-          </p-dropdown>
+          <div style="text-align: center">
+            <p-dropdown
+              placeholder="Undone"
+              [(ngModel)]="roundMatch['result']"
+              [options]="winningOptions"
+              (onChange)="changeWinner($event, roundMatch)">
+            </p-dropdown>
+          </div>
         </ng-template>
       </p-column>
       <p-column styleClass="col-player col-firstPlayer"
@@ -272,8 +273,8 @@
                 filterPlaceholder="Search">
         <ng-template pTemplate="header">Player 1</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <div  style="text-align: center"
-                [ngClass]="{
+          <div style="text-align: center"
+               [ngClass]="{
                    'winner-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
@@ -284,7 +285,7 @@
             </span>
 
           </div>
-          <div  style="text-align: center" *ngIf="isOrga">
+          <div style="text-align: center" *ngIf="isOrga">
             Choose played
           </div>
 
@@ -306,8 +307,8 @@
                 filterPlaceholder="Search">
         <ng-template pTemplate="header">Player 2</ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
-          <div  style="text-align: center"
-                [ngClass]="{
+          <div style="text-align: center"
+               [ngClass]="{
                    'winner-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
@@ -330,17 +331,21 @@
             {{scoreField.field}}
           </ng-template>
           <ng-template let-col let-roundMatch="rowData" pTemplate="body">
-            P1
-            <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
-                       [min]="scoreField.min" [max]="scoreField.max"
-                       (onBlur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])">
+            <div style="text-align: center">
+              <span>P1 {{scoreField.field}}</span>
+              <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
+                         [min]="scoreField.min" [max]="scoreField.max"
+                         (onBlur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])">
 
-            </p-spinner>
-            P2
-            <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
-                       [min]="scoreField.min" [max]="scoreField.max"
-                       (onBlur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])">
-            </p-spinner>
+              </p-spinner>
+            </div>
+            <div style="text-align: center">
+              <span>P2 {{scoreField.field}}</span>
+              <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
+                         [min]="scoreField.min" [max]="scoreField.max"
+                         (onBlur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])">
+              </p-spinner>
+            </div>
           </ng-template>
         </p-column>
       </ng-container>

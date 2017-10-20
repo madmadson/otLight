@@ -8,6 +8,8 @@ import {getPlayerForJSON, Player} from "../../models/Player";
 import * as _ from 'lodash';
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
+import {UUID} from "angular2-uuid";
+import {ConnectivityService} from "../../services/connectivity-service";
 
 @Component({
   selector: 'app-player-add-dialog',
@@ -22,7 +24,7 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
   protected gameSystems: string[];
   protected playerForm: FormGroup;
 
-  protected playerSaving: boolean;
+  playerSaving: boolean;
 
   protected allPlayersToCheck: Player[] = [];
   protected playersColRef: CollectionReference;
@@ -31,6 +33,7 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
+              private conService: ConnectivityService,
               private afs: AngularFirestore) {
     this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
     this.gameSystems = getGameSystems();
@@ -88,18 +91,42 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
         }
       });
 
-      this.afs.firestore.collection('players').add(player).then(function (docRef) {
-        console.log("Player written with ID: ", docRef.id);
+      const uuid = UUID.UUID();
+      player.id = uuid;
+
+      if (this.conService.isOnline()) {
+        this.afs.firestore.doc('players/' + uuid).set(player).then(function () {
+          console.log("Player written with ID: ", player.id);
+
+          that.onPlayerSaved.emit();
+
+          that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Player created'});
+          that.playerSaving = false;
+        }).catch(function (error) {
+          console.error("Error writing Player: ", error);
+          that.messageService.add({severity: 'error', summary: 'Creation', detail: 'Player creation failed'});
+          that.playerSaving = false;
+        });
+      } else {
+        this.afs.firestore.doc('players/' + uuid).set(player).then(function () {
+          // ignored is offline :/
+        }).catch(function () {
+          // ignored is offline :/
+        });
+
+        console.log("Player written with ID: ", player.id);
 
         that.onPlayerSaved.emit();
+        that.playerSaving = false;
 
-        that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Player created'});
-        that.playerSaving = false;
-      }).catch(function (error) {
-        console.error("Error writing Player: ", error);
-        that.messageService.add({severity: 'error', summary: 'Creation', detail: 'Player creation failed'});
-        that.playerSaving = false;
-      });
+        that.messageService.add(
+          {
+            severity: 'success',
+            summary: 'Creation',
+            detail: 'ATTENTION Player created offline! Go online to sync data'
+          }
+        );
+      }
     }
   }
 
