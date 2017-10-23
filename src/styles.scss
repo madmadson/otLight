@@ -130,3 +130,7 @@ input.ng-invalid.ng-dirty{
   cursor: pointer;
   color: $hover_color;
 }
+
+.fail-color{
+  color: $fail_color;
+}

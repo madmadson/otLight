@@ -74,8 +74,8 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
     that.tournamentNameAlreadyTaken = false;
 
     const tournament: Tournament = {
-      name: this.tournamentForm.value.name,
-      password: this.tournamentForm.value.password,
+      name: this.tournamentForm.value.name.trim(),
+      password: this.tournamentForm.value.password.trim(),
       gameSystem: this.tournamentForm.value.gameSystem,
       type: this.tournamentForm.value.type,
       actualRound: 0,

@@ -33,6 +33,14 @@
           </div>
         </div>
       </div>
+      <div class="ui-grid-row" *ngIf="byeNameTaken">
+        <div class="ui-grid-col-12">
+          <div class="ui-message ui-messages-error ui-corner-all">
+            <i class="fa fa-close"></i>
+            Bye is not a valid name!
+          </div>
+        </div>
+      </div>
       <div class="ui-grid-row">
         <div class="ui-grid-col-4">
           Location:

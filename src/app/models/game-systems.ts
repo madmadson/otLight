@@ -86,4 +86,14 @@ export function getScoreByGameSystem(gameSystem: string): number[] {
   }
 }
 
+export function getByeScoring(gameSystem: string): any {
+
+  if (gameSystem === 'WmHo') {
+    return {'score': 1, 'cp': 3, 'vp': 38};
+  } else {
+    return {'score': 1};
+  }
+}
+
+
 

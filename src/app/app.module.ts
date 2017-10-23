@@ -12,7 +12,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AngularFirestoreModule} from "angularfire2/firestore";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
-  AutoCompleteModule, DataListModule,
+  AutoCompleteModule, ConfirmationService, ConfirmDialogModule, DataListModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputTextModule, MessagesModule, MultiSelectModule,
   PanelModule, RadioButton, RadioButtonModule,
   SelectButtonModule,
@@ -69,13 +69,15 @@ export const firebaseConfig = environment.firebaseConfig;
     AutoCompleteModule,
     TooltipModule,
     RadioButtonModule,
-    SpinnerModule
+    SpinnerModule,
+    ConfirmDialogModule,
   ],
   providers: [
     WindowRefService,
     ConnectivityService,
     TournamentsService,
     MessageService,
+    ConfirmationService,
     GameSystemService,
     RoundMatchService
   ],

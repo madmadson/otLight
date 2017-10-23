@@ -30,6 +30,7 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
   protected playersColRef: CollectionReference;
   protected playersUnsubscribeFunction: () => void;
   protected playerNameAlreadyTaken: boolean;
+  protected byeNameTaken: boolean;
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
@@ -68,12 +69,17 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
     const that = this;
 
     that.playerNameAlreadyTaken = false;
+    that.byeNameTaken = false;
 
     _.forEach(this.allPlayersToCheck, function (playerToCheck: Player) {
-      if (playerToCheck.name === that.playerForm.value.name) {
+      if (playerToCheck.name.toLowerCase() === that.playerForm.value.name.toLowerCase().trim()) {
         that.playerNameAlreadyTaken = true;
       }
     });
+
+    if (that.playerForm.value.name.toLowerCase().trim() === 'bye') {
+      that.byeNameTaken = true;
+    }
 
     if (!this.playerNameAlreadyTaken) {
 

@@ -1,3 +1,5 @@
+<p-confirmDialog header="Confirmation" icon="fa fa-question-circle" width="425"></p-confirmDialog>
+
 <p-dialog [(visible)]="orgaDialogVisibility"
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
@@ -81,6 +83,20 @@
       </div>
     </ng-container>
 
+    <ng-container *ngIf="(pairingAgain)">
+      <div class="heading">Pair Round Again...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="(creatingNextRound)">
+      <div class="heading">Create next Round...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
     <div *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSytem in menu *NEW PLAYER*
@@ -136,17 +152,26 @@
               pButton type="button"
               class="action-element ui-button-success"
               (click)="createFirstRound()"
-              label="Start Tournament"></button>
-      <button *ngIf="tournament?.actualRound > 0"
+              label="Start Tournament">
+      </button>
+      <button *ngIf="tournament?.actualRound > 0 && allMatchesFinished"
               pButton type="button"
               class="action-element ui-button-success"
-
-              label="New Round"></button>
+              (click)="nextRound()"
+              label="Next Round">
+      </button>
       <button *ngIf="tournament?.actualRound > 0"
               pButton type="button"
               (click)="deleteRound()"
               class="action-element ui-button-warning"
-              label="Delete Round"></button>
+              label="Delete Round">
+      </button>
+      <button *ngIf="tournament?.actualRound > 0 && noMatchFinished"
+              pButton type="button"
+              class="action-element ui-button-success"
+              (click)="pairAgain()"
+              label="Pair again">
+      </button>
     </div>
   </p-panel>
   <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true"
@@ -165,10 +190,11 @@
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
     </ng-container>
-
+    <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
     <p-dataTable *ngIf="(!loadingParticipants) && (!removingPlayer) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
+                 [stacked]="stackedPlayers"
                  (onEditComplete)="onEditParticipant($event)"
                  [responsive]="true"
                  [rows]="10"
@@ -207,14 +233,18 @@
                         [(ngModel)]="participant[col.field]"
                         [options]="participantField.fieldValues"
                         (onChange)="changeParticipant(participant)"
+                        (onBlur)="saveParticipant()"
                         [autoWidth]="false"
                         [style]="{'width':'100%'}">
             </p-dropdown>
             <p-multiSelect *ngIf="participantField.type === 'multiSelect'"
+                           placeholder="None"
                            [(ngModel)]="participant[col.field]"
                            [options]="participantField.fieldValues"
                            (onChange)="changeParticipant(participant)"
+                           (onPanelHide)="saveParticipant()"
                            [showToggleAll]=false
+                           [maxSelectedLabels]=3
                            [style]="{'width':'100%'}">
             </p-multiSelect>
           </ng-template>
@@ -262,8 +292,8 @@
       </div>
     </ng-container>
 
-    <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
-    <p-dataTable *ngIf="(!loadingRound) && (!startingTournament) && (!deletingRound) && (!clearingMatch)"
+    <button pButton type="button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
+    <p-dataTable *ngIf="(!loadingRound) && (!startingTournament) && (!deletingRound) && (!clearingMatch) && (!pairingAgain) && (!creatingNextRound)"
                  [value]="roundMatches"
                  [editable]="isOrga"
                  [responsive]="true"
@@ -271,7 +301,7 @@
                  [rows]="10"
                  [paginator]="true"
                  [pageLinks]="3"
-                 [stacked]="stacked"
+                 [stacked]="stackedMatches"
                  [rowsPerPageOptions]="[5,10,20]">
       <p-header>{{roundMatches?.length}} Matches</p-header>
       <p-column styleClass="col-result" *ngIf="isOrga">
@@ -304,11 +334,11 @@
                    'looser-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
                 }">
-            <span class="big-text">
+            <span class="big-text" *ngIf="roundMatch.participantOne.name !== 'bye'">
               {{roundMatch.participantOne.name}}
-              ({{roundMatch.participantOne.roundScores[shownRound - 1] ? roundMatch.participantOne.roundScores[shownRound - 1] : '0'}})
+              ({{getScoreTillRoundForParticipant(roundMatch.participantOne)}})
             </span>
-
+            <span class="big-text" *ngIf="roundMatch.participantOne.name === 'bye'">BYE</span>
           </div>
           <div style="text-align: center" *ngIf="isOrga">
             Choose played
@@ -339,10 +369,11 @@
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
                 }">
 
-            <span class="big-text">
-                  ({{roundMatch.participantTwo.roundScores[shownRound - 1] ? roundMatch.participantTwo.roundScores[shownRound - 1] : '0'}})
+            <span class="big-text" *ngIf="roundMatch.participantTwo.name !== 'bye'">
+                  ({{getScoreTillRoundForParticipant(roundMatch.participantTwo)}})
                   {{roundMatch.participantTwo.name}}
             </span>
+            <span class="big-text" *ngIf="roundMatch.participantTwo.name === 'bye'">BYE</span>
           </div>
           <div style="text-align: center" *ngIf="isOrga">
             Choose played
