@@ -11,6 +11,8 @@ import {
   FieldValues, getGameSystemConfig, getScoreByGameSystem,
   orderParticipantsForGameSystem
 } from "../models/game-systems";
+import * as firebase from "firebase/app";
+import WriteBatch = firebase.firestore.WriteBatch;
 
 
 @Injectable()
@@ -20,7 +22,7 @@ export class RoundMatchService {
   constructor(protected afs: AngularFirestore) {
   }
 
-  createFirstRound(tournament: Tournament, allParticipant: Participant[]): boolean {
+  createFirstRound(tournament: Tournament, allParticipant: Participant[]): Promise<void> {
 
     const that = this;
 
@@ -40,7 +42,7 @@ export class RoundMatchService {
     const success = this.match(orderedParticipants, newRoundMatches);
 
     if (!success) {
-      return false;
+      return null;
     }
 
     _.reverse(newRoundMatches);
@@ -55,13 +57,8 @@ export class RoundMatchService {
       batch.set(roundsDocRef, newMatch);
     });
 
-    batch.commit().then(function () {
-      console.log("Round generated successfully");
-    }).catch(function (error) {
-      console.error("Failed to generate round: ", error);
-    });
+    return batch.commit();
 
-    return true;
   }
 
   // createNextRound(tournament: Tournament, previousRoundMatches: RoundMatch[]) {
@@ -164,7 +161,6 @@ export class RoundMatchService {
         });
         participant.roundScores.splice((tournament.actualRound - 1), 1);
         participant.opponentParticipantsNames.splice((tournament.actualRound - 1), 1);
-        participant.opponentParticipantsIds.splice((tournament.actualRound - 1), 1);
 
         console.log('after participant:' + JSON.stringify(participant));
 
@@ -176,7 +172,7 @@ export class RoundMatchService {
     }
   }
 
-  playerOneWon(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[]) {
+  playerOneWon(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[], batch: WriteBatch) {
 
     const that = this;
 
@@ -189,7 +185,6 @@ export class RoundMatchService {
     });
     participantOneToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[0];
     participantOneToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantTwo.name;
-    participantOneToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantTwo.id;
 
     // SOS specialcase
     if (tournament.gameSystem === 'WmHo') {
@@ -203,48 +198,45 @@ export class RoundMatchService {
 
           participant.sos[index] = participant.sos[index] + 1;
 
-          const participantDocRef = that.afs.firestore
+          const opponentDocRef = that.afs.firestore
             .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
-          participantDocRef.update(participant).then(function () {
-            console.log('hurray');
-          }).catch(function (error) {
-            console.error("Error", error);
-          });
+          batch.update(opponentDocRef, participant);
         }
       });
     }
-
-    this.updateDataForParticipate(tournament, participantOneToUpdate);
+    const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
+    batch.update(participantDocRef, participantOneToUpdate);
 
     // PlayerTwo
     const participantTwoToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
       return par.id === roundMatch.participantTwo.id;
     });
+    participantTwoToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[1];
     participantTwoToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantOne.name;
-    participantTwoToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantOne.id;
 
-    this.updateDataForParticipate(tournament, participantTwoToUpdate);
+    const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
+    batch.update(participantTwoDocRef, participantTwoToUpdate);
 
     roundMatch.scoreParticipantOne = scorePerGameSystem[0];
     roundMatch.result = 'p1';
     roundMatch.finished = true;
 
-    this.updateDataForMatch(tournament, roundMatch);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
+    batch.update(matchDocRef, roundMatch);
   }
 
-  playerTwoWon(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[]) {
+  playerTwoWon(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[], batch: WriteBatch)  {
     const that = this;
 
     console.log(roundMatch.participantTwo.name + ' WON');
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
-    // PlayerOne
+    // PlayerTwo
     const participantTwoToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
       return par.id === roundMatch.participantTwo.id;
     });
     participantTwoToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[0];
-    participantTwoToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantTwo.name;
-    participantTwoToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantTwo.id;
+    participantTwoToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantOne.name;
 
     // SOS specialcase
     if (tournament.gameSystem === 'WmHo') {
@@ -258,55 +250,77 @@ export class RoundMatchService {
 
           participant.sos[index] = participant.sos[index] + 1;
 
-          const participantDocRef = that.afs.firestore
+          const opponentDocRef = that.afs.firestore
             .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
-          participantDocRef.update(participant).then(function () {
-            console.log('hurray');
-          }).catch(function (error) {
-            console.error("Error", error);
-          });
+          batch.update(opponentDocRef, participant);
         }
       });
     }
 
-    this.updateDataForParticipate(tournament, participantTwoToUpdate);
+    const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
+    batch.update(participantTwoDocRef, participantTwoToUpdate);
 
-    // PlayerTwo
+    // PlayerOne
     const participantOneToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
-      return par.id === roundMatch.participantTwo.id;
+      return par.id === roundMatch.participantOne.id;
     });
-    participantOneToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantOne.name;
-    participantOneToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantOne.id;
+    participantOneToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[1];
+    participantOneToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantTwo.name;
 
-    this.updateDataForParticipate(tournament, participantOneToUpdate);
+    const participantOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
+    batch.update(participantOneDocRef, participantOneToUpdate);
 
     roundMatch.scoreParticipantTwo = scorePerGameSystem[0];
     roundMatch.result = 'p2';
     roundMatch.finished = true;
 
-    this.updateDataForMatch(tournament, roundMatch);
-
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
+    batch.update(matchDocRef, roundMatch);
   }
 
-  playerOneLost(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[]) {
+  playerOneLost(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[], batch: WriteBatch ) {
+    const that = this;
     console.log(roundMatch.participantOne.name + ' LOOSE');
 
     const participantToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
       return par.id === roundMatch.participantOne.id;
     });
 
+
+    // SOS specialcase
+    if (tournament.gameSystem === 'WmHo') {
+      _.forEach(actualRoundParticipants, function (participant: Participant) {
+
+        const index = participantToUpdate.opponentParticipantsNames.indexOf(participant.name);
+
+        if (index !== -1) {
+
+          console.log('found opponent! add sos to: ' + participant.name);
+
+          participant.sos[index] = participant.sos[index] - 1;
+
+          const opponentDocRef = that.afs.firestore
+            .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
+          batch.update(opponentDocRef, participant);
+        }
+      });
+    }
+
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
     participantToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[1];
-    this.updateDataForParticipate(tournament, participantToUpdate);
 
+    const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantToUpdate.id);
+    batch.update(participantDocRef, participantToUpdate);
 
     roundMatch.scoreParticipantOne = scorePerGameSystem[1];
     roundMatch.finished = true;
 
-    this.updateDataForMatch(tournament, roundMatch);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
+    batch.update(matchDocRef, roundMatch);
   }
 
-  playerTwoLost(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[]) {
+  playerTwoLost(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[], batch: WriteBatch) {
+    const that = this;
     console.log(roundMatch.participantTwo.name + ' LOOSE');
 
     const participantToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
@@ -315,16 +329,40 @@ export class RoundMatchService {
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
     participantToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[1];
-    this.updateDataForParticipate(tournament, participantToUpdate);
+
+    const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantToUpdate.id);
+    batch.update(participantDocRef, participantToUpdate);
+
+    // SOS specialcase
+    if (tournament.gameSystem === 'WmHo') {
+      _.forEach(actualRoundParticipants, function (participant: Participant) {
+
+        const index = participantToUpdate.opponentParticipantsNames.indexOf(participant.name);
+
+        if (index !== -1) {
+
+          console.log('found opponent! add sos to: ' + participant.name);
+
+          participant.sos[index] = participant.sos[index] - 1;
+
+          const opponentDocRef = that.afs.firestore
+            .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
+          batch.update(opponentDocRef, participant);
+        }
+      });
+    }
 
     roundMatch.scoreParticipantTwo = scorePerGameSystem[1];
     roundMatch.finished = true;
 
-    this.updateDataForMatch(tournament, roundMatch);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
+    batch.update(matchDocRef, roundMatch);
+
   }
 
-  resultDraw(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[]) {
+  resultDraw(tournament: Tournament, roundMatch: RoundMatch, actualRoundParticipants: Participant[], batch: WriteBatch) {
     console.log(roundMatch.participantTwo.name + ' DRAW');
+    const that = this;
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
@@ -335,8 +373,28 @@ export class RoundMatchService {
 
     participantOneToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[2];
     participantOneToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantTwo.name;
-    participantOneToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantTwo.id;
-    this.updateDataForParticipate(tournament, participantOneToUpdate);
+
+    const participantOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
+    batch.update(participantOneDocRef, participantOneToUpdate);
+
+    // SOS specialcase
+    if (tournament.gameSystem === 'WmHo' && roundMatch.scoreParticipantOne === scorePerGameSystem[0]) {
+      _.forEach(actualRoundParticipants, function (participant: Participant) {
+
+        const index = participantOneToUpdate.opponentParticipantsNames.indexOf(participant.name);
+
+        if (index !== -1) {
+
+          console.log('found opponent! add sos to: ' + participant.name);
+
+          participant.sos[index] = participant.sos[index] - 1;
+
+          const opponentDocRef = that.afs.firestore
+            .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
+          batch.update(opponentDocRef, participant);
+        }
+      });
+    }
 
     // PlayerTwo
     const participantTwoToUpdate: Participant = _.find(actualRoundParticipants, function (par: Participant) {
@@ -345,35 +403,36 @@ export class RoundMatchService {
 
     participantTwoToUpdate.roundScores[roundMatch.round - 1] = scorePerGameSystem[2];
     participantTwoToUpdate.opponentParticipantsNames[roundMatch.round - 1] = roundMatch.participantOne.name;
-    participantTwoToUpdate.opponentParticipantsIds[roundMatch.round - 1] = roundMatch.participantOne.id;
-    this.updateDataForParticipate(tournament, participantTwoToUpdate);
 
+    const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
+    batch.update(participantTwoDocRef, participantTwoToUpdate);
+
+    // SOS specialcase
+    if (tournament.gameSystem === 'WmHo'  && roundMatch.scoreParticipantTwo === scorePerGameSystem[0]) {
+      _.forEach(actualRoundParticipants, function (participant: Participant) {
+
+        const index = participantTwoToUpdate.opponentParticipantsNames.indexOf(participant.name);
+
+        if (index !== -1) {
+
+          console.log('found opponent! add sos to: ' + participant.name);
+
+          participant.sos[index] = participant.sos[index] - 1;
+
+          const opponentDocRef = that.afs.firestore
+            .doc('tournaments/' + tournament.id + '/participants/' + participant.id);
+          batch.update(opponentDocRef, participant);
+        }
+      });
+    }
+
+    roundMatch.scoreParticipantOne = scorePerGameSystem[2];
     roundMatch.scoreParticipantTwo = scorePerGameSystem[2];
     roundMatch.finished = true;
     roundMatch.result = 'draw';
 
-    this.updateDataForMatch(tournament, roundMatch);
-  }
-
-  updateDataForMatch(tournament: Tournament, roundMatch: RoundMatch) {
-
-
     const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
-    matchDocRef.update(roundMatch).then(function () {
-      console.log('hurray');
-    }).catch(function (error) {
-      console.error("Error", error);
-    });
+    batch.update(matchDocRef, roundMatch);
   }
 
-  updateDataForParticipate(tournament: Tournament, participantToUpdate: Participant) {
-
-    const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantToUpdate.id);
-    participantDocRef.update(participantToUpdate).then(function () {
-      console.log('hurray');
-    }).catch(function (error) {
-      console.error("Error", error);
-    });
-
-  }
 }

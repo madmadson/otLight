@@ -12,8 +12,8 @@
   </div>
 </ng-container>
 
-<button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
 <ng-container *ngIf="(playersLoaded) && !updatePlayer">
+  <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
   <p-dataTable [value]="players"
                [stacked]="stacked"
                [editable]="true"
@@ -26,7 +26,7 @@
     <p-header>{{selectedGameSystem}} Players</p-header>
     <p-column field="name"
               [editable]="true"
-              styleClass="{{'editable-column'}}"
+              styleClass="{{'editable-column'}}, break-word"
               header="Name"
               [sortable]="true"
               [filter]="true"
@@ -34,14 +34,14 @@
     </p-column>
     <p-column field="location"
               header="Location"
-              styleClass="{{'editable-column'}}"
+              styleClass="{{'editable-column'}}, break-word"
               [editable]="true"
               [sortable]="true"
               [filter]="true"
               filterPlaceholder="Search">
     </p-column>
 
-    <p-column styleClass="{{'editable-column'}}"
+    <p-column styleClass="{{'editable-column'}}, break-word"
               [sortable]="true"
               [header]="'GameSystems'"
               [filter]="true"
@@ -63,7 +63,7 @@
 
     <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
       <p-column [editable]="true"
-                styleClass="{{'editable-column'}}"
+                styleClass="{{'editable-column'}}, break-word"
                 field="{{playerField.field}}"
                 header="{{playerField.field}}"
                 [sortable]="true"

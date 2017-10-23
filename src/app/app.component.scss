@@ -78,14 +78,20 @@ body {
 
 .online-icon{
   color: $success_color;
-  margin-top: $main_tick;
+  margin-top: 18px;
   margin-left: $main_tick;
 }
 
 .offline-icon{
   color: $fail_color;
-  margin-top: $main_tick;
+  margin-top: 18px;
   margin-left: $main_tick;
+}
+
+.version-label{
+  color: $color_text;
+  font-size: 0.7em;
+  font-weight: bold;
 }
 
 .topbar-menu {

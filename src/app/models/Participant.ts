@@ -8,7 +8,6 @@ export interface Participant {
   type: string;
 
   opponentParticipantsNames: string[];
-  opponentParticipantsIds: string[];
   roundScores: number[];
 
   // TEAM
@@ -37,7 +36,6 @@ export function getParticipantForJSON(id: string, json: any): Participant {
     type: json.type ? json.type : '',
 
     opponentParticipantsNames: json.opponentParticipantsNames ? json.opponentParticipantsNames : [],
-    opponentParticipantsIds: json.opponentParticipantsIds ? json.opponentParticipantsIds : [],
     roundScores: json.roundScores ? json.roundScores : [],
   };
 }

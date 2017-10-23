@@ -6,8 +6,8 @@
   </div>
 </ng-container>
 
-<button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
 <ng-container *ngIf="(tournamentsLoaded)">
+  <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
   <p-dataTable [value]="tournaments"
                [stacked]="stacked"
                [responsive]="true"

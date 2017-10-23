@@ -33,21 +33,21 @@
   </div>
 </p-dialog>
 
-<ng-container *ngIf="(!tournamentLoaded)">
+<ng-container *ngIf="(loadingTournament)">
   <div class="heading">Load Tournament...</div>
   <div class="centered-content-container">
     <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
   </div>
 </ng-container>
 
-<ng-container *ngIf="(tournamentLoaded)">
+<ng-container *ngIf="(!loadingTournament)">
   <p-panel [style]="{'text-align':'center'}"
            header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament - ActualRound {{tournament?.actualRound}}"
            [toggleable]="true">
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
     <div class="centered-content-container">
-      <button pButton label="Last Round" (click)="showLastRound()" class="ui-button-info"></button>
+      <button pButton label="Last Round" (click)="showPreviousRound()" class="ui-button-info"></button>
       <button *ngIf="!isOrga" pButton label="Orga View" (click)="showOrgaDialog()" class="ui-button-success"></button>
       <button pButton label="Next Round" (click)="showNextRound()" class="ui-button-info"></button>
     </div>
@@ -57,6 +57,25 @@
 
     <ng-container *ngIf="(addingPlayer)">
       <div class="heading">Add Player...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="(startingTournament)">
+      <div class="heading">Start Tournament...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="(deletingRound)">
+      <div class="heading">Delete Round...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="(clearingMatch)">
+      <div class="heading">Clear Match...</div>
       <div class="centered-content-container">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
@@ -133,7 +152,7 @@
   <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true"
            [collapsed]="shownRound !== 0">
 
-    <ng-container *ngIf="(!participantsLoaded)">
+    <ng-container *ngIf="(loadingParticipants)">
       <div class="heading">Load Players...</div>
       <div class="centered-content-container">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
@@ -147,7 +166,7 @@
       </div>
     </ng-container>
 
-    <p-dataTable *ngIf="(participantsLoaded) && !(removingPlayer)"
+    <p-dataTable *ngIf="(!loadingParticipants) && (!removingPlayer) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
                  (onEditComplete)="onEditParticipant($event)"
@@ -162,10 +181,11 @@
                 header="Name"
                 [sortable]="true"
                 [filter]="true"
+                styleClass="break-word"
                 filterPlaceholder="Search">
       </p-column>
       <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}"
+                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
                 field="location"
                 header="Location"
                 [sortable]="true"
@@ -175,7 +195,7 @@
 
       <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
         <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                  styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}"
+                  styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
                   field="{{participantField.field}}"
                   header="{{participantField.field}}"
                   [sortable]="true"
@@ -235,7 +255,7 @@
   </p-panel>
   <p-panel *ngIf="shownRound > 0" header="Pairings Round {{shownRound}}" [toggleable]="true">
 
-    <ng-container *ngIf="(!roundLoaded)">
+    <ng-container *ngIf="(loadingRound)">
       <div class="heading">Load Round...</div>
       <div class="centered-content-container">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
@@ -243,7 +263,7 @@
     </ng-container>
 
     <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
-    <p-dataTable *ngIf="(roundLoaded)"
+    <p-dataTable *ngIf="(!loadingRound) && (!startingTournament) && (!deletingRound) && (!clearingMatch)"
                  [value]="roundMatches"
                  [editable]="isOrga"
                  [responsive]="true"
@@ -264,6 +284,11 @@
               [options]="winningOptions"
               (onChange)="changeWinner($event, roundMatch)">
             </p-dropdown>
+          </div>
+          <div *ngIf="roundMatch?.finished" style="text-align: center">
+            <i class="fa fa-times warning-icon"
+               aria-hidden="true"
+               (click)="clearGame(roundMatch)"> Clear Game</i>
           </div>
         </ng-template>
       </p-column>
