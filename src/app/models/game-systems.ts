@@ -62,12 +62,63 @@ export function getGameSystemConfig(system: string, tournamentType: string): Gam
   }
 }
 
-export function orderParticipantsForGameSystem(gameSystem: string, participants: Participant[]): Participant[] {
+
+
+export function orderParticipantsForGameSystem(gameSystem: string, participants: Participant[], participantsScoreMap: any): Participant[] {
 
   if (gameSystem === 'WmHo') {
-    return _.orderBy(participants, ['score'], ['desc']);
+     return participants.sort((part1, part2) => {
+
+      let result = 0;
+
+      if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
+        result = 1;
+      } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
+        result = -1;
+      } else {
+        if (getSos(part1, participantsScoreMap) < getSos(part2, participantsScoreMap)) {
+          result = 1;
+        } else if (getSos(part1, participantsScoreMap) > getSos(part2, participantsScoreMap)) {
+          result = -1;
+        } else {
+          if (getCP(part1) < getCP(part2)) {
+            result = 1;
+          } else if (getCP(part1) > getCP(part2)) {
+            result = -1;
+          } else {
+            if (getVP(part1) < getVP(part2)) {
+              result = 1;
+            } else if (getVP(part1) > getVP(part2)) {
+              result = -1;
+            }
+          }
+        }
+      }
+      return result;
+    });
   } else {
-    return _.orderBy(participants, ['score'], ['desc']);
+    return participants.sort((part1, part2) => {
+
+      let result = 0;
+
+      if (getScore(part1) < getScore(part2)) {
+        result = 1;
+      } else if (getScore(part1) > getScore(part2)) {
+        result = -1;
+      }
+      return result;
+    });
+  }
+}
+
+export function getColumnsForStandingsExport(gameSystem: string): number[] {
+
+  if (gameSystem === 'WmHo') {
+    // name, location, faction, armyLists, score, sos, cp, vp
+    return [1, 2, 3, 4, 5, 6, 7, 8];
+  } else {
+    // name, location, score
+    return [1, 2, 3];
   }
 }
 
@@ -93,6 +144,42 @@ export function getByeScoring(gameSystem: string): any {
   } else {
     return {'score': 1};
   }
+}
+
+export function getScore(participant: Participant) {
+
+  let scoreSum = 0;
+  _.forEach(participant.roundScores, function (score: number) {
+    scoreSum = scoreSum + score;
+  });
+  return scoreSum;
+}
+
+export function getSos(participant: Participant, participantsScoreMap: any) {
+
+  let sosSum = 0;
+  _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
+    sosSum = sosSum + participantsScoreMap[opponentName];
+  });
+  return sosSum;
+}
+
+export function getCP(participant: Participant) {
+
+  let cpSum = 0;
+  _.forEach(participant.cp, function (cp: number) {
+    cpSum = cpSum + cp;
+  });
+  return cpSum;
+}
+
+export function getVP(participant: Participant) {
+
+  let vpSum = 0;
+  _.forEach(participant.vp, function (vp: number) {
+    vpSum = vpSum + vp;
+  });
+  return vpSum;
 }
 
 

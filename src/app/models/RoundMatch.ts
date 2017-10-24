@@ -1,5 +1,3 @@
-
-
 import {Participant} from "./Participant";
 
 export interface RoundMatch {
@@ -9,6 +7,8 @@ export interface RoundMatch {
 
   participantOne: Participant;
   participantTwo: Participant;
+
+  table: number;
 
   scoreParticipantOne: number;
   scoreParticipantTwo: number;
@@ -37,8 +37,10 @@ export function getRoundMatchForJSON(id: string, json: any): RoundMatch {
     participantOne: json.participantOne,
     participantTwo: json.participantTwo,
 
-    scoreParticipantOne: json.scoreParticipantOne,
-    scoreParticipantTwo: json.scoreParticipantTwo,
+    table: json.table ? json.table : 0,
+
+    scoreParticipantOne: json.scoreParticipantOne ? json.scoreParticipantOne : 0,
+    scoreParticipantTwo: json.scoreParticipantTwo ? json.scoreParticipantTwo : 0,
 
     result: json.result ? json.result : '',
     finished: json.finished ? json.finished : false

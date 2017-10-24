@@ -14,8 +14,6 @@ export interface Participant {
   sgw?: number[];
 
   // WARMACHINE
-
-  sos?: number[];
   cp?: number[];
   vp?: number[];
   MainFaction?: string;

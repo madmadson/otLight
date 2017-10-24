@@ -35,6 +35,63 @@
   </div>
 </p-dialog>
 
+
+<p-dialog [(visible)]="pairRoundDialogVisibility"
+          [contentStyle]="{'overflow':'visible', 'height':'100%'}"
+          [modal]=true
+          [width]="400">
+  <p-header>
+    Pair Round {{roundToPair}}
+  </p-header>
+  <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+
+    <div class="ui-grid-row" *ngIf="failedToCreateRound">
+      <div class="ui-grid-col-12 big-text fail-color">
+        Failed to create Round. Check Restrictions.
+      </div>
+    </div>
+
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-8">
+        Location Restriction*:
+      </div>
+      <div class="ui-grid-col-8">
+        <p-inputSwitch [(ngModel)]="locationRestriction"></p-inputSwitch>
+      </div>
+    </div>
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-12 small-text">
+        * No pairings will be generated with given Restriction. If no pairing is possible
+        you can just uncheck the option and try again
+      </div>
+    </div>
+  </div>
+  <p-footer>
+    <button *ngIf="tournament?.actualRound == 0 && !sameRoundAgain"
+            type="button"
+            pButton
+            icon="fa-check"
+            (click)="createFirstRound()"
+            label="Start Tournament">
+    </button>
+    <button *ngIf="tournament?.actualRound > 0 && !sameRoundAgain"
+            type="button"
+            pButton
+            icon="fa-check"
+            (click)="nextRound()"
+            label="Start Tournament">
+    </button>
+    <button *ngIf="sameRoundAgain"
+            type="button"
+            pButton
+            icon="fa-check"
+            (click)="pairAgain()"
+            label="Pair Again">
+    </button>
+    <button type="button" pButton icon="fa-close" (click)="pairRoundDialogVisibility = false" label="Cancel"></button>
+  </p-footer>
+</p-dialog>
+
 <ng-container *ngIf="(loadingTournament)">
   <div class="heading">Load Tournament...</div>
   <div class="centered-content-container">
@@ -49,9 +106,9 @@
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
     <div class="centered-content-container">
-      <button pButton label="Last Round" (click)="showPreviousRound()" class="ui-button-info"></button>
+      <button *ngIf="(shownRound > 0)" pButton label="Last Round" (click)="showPreviousRound()" class="ui-button-info"></button>
       <button *ngIf="!isOrga" pButton label="Orga View" (click)="showOrgaDialog()" class="ui-button-success"></button>
-      <button pButton label="Next Round" (click)="showNextRound()" class="ui-button-info"></button>
+      <button *ngIf="(shownRound < tournament?.actualRound)" pButton label="Next Round" (click)="showNextRound()" class="ui-button-info"></button>
     </div>
   </p-panel>
 
@@ -97,13 +154,20 @@
       </div>
     </ng-container>
 
-    <div *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
+    <ng-container *ngIf="(loadingPlayers)">
+      <div class="heading">Load available Players...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <div *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
-      GameSytem in menu *NEW PLAYER*
+      GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
 
     <div class="orga-panel-container"
-         *ngIf="tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
+         *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
       <p-dataTable [value]="possiblePlayersToAdd"
                    [paginator]="true"
                    [rows]="5">
@@ -151,14 +215,20 @@
       <button *ngIf="tournament?.actualRound === 0 && participants?.length >= 2"
               pButton type="button"
               class="action-element ui-button-success"
-              (click)="createFirstRound()"
+              (click)="pairRound(false)"
               label="Start Tournament">
       </button>
       <button *ngIf="tournament?.actualRound > 0 && allMatchesFinished"
               pButton type="button"
               class="action-element ui-button-success"
-              (click)="nextRound()"
+              (click)="pairRound(false)"
               label="Next Round">
+      </button>
+      <button *ngIf="tournament?.actualRound > 0 && noMatchFinished"
+              pButton type="button"
+              class="action-element ui-button-success"
+              (click)="pairRound(true)"
+              label="Pair again">
       </button>
       <button *ngIf="tournament?.actualRound > 0"
               pButton type="button"
@@ -166,19 +236,13 @@
               class="action-element ui-button-warning"
               label="Delete Round">
       </button>
-      <button *ngIf="tournament?.actualRound > 0 && noMatchFinished"
-              pButton type="button"
-              class="action-element ui-button-success"
-              (click)="pairAgain()"
-              label="Pair again">
-      </button>
     </div>
   </p-panel>
   <p-panel header="{{shownRound === 0 ? 'Players': 'Standings Round ' + shownRound}}" [toggleable]="true"
            [collapsed]="shownRound !== 0">
 
     <ng-container *ngIf="(loadingParticipants)">
-      <div class="heading">Load Players...</div>
+      <div class="heading">Load Participants...</div>
       <div class="centered-content-container">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
@@ -191,6 +255,7 @@
       </div>
     </ng-container>
     <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
+    <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
     <p-dataTable *ngIf="(!loadingParticipants) && (!removingPlayer) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
@@ -200,7 +265,9 @@
                  [rows]="10"
                  [paginator]="true"
                  [pageLinks]="3"
-                 [rowsPerPageOptions]="[5,10,20]">
+                 [rowsPerPageOptions]="[5,10,20]"
+                 [exportFilename]="'Standings Round: ' + shownRound"
+                 #standingsTable>
       <p-header>{{participants?.length}} Players in Tournament</p-header>
 
       <p-column field="name"
@@ -250,20 +317,17 @@
           </ng-template>
         </p-column>
       </ng-container>
-      <p-column sortable="custom" (sortFunction)="sortByScore($event)">
-        <ng-template pTemplate="header">
-          Score
-        </ng-template>
+
+      <p-column sortable="custom"
+                header="Score"
+                (sortFunction)="sortByScore($event)">
         <ng-template let-participant="rowData" pTemplate="body">
-          {{getScore(participant)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTooltip(participant)}}"></i>
+          {{getActualScore(participant)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTooltip(participant)}}"></i>
         </ng-template>
       </p-column>
 
       <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
-        <p-column>
-          <ng-template pTemplate="header">
-            {{scoreField.field}}
-          </ng-template>
+        <p-column header="{{scoreField.field}}">
           <ng-template let-participant="rowData" pTemplate="body">
             {{getScoreFieldValue(scoreField, participant)}}
             <i class="fa fa-info-circle" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"></i>
@@ -293,16 +357,21 @@
     </ng-container>
 
     <button pButton type="button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
-    <p-dataTable *ngIf="(!loadingRound) && (!startingTournament) && (!deletingRound) && (!clearingMatch) && (!pairingAgain) && (!creatingNextRound)"
-                 [value]="roundMatches"
-                 [editable]="isOrga"
-                 [responsive]="true"
-                 [rowStyleClass]="getStyleForMatchesRow"
-                 [rows]="10"
-                 [paginator]="true"
-                 [pageLinks]="3"
-                 [stacked]="stackedMatches"
-                 [rowsPerPageOptions]="[5,10,20]">
+    <button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+    <p-dataTable
+      *ngIf="(!loadingRound) && (!startingTournament) && (!deletingRound) && (!clearingMatch) && (!pairingAgain) && (!creatingNextRound)"
+      [value]="roundMatches"
+      [editable]="isOrga"
+      [responsive]="true"
+      [rowStyleClass]="getStyleForMatchesRow"
+      [rows]="10"
+      [paginator]="true"
+      [pageLinks]="3"
+      [stacked]="stackedMatches"
+      [rowsPerPageOptions]="[5,10,20]"
+      [csvSeparator]="';'"
+      [exportFilename]="'Matches_Round_' + shownRound"
+      #matchesTable>
       <p-header>{{roundMatches?.length}} Matches</p-header>
       <p-column styleClass="col-result" *ngIf="isOrga">
         <ng-template pTemplate="header">Result</ng-template>
@@ -322,14 +391,32 @@
           </div>
         </ng-template>
       </p-column>
+      <p-column field="table"
+                header="Table"
+                [sortable]="true"
+                [filter]="true"
+                styleClass="col-table"
+                filterPlaceholder="Search">
+      </p-column>
       <p-column styleClass="col-player col-firstPlayer"
+                field="participantOne.name"
+                header="Player 1"
                 [sortable]="true"
                 [filter]="true"
                 filterPlaceholder="Search">
-        <ng-template pTemplate="header">Player 1</ng-template>
+        <ng-template pTemplate="filter" let-col let-roundMatch="rowData">
+          <input type="text"
+                 [(ngModel)]="participantOneFilter"
+                 pInputText
+                 (keyup)="filterParticipantOneMatchesTable()"/>
+        </ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
           <div style="text-align: center"
+               pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo)}}"
                [ngClass]="{
+                   'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'swap'),
+                   'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'not'),
+                   'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'impo'),
                    'winner-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
@@ -348,22 +435,47 @@
       </p-column>
       <p-column styleClass="col-vs">
         <ng-template pTemplate="header"></ng-template>
-        <ng-template pTemplate="body">
+        <ng-template pTemplate="body" let-roundMatch="rowData">
           <div style="text-align: center">
-            <i class="fa fa-arrows-v fa-2x" aria-hidden="true" pTooltip="Swap Player1"></i>
-            <span>VS</span>
-            <i class="fa fa-arrows-v fa-2x" aria-hidden="true" pTooltip="Swap Player2"></i>
+            <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap"
+               class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player1"
+               (click)="swapPlayerOne(roundMatch)">
+            </i>
+            <i *ngIf="playerToSwap && isOrga"
+               class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+               (click)="stopSwapPlayer()">
+            </i>
+            <span><b>VS</b></span>
+            <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap"
+               class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player2"
+               (click)="swapPlayerTwo(roundMatch)">
+            </i>
+            <i *ngIf="playerToSwap && isOrga"
+               class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+               (click)="stopSwapPlayer()">
+            </i>
           </div>
         </ng-template>
       </p-column>
       <p-column styleClass="col-player"
+                field="participantTwo.name"
+                header="Player 2"
                 [sortable]="true"
                 [filter]="true"
                 filterPlaceholder="Search">
-        <ng-template pTemplate="header">Player 2</ng-template>
+        <ng-template pTemplate="filter" let-col let-roundMatch="rowData">
+          <input type="text"
+                 [(ngModel)]="participantTwoFilter"
+                 pInputText
+                 (keyup)="filterParticipantTwoMatchesTable()"/>
+        </ng-template>
         <ng-template pTemplate="body" let-roundMatch="rowData">
           <div style="text-align: center"
+               pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne)}}"
                [ngClass]="{
+                   'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'swap'),
+                   'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'not'),
+                   'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'impo'),
                    'winner-label': (roundMatch.scoreParticipantTwo === 1 && roundMatch.finished),
                    'looser-label': (roundMatch.scoreParticipantOne === 1 && roundMatch.finished),
                    'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
@@ -405,8 +517,6 @@
           </ng-template>
         </p-column>
       </ng-container>
-
-
     </p-dataTable>
   </p-panel>
 
