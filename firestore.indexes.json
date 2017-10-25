@@ -1,14 +1,13 @@
 {
   // Example:
   //
-  // "indexes": [
-  //   {
-  //     "collectionId": "widgets",
-  //     "fields": [
-  //       { "fieldPath": "foo", "mode": "ASCENDING" },
-  //       { "fieldPath": "bar", "mode": "DESCENDING" }
-  //     ]
-  //   }
-  // ]
-  "indexes": []
+   "indexes": [
+     {
+       "collectionId": "roundMatches",
+       "fields": [
+         { "fieldPath": "round", "mode": "ASCENDING" },
+         { "fieldPath": "matchDate", "mode": "DESCENDING" }
+       ]
+     }
+   ]
 }

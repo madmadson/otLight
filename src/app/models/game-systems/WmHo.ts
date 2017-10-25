@@ -4,7 +4,8 @@ import {GameSystemConfig} from "../game-systems";
 
 export function getWmHoFieldConfig(type: string): GameSystemConfig {
 
-  const gameConfig: GameSystemConfig = {playerFields: [], participantFields: [], scoreFields: [], standingFields: []};
+  const gameConfig: GameSystemConfig =
+    {playerFields: [], participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
 
   gameConfig.playerFields.push({
     defaultValue: '',
@@ -69,6 +70,14 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
     fieldPlayerTwo: 'vpParticipantTwo',
     min: 0,
     max: 200
+  });
+
+  gameConfig.choosePlayed.push({
+    defaultValue: '',
+    type: 'dropDown',
+    field: 'ArmyLists',
+    fieldPlayerOne: 'armyListParticipantOne',
+    fieldPlayerTwo: 'armyListParticipantTwo',
   });
 
   return gameConfig;

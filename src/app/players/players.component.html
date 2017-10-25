@@ -18,12 +18,12 @@
                [stacked]="stacked"
                [editable]="true"
                [responsive]="true"
-               [rows]="10"
+               [rows]="50"
                [paginator]="true"
                [pageLinks]="3"
                (onEditComplete)="onEditPlayer($event)"
-               [rowsPerPageOptions]="[5,10,20]">
-    <p-header>{{selectedGameSystem}} Players</p-header>
+               [rowsPerPageOptions]="[5, 10, 20, 50, 100]">
+    <p-header>{{players?.length}} {{selectedGameSystem}} Players</p-header>
     <p-column field="name"
               [editable]="true"
               styleClass="{{'editable-column'}}, break-word"

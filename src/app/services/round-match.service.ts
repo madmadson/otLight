@@ -159,7 +159,7 @@ export class RoundMatchService {
         let fromSameLocation = false;
         if (locationRestriction) {
           if (participant1.location && participant2.location) {
-            fromSameLocation = participant1.location.trim().toLowerCase() === participant1.location.trim().toLowerCase();
+            fromSameLocation = participant1.location.trim().toLowerCase() === participant2.location.trim().toLowerCase();
 
             if (fromSameLocation) {
               console.log('from same location skipping: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
@@ -201,6 +201,7 @@ export class RoundMatchService {
             scoreParticipantTwo: 0,
             result: '',
             finished: false,
+            matchDate: new Date(),
           };
           console.log('foundMatch: ' + JSON.stringify(newMatch));
           newRoundMatches.push(newMatch);

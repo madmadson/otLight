@@ -54,7 +54,7 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
     });
 
     this.playerForm = this.fb.group({
-      'name': new FormControl('', Validators.compose([Validators.required, Validators.minLength(4), Validators.maxLength(30)])),
+      'name': new FormControl('', Validators.compose([Validators.required, Validators.minLength(3), Validators.maxLength(30)])),
       'location': new FormControl('', Validators.maxLength(30)),
       'gameSystems': new FormControl([], Validators.required),
     });

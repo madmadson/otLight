@@ -5,7 +5,7 @@ import {SelectItem} from "primeng/primeng";
 
 export function getJudgementFieldConfig(type: string): GameSystemConfig {
 
-  const gameConfig: GameSystemConfig = {playerFields: [], participantFields: [], scoreFields: [], standingFields: []};
+  const gameConfig: GameSystemConfig = {playerFields: [], participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
 
   gameConfig.playerFields.push({
     defaultValue: [],

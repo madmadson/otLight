@@ -18,6 +18,8 @@ export interface RoundMatch {
   vpParticipantOne?: number;
   cpParticipantTwo?: number;
   vpParticipantTwo?: number;
+  armyListParticipantOne?: string;
+  armyListParticipantTwo?: string;
 
   // JUDGEMENT
   soulsParticipantOne?: number;
@@ -27,6 +29,7 @@ export interface RoundMatch {
 
   result: string;
   finished: boolean;
+  matchDate: Date;
 }
 
 export function getRoundMatchForJSON(id: string, json: any): RoundMatch {
@@ -43,6 +46,8 @@ export function getRoundMatchForJSON(id: string, json: any): RoundMatch {
     scoreParticipantTwo: json.scoreParticipantTwo ? json.scoreParticipantTwo : 0,
 
     result: json.result ? json.result : '',
-    finished: json.finished ? json.finished : false
+    finished: json.finished ? json.finished : false,
+
+    matchDate: json.matchDate ? json.matchDate : new Date(),
   };
 }

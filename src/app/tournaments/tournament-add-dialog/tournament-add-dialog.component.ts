@@ -79,6 +79,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
       gameSystem: this.tournamentForm.value.gameSystem,
       type: this.tournamentForm.value.type,
       actualRound: 0,
+      publishedRound: 0,
       status: 'CREATED',
     };
 

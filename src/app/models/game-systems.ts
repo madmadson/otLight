@@ -34,6 +34,7 @@ export interface GameSystemConfig {
   participantFields: FieldValues[];
   scoreFields: FieldValues[];
   standingFields: FieldValues[];
+  choosePlayed: FieldValues[];
 }
 export interface FieldValues {
   defaultValue: any;
@@ -58,6 +59,7 @@ export function getGameSystemConfig(system: string, tournamentType: string): Gam
       playerFields: [],
       scoreFields: [],
       standingFields: [],
+      choosePlayed: [],
     };
   }
 }
