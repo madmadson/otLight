@@ -9,7 +9,7 @@ export interface Tournament {
   password?: string;
   actualRound: number;
   publishedRound: number;
-  status: string;
+  state: string;
 }
 
 export function getTournamentForJSON(id: string, json: any): Tournament {
@@ -21,6 +21,6 @@ export function getTournamentForJSON(id: string, json: any): Tournament {
     password: json.password ? json.password : '',
     actualRound: json.actualRound ? json.actualRound : 0,
     publishedRound: json.publishedRound ? json.publishedRound : 0,
-    status: json.status ? json.status : 'CREATED',
+    state: json.state ? json.state : 'CREATED',
   };
 }

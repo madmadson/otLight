@@ -44,6 +44,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   isOrga: boolean;
   passwordWrong: boolean;
 
+  tournamentFinished: boolean;
   shownRound: number;
   clearingMatch: boolean;
 
@@ -118,7 +119,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participants');
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
 
-    // this.isOrga = true;
+     this.isOrga = true;
   }
 
   ngOnInit() {
@@ -135,6 +136,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           that.tournament = getTournamentForJSON(doc.id, doc.data());
 
+          that.tournamentFinished = that.tournament.state === 'FINISHED';
+          if (that.tournamentFinished) {
+            that.shownRound = that.tournament.actualRound + 1;
+          } else {
+            that.shownRound = that.tournament.actualRound;
+          }
+
           if (tournamentBeforeUpdate.actualRound !== that.tournament.actualRound) {
             that.shownRound = that.tournament.actualRound;
 
@@ -148,11 +156,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
         } else {
           that.tournament = getTournamentForJSON(doc.id, doc.data());
 
-          that.shownRound = that.tournament.actualRound;
+          that.tournamentFinished = that.tournament.state === 'FINISHED';
+          if (that.tournamentFinished) {
+            that.shownRound = that.tournament.actualRound + 1;
+          } else {
+            that.shownRound = that.tournament.actualRound;
+            that.subscribeOnRoundMatches(that.shownRound);
+          }
 
           that.gameSystemConfig = getGameSystemConfig(that.tournament.gameSystem, that.tournament.type);
-
-          that.subscribeOnRoundMatches(that.shownRound);
           that.subscribeOnParticipants();
 
           that.loadingTournament = false;
@@ -691,7 +703,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           that.tournament.actualRound = 1;
           that.tournament.publishedRound = 0;
-          that.tournament.status = 'STARTED';
+          that.tournament.state = 'STARTED';
           that.tournamentDocRef.update(that.tournament);
 
           console.log("Round generated successfully");
@@ -721,7 +733,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
         that.tournament.actualRound = 1;
         that.tournament.publishedRound = 0;
-        that.tournament.status = 'STARTED';
+        that.tournament.state = 'STARTED';
         that.tournamentDocRef.update(that.tournament);
 
         that.messageService.add(
@@ -810,7 +822,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
             that.tournament.publishedRound = (that.tournament.actualRound - 2) < 0 ? 0 : (that.tournament.actualRound - 2);
             that.tournament.actualRound = (that.tournament.actualRound - 1);
             if (that.tournament.actualRound === 0) {
-              that.tournament.status = 'CREATED';
+              that.tournament.state = 'CREATED';
             }
             that.tournamentDocRef.update(that.tournament);
 
@@ -831,7 +843,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
           that.tournament.publishedRound = (that.tournament.actualRound - 2) < 0 ? 0 : (that.tournament.actualRound - 2);
           that.tournament.actualRound = (that.tournament.actualRound - 1);
           if (that.tournament.actualRound === 0) {
-            that.tournament.status = 'CREATED';
+            that.tournament.state = 'CREATED';
           }
           that.tournamentDocRef.update(that.tournament);
 
@@ -1404,4 +1416,44 @@ export class TournamentComponent implements OnInit, OnDestroy {
   }
 
 
+  finishTournament() {
+    const that = this;
+
+    this.confirmationService.confirm({
+      header: 'Really finish Tournament?',
+      message: 'You can undo this action',
+      accept: () => {
+
+        console.log("finish Tournament");
+
+        that.tournament.publishedRound = that.tournament.actualRound;
+        that.tournament.state = 'FINISHED';
+        that.tournamentDocRef.update(that.tournament);
+
+        that.messageService.add({severity: 'success', summary: 'Update', detail: 'Tournament finished'});
+      }
+    });
+  }
+
+  undoFinishTournament() {
+    const that = this;
+    console.log("undo finish Tournament");
+
+    that.tournament.publishedRound = that.tournament.actualRound;
+    that.tournament.state = 'STARTED';
+    that.tournamentDocRef.update(that.tournament);
+
+    that.messageService.add({severity: 'success', summary: 'Update', detail: 'Undo finish Tournament'});
+  }
+
+  getPlayerTableHeading(): string {
+
+    if (this.tournamentFinished) {
+      return 'Final Standings';
+    } else if (this.shownRound === 0) {
+      return 'Players';
+    } else {
+      return 'Standings Round ' + this.shownRound;
+    }
+  }
 }

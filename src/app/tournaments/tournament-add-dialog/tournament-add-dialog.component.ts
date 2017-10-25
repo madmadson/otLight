@@ -80,7 +80,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
       type: this.tournamentForm.value.type,
       actualRound: 0,
       publishedRound: 0,
-      status: 'CREATED',
+      state: 'CREATED',
     };
 
     _.forEach(this.allTournamentsToCheck, function (tournamentToCheck: Tournament) {

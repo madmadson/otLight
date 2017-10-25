@@ -3,11 +3,10 @@
     <a class="menu-button" (click)="sidebarVisible = !sidebarVisible">
       <i class="fa fa-bars"></i>
     </a>
-
     <div class="logo-container">
       <a class="logo-topbar">
         <img alt="logo" src="../assets/images/logo42.png"/>
-        <div class="version-label">Version 0.89</div>
+        <div class="version-label">Version 0.9.0</div>
       </a>
       <span>
         <i *ngIf="(isConnected$ | async)" class="fa fa-wifi fa-2x online-icon" pTooltip="Online"></i>
@@ -15,7 +14,6 @@
       </span>
     </div>
     <ul class="topbar-menu">
-
       <li>
         <label for="gameSelect">GameSystem</label>
         <p-dropdown
