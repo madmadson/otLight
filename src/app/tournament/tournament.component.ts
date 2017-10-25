@@ -119,7 +119,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participants');
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
 
-     this.isOrga = true;
+    // this.isOrga = true;
   }
 
   ngOnInit() {

@@ -344,12 +344,12 @@
         </p-column>
       </ng-container>
 
-      <p-column styleClass="col-actions">
+      <p-column styleClass="col-actions" *ngIf="tournament?.actualRound === 0">
         <ng-template pTemplate="header">
           Actions
         </ng-template>
         <ng-template let-participant="rowData" pTemplate="body">
-          <button *ngIf="isOrga && tournament?.actualRound === 0"
+          <button *ngIf="isOrga"
                   type="button" pButton (click)="deleteParticipant(participant)" icon="fa-trash" label="Remove Player">
           </button>
         </ng-template>
@@ -453,10 +453,18 @@
                      'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
                   }">
               <span class="very-big-text break-word" *ngIf="roundMatch.participantOne.name !== 'bye'">
-                {{roundMatch.participantOne.name}}
                 ({{getScoreTillRoundForParticipant(roundMatch.participantOne)}})
+                {{roundMatch.participantOne.name}}
               </span>
               <span class="very-big-text" *ngIf="roundMatch.participantOne.name === 'bye'">BYE</span>
+              <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap && !tournamentFinished"
+                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player1"
+                 (click)="swapPlayerOne(roundMatch)">
+              </i>
+              <i *ngIf="playerToSwap && isOrga"
+                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+                 (click)="stopSwapPlayer()">
+              </i>
             </div>
             <div style="text-align: center" *ngIf="isOrga">
               <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
@@ -481,23 +489,7 @@
           <ng-template pTemplate="header"></ng-template>
           <ng-template pTemplate="body" let-roundMatch="rowData">
             <div style="text-align: center">
-              <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap && !tournamentFinished"
-                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player1"
-                 (click)="swapPlayerOne(roundMatch)">
-              </i>
-              <i *ngIf="playerToSwap && isOrga"
-                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
-                 (click)="stopSwapPlayer()">
-              </i>
-              <span class="very-big-text">VS</span>
-              <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap  && !tournamentFinished"
-                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player2"
-                 (click)="swapPlayerTwo(roundMatch)">
-              </i>
-              <i *ngIf="playerToSwap && isOrga"
-                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
-                 (click)="stopSwapPlayer()">
-              </i>
+              <span class="big-text">VS</span>
             </div>
           </ng-template>
         </p-column>
@@ -532,6 +524,14 @@
                     {{roundMatch.participantTwo.name}}
               </span>
               <span class="very-big-text" *ngIf="roundMatch.participantTwo.name === 'bye'">BYE</span>
+              <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap  && !tournamentFinished"
+                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player2"
+                 (click)="swapPlayerTwo(roundMatch)">
+              </i>
+              <i *ngIf="playerToSwap && isOrga"
+                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+                 (click)="stopSwapPlayer()">
+              </i>
             </div>
             <div style="text-align: center" *ngIf="isOrga">
               <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
