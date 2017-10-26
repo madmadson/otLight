@@ -79,7 +79,7 @@
             pButton
             icon="fa-check"
             (click)="nextRound()"
-            label="Start Tournament">
+            label="Next Round">
     </button>
     <button *ngIf="sameRoundAgain"
             type="button"
@@ -393,6 +393,8 @@
         [rows]="20"
         [paginator]="true"
         [pageLinks]="3"
+        [dataKey]="'id'"
+        [immutable]="false"
         [stacked]="stackedMatches"
         [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
         [csvSeparator]="';'"
@@ -554,25 +556,30 @@
         </p-column>
 
         <ng-container *ngFor="let scoreField of gameSystemConfig.scoreFields">
-          <p-column *ngIf="isOrga" styleClass="col-scoring">
+          <p-column *ngIf="isOrga"
+                    styleClass="col-scoring break-word">
             <ng-template pTemplate="header">
               {{scoreField.field}}
             </ng-template>
             <ng-template let-col let-roundMatch="rowData" pTemplate="body">
-              <div style="text-align: center">
-                <span>P1 {{scoreField.field}}</span>
-                <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
-                           [min]="scoreField.min" [max]="scoreField.max"
-                           (onBlur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])">
-
-                </p-spinner>
+              <div>
+                <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
+                       [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
+                       size="50"
+                       (blur)="changeScoringForPlayerOne($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])"
+                       (keyup.enter)="changeScoringForPlayerOne($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                />
+                <span class="small-text"> {{scoreField.field}} {{roundMatch.participantOne.name}}</span>
               </div>
-              <div style="text-align: center">
-                <span>P2 {{scoreField.field}}</span>
-                <p-spinner size="5" [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
-                           [min]="scoreField.min" [max]="scoreField.max"
-                           (onBlur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])">
-                </p-spinner>
+              <div class="breaking-line"></div>
+              <div>
+                <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
+                       [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
+                       size="50"
+                       (blur)="changeScoringPlayerTwo($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                       (keyup.enter)="changeScoringPlayerTwo($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                />
+                <span class="small-text">{{scoreField.field}} {{roundMatch.participantTwo.name}}</span>
               </div>
             </ng-template>
           </p-column>

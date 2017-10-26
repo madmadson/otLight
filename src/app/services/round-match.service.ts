@@ -46,7 +46,7 @@ export class RoundMatchService {
         roundScores: []
       });
     }
-    console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
+    // console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
 
     const newRoundMatches: RoundMatch[] = [];
 
@@ -152,7 +152,7 @@ export class RoundMatchService {
 
         const participant2: Participant = shuffledParticipants[j];
 
-        console.log('check possible Match: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
+        // console.log('check possible Match: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
 
         const alreadyPlayingAgainstEachOther = _.includes(participant1.opponentParticipantsNames, participant2.name);
 
@@ -162,20 +162,20 @@ export class RoundMatchService {
             fromSameLocation = participant1.location.trim().toLowerCase() === participant2.location.trim().toLowerCase();
 
             if (fromSameLocation) {
-              console.log('from same location skipping: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
+              // console.log('from same location skipping: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
               continue;
             }
           }
         }
 
         if (alreadyPlayingAgainstEachOther) {
-          console.log('alreadyPlayingAgainstEachOther: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
+          // console.log('alreadyPlayingAgainstEachOther: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
           continue;
         }
 
         if (distanceCheck) {
           if (getScore(participant1) - 1 > getScore(participant1)) {
-            console.log('score distance to high: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
+            // console.log('score distance to high: ' + JSON.stringify(participant1) + ' vs' + JSON.stringify(participant2));
             continue;
           }
       }
@@ -187,7 +187,7 @@ export class RoundMatchService {
             participant.id === participant2.id;
         });
 
-        console.log('participants left: ' + JSON.stringify(copiesOfParticipants));
+        // console.log('participants left: ' + JSON.stringify(copiesOfParticipants));
 
         const success = this.match(copiesOfParticipants, newRoundMatches, round, locationRestriction, distanceCheck);
 
@@ -203,7 +203,7 @@ export class RoundMatchService {
             finished: false,
             matchDate: new Date(),
           };
-          console.log('foundMatch: ' + JSON.stringify(newMatch));
+          //  console.log('foundMatch: ' + JSON.stringify(newMatch));
           newRoundMatches.push(newMatch);
 
           return true;
@@ -230,7 +230,7 @@ export class RoundMatchService {
       });
       _.forEach(participants, function (participant: Participant) {
 
-        console.log('before participant:' + JSON.stringify(participant));
+        // console.log('before participant:' + JSON.stringify(participant));
 
         _.forEach(gameConfig.standingFields, function (fieldValues: FieldValues) {
           participant[fieldValues.field].splice((tournament.actualRound - 1), 1);
@@ -238,7 +238,7 @@ export class RoundMatchService {
         participant.roundScores.splice((tournament.actualRound - 1), 1);
         participant.opponentParticipantsNames.splice((tournament.actualRound - 1), 1);
 
-        console.log('after participant:' + JSON.stringify(participant));
+        // console.log('after participant:' + JSON.stringify(participant));
 
         const docRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participant.id);
         batch.update(docRef, participant);
