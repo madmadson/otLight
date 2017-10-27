@@ -7,8 +7,7 @@ import * as _ from 'lodash';
 import {RoundMatch} from "../models/RoundMatch";
 import {UUID} from "angular2-uuid";
 import {
-  FieldValues, getByeScoring, getGameSystemConfig, getScore, getScoreByGameSystem,
-  orderParticipantsForGameSystem
+  FieldValues, getByeScoring, getGameSystemConfig, getScore, getScoreByGameSystem
 } from "../models/game-systems";
 import * as firebase from "firebase/app";
 import WriteBatch = firebase.firestore.WriteBatch;

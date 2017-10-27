@@ -26,6 +26,8 @@ export interface RoundMatch {
   levelsParticipantOne?: number;
   soulsParticipantTwo?: number;
   levelsParticipantTwo?: number;
+  warbandParticipantOne?: string[];
+  warbandParticipantTwo?: string[];
 
   result: string;
   finished: boolean;

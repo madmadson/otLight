@@ -1,11 +1,12 @@
 import {SelectItem} from "primeng/primeng";
 import {GameSystemConfig} from "../game-systems";
-
+import {Participant} from "../Participant";
+import * as _ from 'lodash';
 
 export function getWmHoFieldConfig(type: string): GameSystemConfig {
 
-  const gameConfig: GameSystemConfig =
-    {playerFields: [], participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
+  const gameConfig: GameSystemConfig = {playerFields: [],
+    participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
 
   gameConfig.playerFields.push({
     defaultValue: '',
@@ -81,6 +82,66 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
   });
 
   return gameConfig;
+}
+
+export function orderParticipantsForWmHo( participants: Participant[], participantsScoreMap: any): Participant[] {
+  return participants.sort((part1, part2) => {
+
+    let result = 0;
+
+    if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
+      result = 1;
+    } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
+      result = -1;
+    } else {
+      if (getSos(part1, participantsScoreMap) < getSos(part2, participantsScoreMap)) {
+        result = 1;
+      } else if (getSos(part1, participantsScoreMap) > getSos(part2, participantsScoreMap)) {
+        result = -1;
+      } else {
+        if (getCP(part1) < getCP(part2)) {
+          result = 1;
+        } else if (getCP(part1) > getCP(part2)) {
+          result = -1;
+        } else {
+          if (getVP(part1) < getVP(part2)) {
+            result = 1;
+          } else if (getVP(part1) > getVP(part2)) {
+            result = -1;
+          }
+        }
+      }
+    }
+    return result;
+  });
+}
+
+
+export function getSos(participant: Participant, participantsScoreMap: any) {
+
+  let sosSum = 0;
+  _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
+    sosSum = sosSum + participantsScoreMap[opponentName];
+  });
+  return sosSum;
+}
+
+export function getCP(participant: Participant) {
+
+  let cpSum = 0;
+  _.forEach(participant.cp, function (cp: number) {
+    cpSum = cpSum + cp;
+  });
+  return cpSum;
+}
+
+export function getVP(participant: Participant) {
+
+  let vpSum = 0;
+  _.forEach(participant.vp, function (vp: number) {
+    vpSum = vpSum + vp;
+  });
+  return vpSum;
 }
 
 
@@ -310,6 +371,8 @@ export function getWmHoCasterAsSelectItem(): SelectItem[] {
     {value: 'Ragnor1', label: 'Ragnor1'},
   ];
 }
+
+
 
 
 export function getWmHoCaster(faction: string): string[] {

@@ -4,35 +4,51 @@
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
           [width]="400"
-          [height]="180">
+          [height]="200">
   <p-header>
     Organizer password required
   </p-header>
-  <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
-    <div class="ui-grid-row">
-      <div class="ui-grid-col-4">
-        Password:
+  <form [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
+    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+        <div class="ui-grid-row">
+          <div class="ui-grid-col-4">
+            Orga:
+          </div>
+          <div class="ui-grid-col-8">
+            <input formControlName="user"  id="user" name="user"
+                   tabindex="1" type="text" pInputText value="Orga">
+          </div>
+        </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Password:
+        </div>
+        <div class="ui-grid-col-8">
+          <input id="password" name="password"
+                 #orgaPasswordField
+                 type="password"
+                 (keyup.enter)="checkIfPasswordCorrect()"
+                 tabindex="2"  pPassword
+                 formControlName="password"
+                 required>
+        </div>
       </div>
-      <div class="ui-grid-col-8">
-        <input tabindex="1" type="password" pPassword [(ngModel)]="orgaPassword"/>
+      <div class="ui-grid-row"
+           *ngIf="passwordWrong">
+        <div class="ui-grid-col-12">
+          <div class="ui-message ui-messages-error ui-corner-all">
+            Password wrong
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="ui-grid-row"
-         *ngIf="passwordWrong">
-      <div class="ui-grid-col-12">
-        <div class="ui-message ui-messages-error ui-corner-all">
-          Password wrong
+      <div class="ui-grid-row bottom-button">
+        <div class="ui-grid-col-12">
+          <button [disabled]="orgaForm.pristine"
+                  tabindex="2" pButton type="submit" class="full-width" label="Orga access"></button>
         </div>
       </div>
     </div>
-    <div class="ui-grid-row bottom-button">
-      <div class="ui-grid-col-12">
-        <button tabindex="2" pButton class="full-width" label="Orga access"
-                (click)="checkIfPasswordCorrect()">
-        </button>
-      </div>
-    </div>
-  </div>
+  </form>
 </p-dialog>
 
 
@@ -173,7 +189,6 @@
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
-
     <div class="orga-panel-container"
          *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
       <p-dataTable [value]="possiblePlayersToAdd"
@@ -478,6 +493,15 @@
                             (onChange)="saveChoosePlayed(roundMatch)"
                             [style]="{'width':'100%'}">
                 </p-dropdown>
+                <p-multiSelect *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantOne[chooseField.field]?.length > 0"
+                               placeholder="Choose"
+                               [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
+                               [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
+                               (onPanelHide)="saveChoosePlayed(roundMatch)"
+                               [showToggleAll]=false
+                               [maxSelectedLabels]=3
+                               [style]="{'width':'100%'}">
+                </p-multiSelect>
               </ng-container>
             </div>
             <div style="text-align: center" *ngIf="!isOrga">
@@ -545,6 +569,15 @@
                             (onChange)="saveChoosePlayed(roundMatch)"
                             [style]="{'width':'100%'}">
                 </p-dropdown>
+                <p-multiSelect *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantTwo[chooseField.field]?.length > 0"
+                               placeholder="Choose"
+                               [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
+                               [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
+                               (onPanelHide)="saveChoosePlayed(roundMatch)"
+                               [showToggleAll]=false
+                               [maxSelectedLabels]=3
+                               [style]="{'width':'100%'}">
+                </p-multiSelect>
               </ng-container>
             </div>
             <div style="text-align: center" *ngIf="!isOrga">
@@ -566,8 +599,8 @@
                 <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
                        [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
                        size="50"
-                       (blur)="changeScoringForPlayerOne($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])"
-                       (keyup.enter)="changeScoringForPlayerOne($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                       (blur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])"
+                       (keyup.enter)="forceBlurForScore($event)"
                 />
                 <span class="small-text"> {{scoreField.field}} {{roundMatch.participantOne.name}}</span>
               </div>
@@ -576,8 +609,8 @@
                 <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
                        [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
                        size="50"
-                       (blur)="changeScoringPlayerTwo($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
-                       (keyup.enter)="changeScoringPlayerTwo($event, roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                       (blur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                       (keyup.enter)="forceBlurForScore($event)"
                 />
                 <span class="small-text">{{scoreField.field}} {{roundMatch.participantTwo.name}}</span>
               </div>

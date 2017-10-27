@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {AngularFirestore} from "angularfire2/firestore";
 import * as firebase from "firebase/app";
@@ -19,6 +19,7 @@ import {RoundMatchService} from "../services/round-match.service";
 import {ConfirmationService, DataTable, SelectItem} from "primeng/primeng";
 import {ConnectivityService} from "../services/connectivity-service";
 import WriteBatch = firebase.firestore.WriteBatch;
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 
 
 @Component({
@@ -39,8 +40,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
   swappingPlayer: boolean;
 
   orgaDialogVisibility: boolean;
+  orgaForm: FormGroup;
+  @ViewChild('orgaPasswordField') orgaPasswordField: ElementRef;
 
-  orgaPassword: string;
   isOrga: boolean;
   passwordWrong: boolean;
 
@@ -107,6 +109,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   playerTwoSwapped: boolean;
 
   constructor(protected afs: AngularFirestore,
+              private formBuilder: FormBuilder,
               private messageService: MessageService,
               private activeRouter: ActivatedRoute,
               private confirmationService: ConfirmationService,
@@ -120,6 +123,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
 
     // this.isOrga = true;
+
+    this.orgaForm = this.formBuilder.group({
+      user: [{value: 'Orga', disabled: true}, Validators.required ],
+      password: ['', Validators.required ],
+    });
   }
 
   ngOnInit() {
@@ -197,7 +205,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     this.passwordWrong = false;
 
-    if ((this.orgaPassword ? this.orgaPassword : "") === this.tournament.password) {
+    if ((this.orgaForm.get('password').value ? this.orgaForm.get('password').value : "") === this.tournament.password) {
       this.isOrga = true;
       this.orgaDialogVisibility = false;
     } else {
@@ -504,11 +512,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
         console.log("Participant written with ID: ", participant.id);
         that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
 
-        const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
-        const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
-        newPossiblePlayersToAdd.splice(index, 1);
-        that.possiblePlayersToAdd = newPossiblePlayersToAdd;
-
         that.addingPlayer = false;
       }).catch(function (error) {
         console.error("Error writing participant: ", error);
@@ -521,11 +524,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
         // ignored is offline :/
       });
       console.log("Participant written with ID: ", participant.id);
-
-      const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
-      const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
-      newPossiblePlayersToAdd.splice(index, 1);
-      that.possiblePlayersToAdd = newPossiblePlayersToAdd;
 
       that.addingPlayer = false;
 
@@ -550,10 +548,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
         console.log("Participant successfully deleted!");
         that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Player removed'});
 
-        const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
-        const index = _.findIndex(that.allPlayers, ['name', participant.name]);
-        newPossiblePlayersToAdd.push(that.allPlayers[index]);
-        that.possiblePlayersToAdd = newPossiblePlayersToAdd;
         that.removingPlayer = false;
       }).catch(function (error) {
         console.error("Error removing player: ", error);
@@ -573,10 +567,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
         }
       );
 
-      const newPossiblePlayersToAdd = _.cloneDeep(that.possiblePlayersToAdd);
-      const index = _.findIndex(that.allPlayers, ['name', participant.name]);
-      newPossiblePlayersToAdd.push(that.allPlayers[index]);
-      that.possiblePlayersToAdd = newPossiblePlayersToAdd;
       that.removingPlayer = false;
     }
   }
@@ -665,6 +655,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   showOrgaDialog() {
     this.orgaDialogVisibility = true;
+
+    setTimeout(() => {
+      const element = this.orgaPasswordField.nativeElement;
+      if (element) {
+        element.focus();
+      }
+    }, 200);
   }
 
   getScoreTillRoundForParticipant(participant: Participant) {
@@ -924,11 +921,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
     return rowData.finished ? 'row-finished' : '';
   }
 
-  changeScoringForPlayerOne(event: any,  roundMatch: RoundMatch, field: string, value: number) {
-
+  forceBlurForScore(event: any) {
     if (event.target) {
       event.target.blur();
     }
+  }
+
+  changeScoringForPlayerOne(roundMatch: RoundMatch, field: string, value: number) {
+
     const batch = this.afs.firestore.batch();
 
     const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {
@@ -959,12 +959,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     }
   }
 
-  changeScoringPlayerTwo(event: any, roundMatch: RoundMatch, field: string, value: number) {
-
-    if (event.target) {
-      event.target.blur();
-    }
-
+  changeScoringPlayerTwo(roundMatch: RoundMatch, field: string, value: number) {
     const batch = this.afs.firestore.batch();
 
     const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {

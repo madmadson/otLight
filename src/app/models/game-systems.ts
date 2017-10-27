@@ -1,10 +1,10 @@
 import {SelectItem} from "primeng/primeng";
-import {getWmHoFieldConfig} from "./game-systems/WmHo";
+import {getWmHoFieldConfig, orderParticipantsForWmHo} from "./game-systems/WmHo";
 import {Participant} from "./Participant";
 
 import * as _ from 'lodash';
-import {Tournament} from "./Tournament";
-import {getJudgementFieldConfig} from "./game-systems/Judgement";
+
+import {getJudgementFieldConfig, orderParticipantsForJudgement} from "./game-systems/Judgement";
 
 export function getGameSystemsAsSelectItems(): SelectItem[] {
   return [{
@@ -64,40 +64,12 @@ export function getGameSystemConfig(system: string, tournamentType: string): Gam
   }
 }
 
-
-
 export function orderParticipantsForGameSystem(gameSystem: string, participants: Participant[], participantsScoreMap: any): Participant[] {
 
   if (gameSystem === 'WmHo') {
-     return participants.sort((part1, part2) => {
-
-      let result = 0;
-
-      if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
-        result = 1;
-      } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
-        result = -1;
-      } else {
-        if (getSos(part1, participantsScoreMap) < getSos(part2, participantsScoreMap)) {
-          result = 1;
-        } else if (getSos(part1, participantsScoreMap) > getSos(part2, participantsScoreMap)) {
-          result = -1;
-        } else {
-          if (getCP(part1) < getCP(part2)) {
-            result = 1;
-          } else if (getCP(part1) > getCP(part2)) {
-            result = -1;
-          } else {
-            if (getVP(part1) < getVP(part2)) {
-              result = 1;
-            } else if (getVP(part1) > getVP(part2)) {
-              result = -1;
-            }
-          }
-        }
-      }
-      return result;
-    });
+     return orderParticipantsForWmHo( participants, participantsScoreMap);
+  } else if (gameSystem === 'Judgement') {
+    return orderParticipantsForJudgement( participants, participantsScoreMap);
   } else {
     return participants.sort((part1, part2) => {
 
@@ -118,6 +90,9 @@ export function getColumnsForStandingsExport(gameSystem: string): number[] {
   if (gameSystem === 'WmHo') {
     // name, location, faction, armyLists, score, sos, cp, vp
     return [1, 2, 3, 4, 5, 6, 7, 8];
+  } else if (gameSystem === 'Judgement') {
+    // name, location, warband, score, souls, levels
+    return [1, 2, 3, 4, 5, 6];
   } else {
     // name, location, score
     return [1, 2, 3];
@@ -134,6 +109,8 @@ export function getScoreByGameSystem(gameSystem: string): number[] {
 
   if (gameSystem === 'WmHo') {
     return [1, 0, 0];
+  } else if (gameSystem === 'Judgement') {
+    return [1, 0, 0];
   } else {
     return [1, 0, 0];
   }
@@ -143,6 +120,8 @@ export function getByeScoring(gameSystem: string): any {
 
   if (gameSystem === 'WmHo') {
     return {'score': 1, 'cp': 3, 'vp': 38};
+  } else  if (gameSystem === 'Judgement') {
+    return {'score': 1, 'souls': 2, 'levels': 6};
   } else {
     return {'score': 1};
   }
@@ -156,33 +135,3 @@ export function getScore(participant: Participant) {
   });
   return scoreSum;
 }
-
-export function getSos(participant: Participant, participantsScoreMap: any) {
-
-  let sosSum = 0;
-  _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
-    sosSum = sosSum + participantsScoreMap[opponentName];
-  });
-  return sosSum;
-}
-
-export function getCP(participant: Participant) {
-
-  let cpSum = 0;
-  _.forEach(participant.cp, function (cp: number) {
-    cpSum = cpSum + cp;
-  });
-  return cpSum;
-}
-
-export function getVP(participant: Participant) {
-
-  let vpSum = 0;
-  _.forEach(participant.vp, function (vp: number) {
-    vpSum = vpSum + vp;
-  });
-  return vpSum;
-}
-
-
-
