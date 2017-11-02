@@ -129,14 +129,15 @@
      </div>
   </p-panel>
 
-  <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
+  <p-panel *ngIf="participantsModified">
+    <p-header>
+      <span class="ui-panel-title save-mod-heading">Players modified. Please save to publish</span>
+      <button pButton type="button" class="ui-button-success save-mod-button"
+              (click)="saveParticipants()" label="Save" icon="fa-check"></button>
+    </p-header>
+  </p-panel>
 
-    <ng-container *ngIf="(addingPlayer)">
-      <div class="heading">Add Player...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
+  <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
 
     <ng-container *ngIf="(startingTournament)">
       <div class="heading">Start Tournament...</div>
@@ -150,8 +151,15 @@
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
     </ng-container>
-    <ng-container *ngIf="(clearingMatch)">
-      <div class="heading">Clear Match...</div>
+    <ng-container *ngIf="(updateParticipantList)">
+      <div class="heading">Update PlayerList...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="(updateMatchList)">
+      <div class="heading">Update MatchList...</div>
       <div class="centered-content-container">
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
@@ -190,9 +198,10 @@
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
     <div class="orga-panel-container"
-         *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 && !addingPlayer">
+         *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 ">
       <p-dataTable [value]="possiblePlayersToAdd"
                    [paginator]="true"
+                   [pageLinks]="3"
                    [rows]="5">
         <p-header>List of Players</p-header>
         <p-column field="name"
@@ -218,7 +227,7 @@
       </p-dataTable>
     </div>
     <div class="orga-panel-container">
-      <button *ngIf="tournament?.actualRound === 0 && participants?.length >= 2 && (!loadingPlayers)"
+      <button *ngIf="tournament?.actualRound === 0 && participants?.length >= 2 && (!loadingPlayers) && !participantsModified"
               pButton type="button"
               class="action-element ui-button-success"
               (click)="pairRound(false)"
@@ -272,15 +281,9 @@
       </div>
     </ng-container>
 
-    <ng-container *ngIf="(removingPlayer)">
-      <div class="heading">Remove Player...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
     <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
     <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
-    <p-dataTable *ngIf="(!loadingParticipants) && (!removingPlayer) && (!startingTournament)"
+    <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
                  [stacked]="stackedPlayers"
@@ -324,7 +327,7 @@
                         [(ngModel)]="participant[col.field]"
                         [options]="participantField.fieldValues"
                         (onChange)="changeParticipant(participant)"
-                        (onBlur)="saveParticipant()"
+                        (onBlur)="updateParticipant()"
                         [autoWidth]="false"
                         [style]="{'width':'100%'}">
             </p-dropdown>
@@ -333,7 +336,7 @@
                            [(ngModel)]="participant[col.field]"
                            [options]="participantField.fieldValues"
                            (onChange)="changeParticipant(participant)"
-                           (onPanelHide)="saveParticipant()"
+                           (onPanelHide)="updateParticipant()"
                            [showToggleAll]=false
                            [maxSelectedLabels]=3
                            [style]="{'width':'100%'}">
@@ -370,6 +373,14 @@
         </ng-template>
       </p-column>
     </p-dataTable>
+  </p-panel>
+
+  <p-panel *ngIf="matchModified">
+    <p-header>
+      <span class="ui-panel-title save-mod-heading">Games modified. Please save to publish</span>
+      <button pButton type="button" class="ui-button-success save-mod-button"
+              (click)="saveMatches()" label="Save" icon="fa-check"></button>
+    </p-header>
   </p-panel>
 
   <ng-container *ngIf="!(shownRound > tournament?.actualRound)">
@@ -409,7 +420,7 @@
         [paginator]="true"
         [pageLinks]="3"
         [dataKey]="'id'"
-        [immutable]="false"
+        [immutable]="true"
         [stacked]="stackedMatches"
         [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
         [csvSeparator]="';'"

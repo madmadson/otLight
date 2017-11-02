@@ -13,17 +13,32 @@
 </ng-container>
 
 <ng-container *ngIf="(playersLoaded) && !updatePlayer">
+  <p-dialog [(visible)]="addPlayerDialogVisibility"
+            [contentStyle]="{'overflow':'visible', 'height':'100%'}"
+            [modal]=true
+            [width]="600"
+            [height]="400">
+    <p-header>
+      New Player
+    </p-header>
+    <app-player-add-dialog
+      [allPlayersToCheck]="allPlayers"
+      (onPlayerSaved)="handlePlayerSaved()">
+    </app-player-add-dialog>
+  </p-dialog>
   <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
-  <p-dataTable [value]="players"
+  <button pButton type="button" (click)="addPlayerDialogVisibility = true" label="New Player" icon="fa-plus"></button>
+
+  <p-dataTable [value]="allPlayersForSelectedGameSystem"
                [stacked]="stacked"
                [editable]="true"
                [responsive]="true"
-               [rows]="50"
+               [rows]="20"
                [paginator]="true"
                [pageLinks]="3"
                (onEditComplete)="onEditPlayer($event)"
                [rowsPerPageOptions]="[5, 10, 20, 50, 100]">
-    <p-header>{{players?.length}} {{selectedGameSystem}} Players</p-header>
+    <p-header>{{allPlayersForSelectedGameSystem?.length}} {{selectedGameSystem}} Players</p-header>
     <p-column field="name"
               [editable]="true"
               styleClass="{{'editable-column'}}, break-word"

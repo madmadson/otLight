@@ -38,6 +38,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
   loadingRound: boolean;
   loadingParticipants: boolean;
   swappingPlayer: boolean;
+  updateParticipantList: boolean;
+  updateMatchList: boolean;
 
   orgaDialogVisibility: boolean;
   orgaForm: FormGroup;
@@ -56,9 +58,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected tournamentUnsubscribeFunction: () => void;
   tournament: Tournament;
 
-  protected addingPlayer: boolean;
-  protected removingPlayer: boolean;
-
   protected participantToChange: Participant;
   protected participants: Participant[] = [];
   protected participantsNameList: string[] = [];
@@ -66,6 +65,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected participantsUnsubscribeFunction: () => void;
   protected participantsScoreMap: {} = {};
   protected participantsChoosePlayedMap: {};
+  protected participantsUpdateBatch: WriteBatch;
+  participantsModified: boolean;
 
   stackedPlayers: boolean;
 
@@ -87,7 +88,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected matchesColRef: CollectionReference;
   protected roundMatches: RoundMatch[] = [];
   protected roundUnsubscribeFunction: () => void;
-
+  protected matchesUpdateBatch: WriteBatch;
+  matchModified: boolean;
 
   protected winningOptions: SelectItem[] = [
     {value: 'p1', label: 'P1 WON'},
@@ -122,12 +124,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participants');
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
 
-    // this.isOrga = true;
+    this.isOrga = true;
 
     this.orgaForm = this.formBuilder.group({
-      user: [{value: 'Orga', disabled: true}, Validators.required ],
-      password: ['', Validators.required ],
+      user: [{value: 'Orga', disabled: true}, Validators.required],
+      password: ['', Validators.required],
     });
+
+    this.matchesUpdateBatch = this.afs.firestore.batch();
+    this.participantsUpdateBatch = this.afs.firestore.batch();
   }
 
   ngOnInit() {
@@ -152,7 +157,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
           }
 
           console.log('round before: ' + tournamentBeforeUpdate.actualRound);
-          console.log('round now: ' + that.tournament.actualRound );
+          console.log('round now: ' + that.tournament.actualRound);
           if (tournamentBeforeUpdate.actualRound !== that.tournament.actualRound) {
             console.log('round changed. load data');
             that.shownRound = that.tournament.actualRound;
@@ -218,13 +223,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
     const that = this;
     that.loadingParticipants = true;
     that.participants = [];
-    this.participantsChoosePlayedMap = {};
+    that.participantsChoosePlayedMap = {};
 
-    if (this.participantsUnsubscribeFunction) {
-      this.participantsUnsubscribeFunction();
+    if (that.participantsUnsubscribeFunction) {
+      that.participantsUnsubscribeFunction();
     }
 
-    this.participantsUnsubscribeFunction = this.participantsColRef
+    that.participantsUnsubscribeFunction = this.participantsColRef
       .onSnapshot(function (snapshot) {
 
         snapshot.docChanges.forEach(function (change) {
@@ -307,7 +312,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const that = this;
 
-    this.loadingPlayers = true;
+    that.loadingPlayers = true;
 
     if (that.playersUnsubscribeFunction) {
       that.playersUnsubscribeFunction();
@@ -394,10 +399,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
             that.noMatchFinished = true;
             that.allMatchesFinished = true;
 
+            const newMatches = _.cloneDeep(that.roundMatches);
             const newMatch = getRoundMatchForJSON(change.doc.id, change.doc.data());
             const index = _.findIndex(that.roundMatches, ['id', change.doc.id]);
-            const oldMatch = that.roundMatches[index];
-
 
             _.forEach(that.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
               const fieldPlayerOneValue = change.doc.data()[scoreField.fieldPlayerOne] ?
@@ -419,17 +423,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
               newMatch[choosePlayed.fieldPlayerTwo] = fieldPlayerTwoValue;
             });
 
-            for (const property in newMatch) {
-              if (newMatch.hasOwnProperty(property)) {
-
-                if (!_.isEqual(newMatch[property], oldMatch[property])) {
-                  // console.log("property changed " + JSON.stringify(oldMatch[property]) + " => " + JSON.stringify(newMatch[property]));
-                  oldMatch[property] = newMatch[property];
-                }
-              }
-            }
-
-            // that.roundMatches[index] = roundMatch;
+            newMatches[index] = newMatch;
+            that.roundMatches = newMatches;
 
             _.forEach(that.roundMatches, function (match: RoundMatch) {
               if (match.finished) {
@@ -482,8 +477,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const that = this;
 
-    this.addingPlayer = true;
-
     const participant: Participant = {
       name: playerToAdd.name,
       location: playerToAdd.location ? playerToAdd.location : '',
@@ -506,69 +499,46 @@ export class TournamentComponent implements OnInit, OnDestroy {
     const uuid = UUID.UUID();
     participant.id = uuid;
 
-    if (this.conService.isOnline()) {
+    this.participantsUpdateBatch.set(this.participantsColRef.doc(uuid), participant);
+    this.participantsModified = true;
 
-      that.participantsColRef.doc(uuid).set(participant).then(function () {
-        console.log("Participant written with ID: ", participant.id);
-        that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Participant added'});
+    // modify both lists
+    const newParticipants = _.cloneDeep(that.participants);
+    newParticipants.push(participant);
+    that.participants = newParticipants;
 
-        that.addingPlayer = false;
-      }).catch(function (error) {
-        console.error("Error writing participant: ", error);
-        that.addingPlayer = false;
-      });
-    } else {
-      that.participantsColRef.doc(uuid).set(participant).then(function () {
-        // ignored is offline :/
-      }).catch(function () {
-        // ignored is offline :/
-      });
-      console.log("Participant written with ID: ", participant.id);
+    const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
+    const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
+    newPlayers.splice(index, 1);
+    that.possiblePlayersToAdd = newPlayers;
 
-      that.addingPlayer = false;
-
-      that.messageService.add(
-        {
-          severity: 'success',
-          summary: 'Creation',
-          detail: 'ATTENTION Participant added offline! Go online to sync data'
-        }
-      );
-    }
+    that.messageService.add({severity: 'success',
+      summary: 'Update', detail: 'Player added. Save to start tournament and publish new list of participants'});
   }
 
   deleteParticipant(participant: Participant) {
+
     const that = this;
-    this.removingPlayer = true;
 
     const participantsDocRef = this.participantsColRef.doc(participant.id);
 
-    if (this.conService.isOnline()) {
-      participantsDocRef.delete().then(function () {
-        console.log("Participant successfully deleted!");
-        that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Player removed'});
+    this.participantsUpdateBatch.delete(participantsDocRef);
+    this.participantsModified = true;
 
-        that.removingPlayer = false;
-      }).catch(function (error) {
-        console.error("Error removing player: ", error);
-        that.removingPlayer = false;
-      });
-    } else {
-      participantsDocRef.delete().then(function () {
-        // offline ignored :(
-      }).catch(function () {
-      });
-      console.log("Participant successfully deleted!");
-      that.messageService.add(
-        {
-          severity: 'success',
-          summary: 'Deletion',
-          detail: 'ATTENTION Participant deleted offline! Go online to sync data'
-        }
-      );
+    // modify both lists
+    const newParticipants = _.cloneDeep(that.participants);
+    const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
+    newParticipants.splice(indexParticipants, 1);
+    that.participants = newParticipants;
 
-      that.removingPlayer = false;
-    }
+    const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
+    const indexPlayers = _.findIndex(that.allPlayers, ['name', participant.name]);
+    newPlayers.splice(indexPlayers, 0, that.allPlayers[indexPlayers]);
+    that.possiblePlayersToAdd = newPlayers;
+
+    that.messageService.add({severity: 'success',
+      summary: 'Update', detail: 'Player removed. Save to start tournament and publish new list of participants'});
+
   }
 
   onEditParticipant(event: any) {
@@ -576,24 +546,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     console.log(event.data);
 
     const participantDocRef = this.participantsColRef.doc(event.data.id);
-
     const participant: Participant = getParticipantForJSON(event.data.id, event.data);
 
-    if (this.conService.isOnline()) {
-      participantDocRef.update(participant).then(function () {
-        console.log("Participant updated: ");
-
-      }).catch(function (error) {
-        console.error("Error updating participant: ", error);
-      });
-    } else {
-      participantDocRef.update(participant).then(function () {
-        // ignored is offline :/
-      }).catch(function () {
-        // ignored is offline :/
-      });
-      console.log("Participant updated: ");
-    }
+    this.participantsUpdateBatch.update(participantDocRef, participant);
+    this.participantsModified = true;
   }
 
   onEditMatch(event: any) {
@@ -601,24 +557,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     console.log(event.data);
 
     const matchDocRef = this.matchesColRef.doc(event.data.id);
-
     const match: RoundMatch = getRoundMatchForJSON(event.data.id, event.data);
 
-    if (this.conService.isOnline()) {
-      matchDocRef.update(match).then(function () {
-        console.log("RoundMatch updated: ");
-
-      }).catch(function (error) {
-        console.error("Error updating RoundMatch: ", error);
-      });
-    } else {
-      matchDocRef.update(match).then(function () {
-        // ignored is offline :/
-      }).catch(function () {
-        // ignored is offline :/
-      });
-      console.log("RoundMatch updated: ");
-    }
+    this.matchesUpdateBatch.update(matchDocRef, match);
+    this.matchModified = true;
   }
 
   changeParticipant(participant: Participant) {
@@ -628,28 +570,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
   }
 
 
-  saveParticipant() {
+  updateParticipant() {
 
     const that = this;
 
     if (this.participantToChange) {
       const participantDocRef = this.participantsColRef.doc(that.participantToChange.id);
-
-      if (this.conService.isOnline()) {
-        participantDocRef.update(that.participantToChange).then(function () {
-          console.log("Participant updated: ");
-
-        }).catch(function (error) {
-          console.error("Error updating participant: ", error);
-        });
-      } else {
-        participantDocRef.update(that.participantToChange).then(function () {
-          // ignored is offline :/
-        }).catch(function () {
-          // ignored is offline :/
-        });
-        console.log("Participant updated: ");
-      }
+      this.participantsUpdateBatch.update(participantDocRef, this.participantToChange);
+      this.participantsModified = true;
     }
   }
 
@@ -876,43 +804,28 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const cloneMatch: RoundMatch = _.cloneDeep(roundMatch);
 
-    const that = this;
     console.log('Match winner changed: ' + event.value);
 
-    const batch = that.afs.firestore.batch();
+    this.matchModified = true;
 
     if (event.value === 'p1') {
-      this.roundMatchService.playerOneWon(this.tournament, roundMatch, this.participants, batch);
+      this.roundMatchService.playerOneWon(this.tournament, roundMatch, this.participants, this.matchesUpdateBatch);
 
       if (cloneMatch.finished) {
-        this.roundMatchService.playerTwoLost(this.tournament, roundMatch, this.participants, batch);
+        this.roundMatchService.playerTwoLost(this.tournament, roundMatch, this.participants, this.matchesUpdateBatch);
       }
     }
 
     if (event.value === 'p2') {
-      this.roundMatchService.playerTwoWon(this.tournament, roundMatch, this.participants, batch);
+      this.roundMatchService.playerTwoWon(this.tournament, roundMatch, this.participants, this.matchesUpdateBatch);
 
       if (cloneMatch.finished) {
-        this.roundMatchService.playerOneLost(this.tournament, roundMatch, this.participants, batch);
+        this.roundMatchService.playerOneLost(this.tournament, roundMatch, this.participants, this.matchesUpdateBatch);
       }
     }
 
     if (event.value === 'draw') {
-      this.roundMatchService.resultDraw(this.tournament, roundMatch, this.participants, batch);
-    }
-    if (this.conService.isOnline()) {
-      batch.commit().then(function () {
-        that.messageService.add({severity: 'success', summary: 'Update', detail: 'Match Result entered'});
-      }).catch(function (error) {
-        console.error("Error update winner: ", error);
-      });
-    } else {
-      batch.commit().then(function () {
-        // offline :/
-      }).catch(function () {
-
-      });
-      that.messageService.add({severity: 'success', summary: 'Update', detail: 'Match Result entered'});
+      this.roundMatchService.resultDraw(this.tournament, roundMatch, this.participants, this.matchesUpdateBatch);
     }
   }
 
@@ -1481,5 +1394,66 @@ export class TournamentComponent implements OnInit, OnDestroy {
     } else {
       return 'Standings Round ' + this.shownRound;
     }
+  }
+
+  saveMatches() {
+
+    const that = this;
+
+    if (this.matchModified) {
+      this.publishRound();
+      this.updateMatchList = true;
+      this.matchModified = false;
+      if (this.conService.isOnline()) {
+        this.matchesUpdateBatch.commit().then(function () {
+          that.messageService.add({severity: 'success', summary: 'Update', detail: 'Update Matches'});
+          that.updateMatchList = false;
+        }).catch(function (error) {
+          console.error("Error update winner: ", error);
+        });
+      } else {
+        this.matchesUpdateBatch.commit().then(function () {
+          // offline :/
+        }).catch(function () {
+        });
+        that.messageService.add({severity: 'success', summary: 'Update', detail: 'Update Matches'});
+        that.updateMatchList = false;
+      }
+
+      this.matchesUpdateBatch = this.afs.firestore.batch();
+    }
+
+
+  }
+
+  saveParticipants() {
+
+    const that = this;
+
+    if (this.participantsModified) {
+
+      this.updateParticipantList = true;
+      this.participantsModified = false;
+      if (this.conService.isOnline()) {
+        this.participantsUpdateBatch.commit().then(function () {
+          that.messageService.add({severity: 'success', summary: 'Update', detail: 'Update Players'});
+          that.updateParticipantList = false;
+        }).catch(function (error) {
+          console.error("Error update winner: ", error);
+          that.updateParticipantList = false;
+        });
+      } else {
+        this.participantsUpdateBatch.commit().then(function () {
+          // offline :/
+        }).catch(function () {
+        });
+        that.messageService.add({severity: 'success', summary: 'Update', detail: 'Update Players'});
+        that.updateParticipantList = false;
+      }
+
+      this.participantsUpdateBatch = this.afs.firestore.batch();
+    }
+
+
   }
 }

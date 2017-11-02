@@ -13,7 +13,8 @@ import {GameSystemService} from "../../services/game-system.service";
 import {Subscription} from "rxjs/Subscription";
 
 import {SelectItem} from "primeng/primeng";
-import {Router} from "@angular/router";
+import {ActivatedRoute, ParamMap, Router} from "@angular/router";
+import {Observable} from "rxjs/Observable";
 
 @Component({
   selector: 'app-tournaments',
@@ -33,9 +34,22 @@ export class TournamentsComponent implements OnInit, OnDestroy {
   protected gameSystemSubscription: Subscription;
   protected gameSystems: SelectItem[];
 
+  addTournamentDialogVisibility: boolean;
+  private routerSub: Subscription;
+
   constructor(protected afs: AngularFirestore,
               protected router: Router,
+              private route: ActivatedRoute,
               protected gameSystemService: GameSystemService) {
+
+    this.routerSub  = this.route
+      .paramMap
+      .map(params => {
+        console.log('params: ' + JSON.stringify(params));
+        if (params.get('new')) {
+          this.addTournamentDialogVisibility = true;
+        }
+      }).subscribe();
 
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
 
@@ -56,6 +70,11 @@ export class TournamentsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.tournamentsUnsubscribeFunction();
     this.gameSystemSubscription.unsubscribe();
+    this.routerSub.unsubscribe();
+  }
+
+  handleTournamentSaved() {
+    this.addTournamentDialogVisibility = false;
   }
 
 

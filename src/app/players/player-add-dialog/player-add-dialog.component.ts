@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnDestroy, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {SelectItem} from "primeng/primeng";
 import {MessageService} from "primeng/components/common/messageservice";
@@ -16,9 +16,10 @@ import {ConnectivityService} from "../../services/connectivity-service";
   templateUrl: './player-add-dialog.component.html',
   styleUrls: ['./player-add-dialog.component.scss']
 })
-export class PlayerAddDialogComponent implements OnInit, OnDestroy {
+export class PlayerAddDialogComponent implements OnInit {
 
   @Output() onPlayerSaved = new EventEmitter<any>();
+  @Input() allPlayersToCheck: Player[];
 
   protected gameSystemsAsSelectItems: SelectItem[];
   protected gameSystems: string[];
@@ -26,9 +27,6 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
 
   playerSaving: boolean;
 
-  protected allPlayersToCheck: Player[] = [];
-  protected playersColRef: CollectionReference;
-  protected playersUnsubscribeFunction: () => void;
   protected playerNameAlreadyTaken: boolean;
   protected byeNameTaken: boolean;
 
@@ -38,20 +36,9 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
               private afs: AngularFirestore) {
     this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
     this.gameSystems = getGameSystems();
-    this.playersColRef = this.afs.firestore.collection('players');
   }
 
   ngOnInit() {
-
-    const that = this;
-
-    this.playersUnsubscribeFunction = this.playersColRef.onSnapshot(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-
-        const player: Player = getPlayerForJSON(doc.id, doc.data());
-        that.allPlayersToCheck.push(player);
-      });
-    });
 
     this.playerForm = this.fb.group({
       'name': new FormControl('', Validators.compose([Validators.required, Validators.minLength(3), Validators.maxLength(30)])),
@@ -60,9 +47,6 @@ export class PlayerAddDialogComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
-    this.playersUnsubscribeFunction();
-  }
 
   onSubmit() {
 

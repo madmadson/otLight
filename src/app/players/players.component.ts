@@ -14,6 +14,7 @@ import {
 import {SelectItem} from "primeng/primeng";
 import {ConnectivityService} from "../services/connectivity-service";
 import {MessageService} from "primeng/components/common/messageservice";
+import {ActivatedRoute} from "@angular/router";
 
 
 @Component({
@@ -28,7 +29,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   updatePlayer: boolean;
   selectedGameSystem: string;
 
-  protected players: Player[] = [];
+  protected allPlayers: Player[] = [];
+  protected allPlayersForSelectedGameSystem: Player[] = [];
   protected gameSystemSubscription: Subscription;
   protected playersColRef: CollectionReference;
   protected playersUnsubscribeFunction: (() => void);
@@ -37,9 +39,13 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   protected gameSystems: string[];
   protected playerToChange: Player;
 
+  addPlayerDialogVisibility: boolean;
+  private routerSub: Subscription;
+
   constructor(private afs: AngularFirestore,
               private conService: ConnectivityService,
               private messageService: MessageService,
+              private route: ActivatedRoute,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
 
@@ -49,6 +55,15 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
     this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
     this.gameSystems = getGameSystems();
+
+    this.routerSub  = this.route
+      .paramMap
+      .map(params => {
+        console.log('params: ' + JSON.stringify(params));
+        if (params.get('new')) {
+          this.addPlayerDialogVisibility = true;
+        }
+      }).subscribe();
   }
 
   ngOnInit() {
@@ -66,25 +81,27 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   ngOnDestroy() {
     this.playersUnsubscribeFunction();
     this.gameSystemSubscription.unsubscribe();
+    this.routerSub.unsubscribe();
   }
 
   protected subscribeOnPlayers() {
 
     const that = this;
     that.playersLoaded = false;
-    that.players = [];
+    that.allPlayers = [];
+    that.allPlayersForSelectedGameSystem = [];
 
     if (this.playersUnsubscribeFunction) {
       this.playersUnsubscribeFunction();
     }
 
-    this.playersUnsubscribeFunction = this.playersColRef
-      .where('gameSystems.' + this.selectedGameSystem, '==', true).onSnapshot(function (snapshot) {
+    this.playersUnsubscribeFunction = this.playersColRef.onSnapshot(function (snapshot) {
 
         snapshot.docChanges.forEach(function (change) {
           if (change.type === "added") {
 
-            const newPlayers = _.cloneDeep(that.players);
+            const newPlayers = _.cloneDeep(that.allPlayers);
+            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
 
             const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
 
@@ -101,11 +118,17 @@ export class PlayersComponent implements OnInit, OnDestroy  {
             });
 
             newPlayers.push(player);
-            that.players = newPlayers;
+            that.allPlayers = newPlayers;
+
+            if (_.includes(player.myGameSystems, that.selectedGameSystem)) {
+              newPlayersForSelectedGameSystem.push(player);
+              that.allPlayersForSelectedGameSystem = newPlayersForSelectedGameSystem;
+            }
           }
           if (change.type === "modified") {
 
-            const newPlayers = _.cloneDeep(that.players);
+            const newPlayers = _.cloneDeep(that.allPlayers);
+            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
 
             const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
 
@@ -122,16 +145,30 @@ export class PlayersComponent implements OnInit, OnDestroy  {
 
             const index = _.findIndex(newPlayers, ['id', change.doc.id]);
             newPlayers[index] = player;
-            that.players = newPlayers;
+            that.allPlayers = newPlayers;
+
+            if (_.includes(player.myGameSystems, that.selectedGameSystem)) {
+              const indexForSelected = _.findIndex(newPlayersForSelectedGameSystem, ['id', change.doc.id]);
+              newPlayersForSelectedGameSystem[indexForSelected] = player;
+              newPlayersForSelectedGameSystem.push(player);
+              that.allPlayersForSelectedGameSystem = newPlayers;
+            }
           }
           if (change.type === "removed") {
 
-            const newPlayers = _.cloneDeep(that.players);
+            const newPlayers = _.cloneDeep(that.allPlayers);
+            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
 
             const index = _.findIndex(newPlayers, ['id', change.doc.id]);
             newPlayers.splice(index, 1);
 
-            that.players = newPlayers;
+            that.allPlayers = newPlayers;
+
+            if (_.includes(change.doc.data().myGameSystems, that.selectedGameSystem)) {
+              const indexForSelected = _.findIndex(newPlayers, ['id', change.doc.id]);
+              newPlayersForSelectedGameSystem.splice(indexForSelected, 1);
+              that.allPlayersForSelectedGameSystem = newPlayersForSelectedGameSystem;
+            }
           }
         });
 
@@ -144,6 +181,11 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     console.log('change Player: ' + JSON.stringify(player));
 
     this.playerToChange = player;
+  }
+
+
+  handlePlayerSaved() {
+    this.addPlayerDialogVisibility = false;
   }
 
   savePlayer() {

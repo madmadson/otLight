@@ -1,4 +1,3 @@
-
 <ng-container *ngIf="(!tournamentsLoaded)">
   <div class="heading">Load Tournaments...</div>
   <div class="centered-content-container">
@@ -7,7 +6,23 @@
 </ng-container>
 
 <ng-container *ngIf="(tournamentsLoaded)">
+  <p-dialog [(visible)]="addTournamentDialogVisibility"
+            [contentStyle]="{'overflow':'visible', 'height':'100%'}"
+            [modal]=true
+            [width]="600"
+            [height]="400">
+    <p-header>
+      New Tournament {{selectedGameSystem}}
+    </p-header>
+    <app-tournament-add-dialog
+      [gameSystem]="selectedGameSystem"
+      [allTournaments]="tournaments"
+      (onTournamentSaved)="handleTournamentSaved()">
+    </app-tournament-add-dialog>
+  </p-dialog>
+
   <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
+  <button pButton type="button" (click)="addTournamentDialogVisibility = true" label="New Tournament" icon="fa-plus"></button>
   <p-dataTable [value]="tournaments"
                [stacked]="stacked"
                [responsive]="true"

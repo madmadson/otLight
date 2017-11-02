@@ -8,8 +8,10 @@ import {TournamentComponent} from "./tournament/tournament.component";
 
 const routes: Routes = [
   { path: 'tournaments', component: TournamentsComponent },
+  { path: 'tournaments/:new', component: TournamentsComponent },
   { path: 'tournament/:id', component: TournamentComponent },
   { path: 'players', component: PlayersComponent },
+  { path: 'players/:new', component: PlayersComponent },
   { path: '', component: TournamentsComponent },
   {path: '**', component: PageNotFoundComponent}
 ];

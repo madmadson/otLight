@@ -17,9 +17,10 @@ import {ConnectivityService} from "../../services/connectivity-service";
   templateUrl: './tournament-add-dialog.component.html',
   styleUrls: ['./tournament-add-dialog.component.scss']
 })
-export class TournamentAddDialogComponent implements OnInit, OnDestroy {
+export class TournamentAddDialogComponent implements OnInit {
 
   @Input() gameSystem: string;
+  @Input() allTournaments: Tournament[];
   @Output() onTournamentSaved = new EventEmitter<any>();
 
   tournamentForm: FormGroup;
@@ -27,9 +28,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
   allGameSystems: SelectItem[];
   tournamentSaving: boolean;
 
-  protected allTournamentsToCheck: Tournament[] = [];
   protected tournamentsColRef: CollectionReference;
-  protected tournamentsUnsubscribeFunction: () => void;
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
@@ -37,22 +36,10 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
               private conService: ConnectivityService) {
 
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
-
     this.allGameSystems = getGameSystemsAsSelectItems();
   }
 
   ngOnInit() {
-
-    const that = this;
-
-    this.tournamentsUnsubscribeFunction = this.tournamentsColRef.onSnapshot(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-
-        const tournament: Tournament = getTournamentForJSON(doc.id, doc.data());
-        that.allTournamentsToCheck.push(tournament);
-      });
-    });
-
     this.tournamentForm = this.fb.group({
       'name': new FormControl('', Validators.required),
       'gameSystem': new FormControl(this.gameSystem, Validators.required),
@@ -62,15 +49,9 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
 
   }
 
-  ngOnDestroy() {
-    this.tournamentsUnsubscribeFunction();
-  }
-
   onSubmit() {
 
     const that = this;
-    this.tournamentSaving = true;
-
     that.tournamentNameAlreadyTaken = false;
 
     const tournament: Tournament = {
@@ -83,7 +64,7 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
       state: 'CREATED',
     };
 
-    _.forEach(this.allTournamentsToCheck, function (tournamentToCheck: Tournament) {
+    _.forEach(this.allTournaments, function (tournamentToCheck: Tournament) {
 
       if (tournamentToCheck.name === tournament.name) {
         that.tournamentNameAlreadyTaken = true;
@@ -92,6 +73,8 @@ export class TournamentAddDialogComponent implements OnInit, OnDestroy {
 
 
     if (!this.tournamentNameAlreadyTaken) {
+
+      this.tournamentSaving = true;
 
       const uuid = UUID.UUID();
       tournament.id = uuid;

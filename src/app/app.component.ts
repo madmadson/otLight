@@ -6,6 +6,7 @@ import {GameSystemService} from "./services/game-system.service";
 import {Observable} from 'rxjs/Rx';
 import {WindowRefService} from "./services/window-ref-service";
 import {ConnectivityService} from "./services/connectivity-service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,7 @@ export class AppComponent  implements OnInit, OnDestroy {
   sidebarVisible: boolean;
 
   messages: Message[] = [];
-  addTournamentDialogVisibility: boolean;
+
   addPlayerDialogVisibility: boolean;
 
   selectedGameSystem: string;
@@ -26,6 +27,7 @@ export class AppComponent  implements OnInit, OnDestroy {
   isConnected$: Observable<boolean>;
 
   constructor(private afs: AngularFirestore,
+              protected router: Router,
               private conService: ConnectivityService,
               protected gameSystemService: GameSystemService) {
 
@@ -63,25 +65,16 @@ export class AppComponent  implements OnInit, OnDestroy {
     this.conService.unSubscribe();
   }
 
-
-  openNewTournamentDialog() {
+  openPlayerWithOpenNewPlayerDialog() {
     this.sidebarVisible = false;
-    this.addTournamentDialogVisibility = true;
+    this.router.navigate(['/players', 'true']);
   }
 
-  openNewPlayerDialog() {
+  openTournamentsWithOpenNewTournamentDialog() {
+
     this.sidebarVisible = false;
-    this.addPlayerDialogVisibility = true;
+    this.router.navigate(['/tournaments', 'true']);
   }
-
-  handleTournamentSaved() {
-    this.addTournamentDialogVisibility = false;
-  }
-
-  handlePlayerSaved() {
-    this.addPlayerDialogVisibility = false;
-  }
-
 
   gameSystemChanged(event: any) {
 
