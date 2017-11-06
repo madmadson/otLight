@@ -269,13 +269,25 @@
       <span class="heading">There are unsaved changes. Please save first to move on.</span>
     </div>
     <div class="orga-panel-container" *ngIf="!dataToSave && !updateData">
-      <button *ngIf="tournament?.actualRound === 0 &&
-                      participants?.length >= 2 &&
+      T: {{fullyLoadedTeams === teams?.length}}
+      <button *ngIf="tournament?.type === 'solo' &&
+                     tournament?.actualRound === 0 &&
+                     participants?.length >= 2 &&
                      (!loadingPlayers)"
               pButton type="button"
               class="action-element ui-button-success"
               (click)="pairRound(false)"
               label="Start Tournament">
+      </button>
+      <button *ngIf="tournament?.type === 'team' &&
+                     tournament?.actualRound === 0 &&
+                     fullyLoadedTeams === teams?.length &&
+                     teams?.length >= 2 &&
+                     (!loadingTeams)"
+              pButton type="button"
+              class="action-element ui-button-success"
+              (click)="pairRound(false)"
+              label="Start Team Tournament">
       </button>
       <button *ngIf="tournament?.actualRound > 0 && allMatchesFinished && !tournamentFinished"
               pButton type="button"
@@ -376,7 +388,7 @@
           <p-dropdown placeholder="Please Choose Team"
                       [(ngModel)]="participant.team"
                       [options]="teamNameSelectItemList"
-                      (onChange)="changeParticipant(participant)"
+                      (onChange)="changeTeam(participant)"
                       (onBlur)="updateParticipant()"
                       [autoWidth]="false"
                       [style]="{'width':'100%'}">
@@ -444,7 +456,6 @@
         </ng-template>
       </p-column>
     </p-dataTable>
-
     <!-- Team List-->
     <p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
                  [value]="teams"
@@ -478,14 +489,19 @@
         <ng-template pTemplate="header">Team Members</ng-template>
         <ng-template pTemplate="body" let-team="rowData">
           <ng-container *ngIf="teamMemberMap[team.name]">
-            {{teamMemberMap[team.name]?.length}} ({{teamMemberMap[team.name]}})
+            <div [ngClass]="{'team-over-full': (teamMemberMap[team.name]?.length > tournament?.teamSize),
+                             'team-not-full-color': (teamMemberMap[team.name]?.length <= tournament?.teamSize)}">
+            {{teamMemberMap[team.name]?.length}}
+              <i *ngIf="teamMemberMap[team.name]?.length > tournament?.teamSize"
+                 class="fa fa-exclamation-triangle" pTooltip="Exceeded TeamSize"></i>
+              <i class="fa fa-info-circle" pTooltip="{{teamMemberMap[team.name]}}"></i>
+            </div>
           </ng-container>
           <ng-container *ngIf="!teamMemberMap[team.name]">
              No Team Members yet
           </ng-container>
         </ng-template>
       </p-column>
-
       <p-column sortable="custom"
                 header="Score"
                 (sortFunction)="sortByScore($event)">
@@ -493,7 +509,6 @@
           {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
         </ng-template>
       </p-column>
-
       <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
         <p-column header="{{scoreField.field}}">
           <ng-template let-team="rowData" pTemplate="body">
@@ -508,7 +523,7 @@
           Actions
         </ng-template>
         <ng-template let-team="rowData" pTemplate="body">
-          <button *ngIf="isOrga"
+          <button *ngIf="!teamMemberMap[team.name] && isOrga"
                   type="button" pButton (click)="deleteTeam(team)" icon="fa-trash" label="Remove Team">
           </button>
         </ng-template>

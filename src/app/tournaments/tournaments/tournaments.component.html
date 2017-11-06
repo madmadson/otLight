@@ -14,11 +14,11 @@
     <p-header>
       New Tournament {{selectedGameSystem}}
     </p-header>
-    <app-tournament-add-dialog
+    <ot-tournament-add-dialog
       [gameSystem]="selectedGameSystem"
       [allTournaments]="tournaments"
       (onTournamentSaved)="handleTournamentSaved()">
-    </app-tournament-add-dialog>
+    </ot-tournament-add-dialog>
   </p-dialog>
 
   <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>

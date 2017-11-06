@@ -197,3 +197,13 @@ input.ng-invalid.ng-dirty{
   cursor: pointer;
   color: $hover_color;
 }
+
+.team-over-full {
+  color: $fail_color;
+  font-size: 2.0em;
+  font-weight: bold;
+}
+
+.team-not-full-color {
+  color: $light_success_color;
+}

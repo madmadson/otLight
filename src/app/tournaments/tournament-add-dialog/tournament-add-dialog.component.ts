@@ -13,7 +13,7 @@ import {UUID} from "angular2-uuid";
 import {ConnectivityService} from "../../services/connectivity-service";
 
 @Component({
-  selector: 'app-tournament-add-dialog',
+  selector: 'ot-tournament-add-dialog',
   templateUrl: './tournament-add-dialog.component.html',
   styleUrls: ['./tournament-add-dialog.component.scss']
 })
@@ -45,6 +45,7 @@ export class TournamentAddDialogComponent implements OnInit {
       'gameSystem': new FormControl(this.gameSystem, Validators.required),
       'password': new FormControl('', Validators.minLength(6)),
       'type': new FormControl('solo'),
+      'teamSize': new FormControl('3'),
     });
 
   }
@@ -59,6 +60,7 @@ export class TournamentAddDialogComponent implements OnInit {
       password: this.tournamentForm.value.password.trim(),
       gameSystem: this.tournamentForm.value.gameSystem,
       type: this.tournamentForm.value.type,
+      teamSize: this.tournamentForm.value.teamSize ? this.tournamentForm.value.teamSize : 0,
       actualRound: 0,
       publishedRound: 0,
       state: 'CREATED',

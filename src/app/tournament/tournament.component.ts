@@ -69,11 +69,12 @@ export class TournamentComponent implements OnInit, OnDestroy {
   stackedPlayers: boolean;
 
   teamCreationDialogVisibility: boolean;
+  fullyLoadedTeams: number;
   teamCreationForm: FormGroup;
   teamNameAlreadyTaken: boolean;
 
   protected teamsColRef: CollectionReference;
-  protected teams: Participant[] = [];
+  protected teams: Team[] = [];
 
   protected teamNameSelectItemList: SelectItem[] = [];
   protected teamMemberMap: {} = {};
@@ -267,6 +268,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
     that.participants = [];
     that.participantsChoosePlayedMap = {};
 
+    that.fullyLoadedTeams = 0;
+
     if (that.participantsUnsubscribeFunction) {
       that.participantsUnsubscribeFunction();
     }
@@ -306,18 +309,18 @@ export class TournamentComponent implements OnInit, OnDestroy {
             orderParticipantsForGameSystem(that.tournament.gameSystem, newParticipants, that.participantsScoreMap);
 
             if (that.tournament.type === 'team' && participant.team) {
-
               console.log('found player ' + participant.name + ' with team: ' + participant.team);
 
               if (that.teamMemberMap[participant.team]) {
-
                 that.teamMemberMap[participant.team] =
                   _.concat(that.teamMemberMap[participant.team], participant.name);
 
-                // console.log('more than one player ' + that.teamMemberMap[participant.team]);
+                if (that.teamMemberMap[participant.team].length === that.tournament.teamSize) {
+                  console.log('found fully loaded team: ' + participant.team);
+                  that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+                }
               } else {
                 that.teamMemberMap[participant.team] = [participant.name];
-                // console.log('first Player: ' + that.teamMemberMap[participant.team]);
               }
             }
           }
@@ -339,11 +342,16 @@ export class TournamentComponent implements OnInit, OnDestroy {
             });
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
+            const oldParticipant = that.participants[index];
             newParticipants[index] = participant;
             that.participants = newParticipants;
 
             that.participantsScoreMap[participant.name] = getScore(participant);
             orderParticipantsForGameSystem(that.tournament.gameSystem, newParticipants, that.participantsScoreMap);
+
+            if (that.tournament.type === 'team' && participant.team && oldParticipant.team !== participant.team) {
+              console.log('found player with modified team: ' + oldParticipant.team + ' to ' + participant.team);
+            }
           }
           if (change.type === "removed") {
             const newParticipants = _.cloneDeep(that.participants);
@@ -410,6 +418,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
       that.teamsUnsubscribeFunction();
     }
 
+    that.teamNameSelectItemList.push({value: '', label: 'No Team'});
+
     that.teamsUnsubscribeFunction = this.teamsColRef
       .onSnapshot(function (snapshot) {
         snapshot.docChanges.forEach(function (change) {
@@ -427,13 +437,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             that.teamsScoreMap[team.name] = getScoreForTeam(team);
             orderTeamsForGameSystem(that.tournament.gameSystem, newTeams, that.teamsScoreMap);
-
-          }
-          if (change.type === "modified") {
-
-          }
-          if (change.type === "removed") {
-
           }
         });
         that.loadingTeams = false;
@@ -619,27 +622,32 @@ export class TournamentComponent implements OnInit, OnDestroy {
       summary: 'Update', detail: 'Player added. Save to start tournament and publish new list of participants'
     });
 
-    if (this.tournament.type === 'team' && participant.team && !this.teamMemberMap[participant.team]) {
-      console.log("create team of participant  ", playerToAdd);
+    if (this.tournament.type === 'team' && participant.team) {
 
-      const team: Team = {
-        name: participant.team,
-        location: participant.team ? participant.team : "",
-        sgw: [0],
-        opponentTeamNames: [],
-        roundScores: []
-      };
+      if (!this.teamMemberMap[participant.team]) {
+        console.log("create team of participant  ", playerToAdd);
 
-      _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-        team[standingValue.field] = [standingValue.defaultValue];
-      });
+        const team: Team = {
+          name: participant.team,
+          location: participant.team ? participant.team : "",
+          sgw: [0],
+          opponentTeamNames: [],
+          roundScores: []
+        };
 
-      const teamUuid = UUID.UUID();
-      team.id = teamUuid;
+        _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+          team[standingValue.field] = [standingValue.defaultValue];
+        });
 
-      this.batchService.set(this.teamsColRef.doc(teamUuid), team);
+        const teamUuid = UUID.UUID();
+        team.id = teamUuid;
+
+        this.batchService.set(this.teamsColRef.doc(teamUuid), team);
+      } else {
+        that.teamMemberMap[participant.team] =
+          _.concat(that.teamMemberMap[participant.team], participant.name);
+      }
     }
-
   }
 
   addTeam() {
@@ -658,12 +666,29 @@ export class TournamentComponent implements OnInit, OnDestroy {
       team[standingValue.field] = [standingValue.defaultValue];
     });
 
-    const uuid = UUID.UUID();
-    team.id = uuid;
+    that.teamNameAlreadyTaken = false;
+   _.forEach(that.teams, function (checkedTeam: Team) {
+     if (checkedTeam.name.toLowerCase() === team.name.toLowerCase()) {
+       that.teamNameAlreadyTaken = true;
+     }
+   });
 
-    this.batchService.set(this.teamsColRef.doc(uuid), team);
+   if (!that.teamNameAlreadyTaken) {
 
-    that.messageService.add({severity: 'success', summary: 'Update', detail: 'Team added'});
+     const uuid = UUID.UUID();
+     team.id = uuid;
+
+     this.batchService.set(this.teamsColRef.doc(uuid), team);
+
+     const newTeams = _.cloneDeep(that.teams);
+     newTeams.push(team);
+     that.teams = newTeams;
+
+     that.messageService.add({severity: 'success', summary: 'Update', detail: 'Team added'});
+
+     that.teamCreationDialogVisibility = false;
+     that.teamNameSelectItemList.push({value: team.name, label: team.name});
+   }
   }
 
   deleteParticipant(participant: Participant) {
@@ -698,6 +723,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const teamDocRef = this.teamsColRef.doc(team.id);
 
+    const newTeams = _.cloneDeep(that.teams);
+    const index = _.findIndex(that.teams, ['id', team.id]);
+    newTeams.splice(index, 1);
+    that.teams = newTeams;
+
     this.batchService.delete(teamDocRef);
 
     that.messageService.add({
@@ -716,13 +746,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     this.batchService.update(participantDocRef, participant);
 
-    if (this.tournament.type === 'team' ) {
-
-      if (participant.team) {
-
-        console.log('found team of participant not yet created');
-      }
-    }
   }
 
   onEditTeam(event: any) {
@@ -761,7 +784,29 @@ export class TournamentComponent implements OnInit, OnDestroy {
     if (this.participantToChange) {
       const participantDocRef = this.participantsColRef.doc(that.participantToChange.id);
       this.batchService.update(participantDocRef, this.participantToChange);
+
     }
+  }
+
+  changeTeam(participant: Participant) {
+
+    const that  = this;
+
+    console.log("change team of participant : " + JSON.stringify(participant));
+    this.participantToChange = participant;
+
+
+    that.teamMemberMap = {};
+
+    _.forEach(that.participants, function (parti: Participant) {
+      if (that.teamMemberMap[parti.team]) {
+        that.teamMemberMap[parti.team] =
+          _.concat(that.teamMemberMap[parti.team], parti.name);
+      } else {
+        that.teamMemberMap[parti.team] = [parti.name];
+      }
+    });
+
   }
 
   showOrgaDialog() {
