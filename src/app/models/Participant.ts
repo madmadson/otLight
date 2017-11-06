@@ -5,13 +5,10 @@ export interface Participant {
   id?: string;
   name: string;
   location?: string;
-  type: string;
+  team?: string;
 
   opponentParticipantsNames: string[];
   roundScores: number[];
-
-  // TEAM
-  sgw?: number[];
 
   // WARMACHINE
   cp?: number[];
@@ -31,7 +28,7 @@ export function getParticipantForJSON(id: string, json: any): Participant {
     id: id,
     name: json.name,
     location: json.location ? json.location : '',
-    type: json.type ? json.type : '',
+    team: json.team ? json.team : '',
 
     opponentParticipantsNames: json.opponentParticipantsNames ? json.opponentParticipantsNames : [],
     roundScores: json.roundScores ? json.roundScores : [],

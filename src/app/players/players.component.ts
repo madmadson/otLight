@@ -18,7 +18,7 @@ import {ActivatedRoute} from "@angular/router";
 
 
 @Component({
-  selector: 'app-players',
+  selector: 'ot-players',
   templateUrl: './players.component.html',
   styleUrls: ['./players.component.scss']
 })

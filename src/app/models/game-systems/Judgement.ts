@@ -5,6 +5,7 @@ import {SelectItem} from "primeng/primeng";
 import {Participant} from "../Participant";
 
 import * as _ from 'lodash';
+import {Team} from "../Team";
 
 export function getJudgementFieldConfig(type: string): GameSystemConfig {
 
@@ -96,7 +97,48 @@ export function orderParticipantsForJudgement( participants: Participant[], part
   });
 }
 
-export function getSouls(participant: Participant) {
+export function orderTeamsForJudgement( teams: Team[], teamsScoreMap: any): Team[] {
+  return teams.sort((team1, team2) => {
+
+    let result = 0;
+
+    if (teamsScoreMap[team1.name] < teamsScoreMap[team2.name]) {
+      result = 1;
+    } else if (teamsScoreMap[team1.name] > teamsScoreMap[team2.name]) {
+      result = -1;
+    } else {
+      if (getSgw(team1) < getSgw(team2)) {
+        result = 1;
+      } else if (getSgw(team1) > getSgw(team2)) {
+        result = -1;
+      } else {
+        if (getSouls(team1) < getSouls(team2)) {
+          result = 1;
+        } else if (getSouls(team1) > getSouls(team2)) {
+          result = -1;
+        } else {
+          if (getLevels(team1) < getLevels(team2)) {
+            result = 1;
+          } else if (getLevels(team1) > getLevels(team2)) {
+            result = -1;
+          }
+        }
+      }
+    }
+    return result;
+  });
+}
+
+export function getSgw(team: Team) {
+
+  let sgwSum = 0;
+  _.forEach(team.sgw, function (sgw: number) {
+    sgwSum = sgwSum + sgw;
+  });
+  return sgwSum;
+}
+
+export function getSouls(participant: any) {
 
   let soulsSum = 0;
   _.forEach(participant.souls, function (souls: number) {
@@ -105,7 +147,7 @@ export function getSouls(participant: Participant) {
   return soulsSum;
 }
 
-export function getLevels(participant: Participant) {
+export function getLevels(participant: any) {
 
   let levelsSum = 0;
   _.forEach(participant.levels, function (levels: number) {

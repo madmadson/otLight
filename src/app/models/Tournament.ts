@@ -10,6 +10,7 @@ export interface Tournament {
   actualRound: number;
   publishedRound: number;
   state: string;
+  teamSize?: number;
 }
 
 export function getTournamentForJSON(id: string, json: any): Tournament {
@@ -22,5 +23,6 @@ export function getTournamentForJSON(id: string, json: any): Tournament {
     actualRound: json.actualRound ? json.actualRound : 0,
     publishedRound: json.publishedRound ? json.publishedRound : 0,
     state: json.state ? json.state : 'CREATED',
+    teamSize: json.teamSize ? json.teamSize : 3
   };
 }

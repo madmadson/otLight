@@ -55,7 +55,14 @@
               [filter]="true"
               filterPlaceholder="Search">
     </p-column>
-
+    <p-column field="team"
+              header="Team"
+              styleClass="{{'editable-column'}}, break-word"
+              [editable]="true"
+              [sortable]="true"
+              [filter]="true"
+              filterPlaceholder="Search">
+    </p-column>
     <p-column styleClass="{{'editable-column'}}, break-word"
               [sortable]="true"
               [header]="'GameSystems'"

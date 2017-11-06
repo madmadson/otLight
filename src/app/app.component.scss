@@ -16,7 +16,7 @@ body {
   font-size: 1em;
 }
 
-#layout-topbar {
+.layout-topbar {
   text-align: center;
   background-color: $color_dark_primary;
   box-sizing: border-box;
@@ -33,7 +33,28 @@ body {
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.3);
 }
 
-#layout-topbar .menu-button {
+.layout-sub-topbar {
+  text-align: center;
+  background-color: $color_dark_primary;
+  box-sizing: border-box;
+  display: block;
+  height: 60px;
+  position: fixed;
+  top: $six_tick;
+  left: 0;
+  width: 100%;
+  z-index: 995;
+
+  font-size: 1.6em;
+  font-weight: bold;
+  line-height: $tripel_tick;
+  color: $color_secondary;
+  padding-top: 10px;
+
+  box-shadow: inset 0 0 12px $color_secondary;
+}
+
+.layout-topbar .menu-button {
   color: #ffffff;
   font-size: 24px;
   position: absolute;
@@ -46,12 +67,12 @@ body {
   transition: background-color .3s;
 }
 
-#layout-topbar .menu-button:hover {
+.layout-topbar .menu-button:hover {
   background-color: #4a4f52;
 }
 
 
-#layout-topbar .menu-button i {
+.layout-topbar .menu-button i {
   line-height: inherit;
 }
 
@@ -141,9 +162,13 @@ body {
   }
 }
 
-#layout-content {
+.layout-content {
   padding-top: $six_tick;
   background-color: #ffffff;
+}
+
+.with-sub-top-bar {
+  padding-top: 125px;
 }
 
 .content-section {
@@ -155,6 +180,14 @@ body {
 }
 
 @media screen and (max-width: 64em) {
+
+  .layout-sub-topbar{
+    background-color: #363c3f;
+    float: none;
+    width: 100%;
+    height: 60px;
+    margin-top: 60px;
+  }
 
   .topbar-menu {
     background-color: #363c3f;
@@ -176,9 +209,13 @@ body {
     }
   }
 
-  #layout-content {
+  .layout-content {
     margin-left: 0;
     padding-top: 104px;
+  }
+  .with-sub-top-bar {
+    margin-left: 0;
+    padding-top: 164px;
   }
 }
 

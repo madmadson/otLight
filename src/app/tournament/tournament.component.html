@@ -10,15 +10,15 @@
   </p-header>
   <form [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
     <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
-        <div class="ui-grid-row">
-          <div class="ui-grid-col-4">
-            Orga:
-          </div>
-          <div class="ui-grid-col-8">
-            <input formControlName="user"  id="user" name="user"
-                   tabindex="1" type="text" pInputText value="Orga">
-          </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Orga:
         </div>
+        <div class="ui-grid-col-8">
+          <input formControlName="user" id="user" name="user"
+                 tabindex="1" type="text" pInputText value="Orga">
+        </div>
+      </div>
       <div class="ui-grid-row">
         <div class="ui-grid-col-4">
           Password:
@@ -28,7 +28,7 @@
                  #orgaPasswordField
                  type="password"
                  (keyup.enter)="checkIfPasswordCorrect()"
-                 tabindex="2"  pPassword
+                 tabindex="2" pPassword
                  formControlName="password"
                  required>
         </div>
@@ -51,6 +51,53 @@
   </form>
 </p-dialog>
 
+<p-dialog [(visible)]="teamCreationDialogVisibility"
+          [contentStyle]="{'overflow':'visible', 'height':'100%'}"
+          [modal]=true
+          [width]="400"
+          [height]="200">
+  <p-header>
+    Organizer password required
+  </p-header>
+  <form [formGroup]="teamCreationForm" (ngSubmit)="addTeam()" novalidate>
+    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Team name:
+        </div>
+        <div class="ui-grid-col-8">
+          <input formControlName="teamName" id="teamName" name="teamName"
+                 tabindex="3" type="text" pInputText required>
+        </div>
+      </div>
+      <div class="ui-grid-row"
+           *ngIf="teamNameAlreadyTaken">
+        <div class="ui-grid-col-12">
+          <div class="ui-message ui-messages-error ui-corner-all">
+            Team name already taken
+          </div>
+        </div>
+      </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Location:
+        </div>
+        <div class="ui-grid-col-8">
+          <input id="teamLocation" name="teamLocation"
+                 pInputText
+                 tabindex="4"
+                 formControlName="teamLocation">
+        </div>
+      </div>
+      <div class="ui-grid-row bottom-button">
+        <div class="ui-grid-col-12">
+          <button [disabled]="teamCreationForm.pristine"
+                  tabindex="2" pButton type="submit" class="full-width" label="Add Team"></button>
+        </div>
+      </div>
+    </div>
+  </form>
+</p-dialog>
 
 <p-dialog [(visible)]="pairRoundDialogVisibility"
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
@@ -122,19 +169,14 @@
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
     <div class="centered-content-container">
-      <button *ngIf="(shownRound > 0)" pButton label="Previous Round" (click)="showPreviousRound()" class="ui-button-info"></button>
+      <button *ngIf="(shownRound > 0)" pButton label="Previous Round" (click)="showPreviousRound()"
+              class="ui-button-info"></button>
       <button *ngIf="!isOrga" pButton label="Orga View" (click)="showOrgaDialog()" class="ui-button-success"></button>
-      <button *ngIf="(shownRound < tournament?.actualRound)" pButton label="Next Round" (click)="showNextRound()" class="ui-button-info"></button>
-      <button *ngIf="(shownRound === tournament?.actualRound) && (tournamentFinished)" pButton label="Final Standings" (click)="showNextRound()" class="ui-button-info"></button>
-     </div>
-  </p-panel>
-
-  <p-panel *ngIf="participantsModified">
-    <p-header>
-      <span class="ui-panel-title save-mod-heading">Players modified. Please save to publish</span>
-      <button pButton type="button" class="ui-button-success save-mod-button"
-              (click)="saveParticipants()" label="Save" icon="fa-check"></button>
-    </p-header>
+      <button *ngIf="(shownRound < tournament?.actualRound)" pButton label="Next Round" (click)="showNextRound()"
+              class="ui-button-info"></button>
+      <button *ngIf="(shownRound === tournament?.actualRound) && (tournamentFinished)" pButton label="Final Standings"
+              (click)="showNextRound()" class="ui-button-info"></button>
+    </div>
   </p-panel>
 
   <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
@@ -151,26 +193,7 @@
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
     </ng-container>
-    <ng-container *ngIf="(updateParticipantList)">
-      <div class="heading">Update PlayerList...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
 
-    <ng-container *ngIf="(updateMatchList)">
-      <div class="heading">Update MatchList...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="(swappingPlayer)">
-      <div class="heading">Swapping...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
 
     <ng-container *ngIf="(pairingAgain)">
       <div class="heading">Pair Round Again...</div>
@@ -193,7 +216,16 @@
       </div>
     </ng-container>
 
-    <div *ngIf="(!loadingPlayers) && (!loadingParticipants) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0" class="sub-heading">
+    <ng-container *ngIf="(updateData)">
+      <div class="heading">Update Data...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <div
+      *ngIf="(!loadingPlayers) && (!loadingParticipants) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0"
+      class="sub-heading">
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
@@ -203,7 +235,7 @@
                    [paginator]="true"
                    [pageLinks]="3"
                    [rows]="5">
-        <p-header>List of Players</p-header>
+        <p-header>Global list of Players</p-header>
         <p-column field="name"
                   header="Name"
                   [sortable]="true"
@@ -212,6 +244,13 @@
         </p-column>
         <p-column field="location"
                   header="Location"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column *ngIf="tournament?.type === 'team'"
+                  field="team"
+                  header="Team"
                   [sortable]="true"
                   [filter]="true"
                   filterPlaceholder="Search">
@@ -226,8 +265,13 @@
         </p-column>
       </p-dataTable>
     </div>
-    <div class="orga-panel-container">
-      <button *ngIf="tournament?.actualRound === 0 && participants?.length >= 2 && (!loadingPlayers) && !participantsModified"
+    <div class="orga-panel-container" *ngIf="dataToSave">
+      <span class="heading">There are unsaved changes. Please save first to move on.</span>
+    </div>
+    <div class="orga-panel-container" *ngIf="!dataToSave && !updateData">
+      <button *ngIf="tournament?.actualRound === 0 &&
+                      participants?.length >= 2 &&
+                     (!loadingPlayers)"
               pButton type="button"
               class="action-element ui-button-success"
               (click)="pairRound(false)"
@@ -282,7 +326,15 @@
     </ng-container>
 
     <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
+    <button *ngIf="tournament?.type === 'team'" pButton type="button" label="Players" icon="fa-user"></button>
+    <button *ngIf="tournament?.type === 'team'" pButton type="button" label="Teams" icon="fa-users"></button>
+    <button *ngIf="tournament?.type === 'team'"
+            pButton type="button"
+            label="Add Team" icon="fa-plus"
+            (click)="teamCreationDialogVisibility = true">
+    </button>
     <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
+    <!-- Player List-->
     <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
@@ -293,10 +345,9 @@
                  [paginator]="true"
                  [pageLinks]="3"
                  [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
-                 [exportFilename]="'Standings Round: ' + shownRound"
+                 [exportFilename]="'Standings_Round_' + shownRound"
                  #standingsTable>
       <p-header>{{participants?.length}} Players in Tournament</p-header>
-
       <p-column field="name"
                 header="Name"
                 [sortable]="true"
@@ -313,9 +364,29 @@
                 filterPlaceholder="Search">
       </p-column>
 
+      <p-column *ngIf="tournament?.type === 'team'"
+                [editable]="isOrga && tournament?.actualRound === 0"
+                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
+                field="team"
+                header="Team"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+        <ng-template let-col let-participant="rowData" pTemplate="editor">
+          <p-dropdown placeholder="Please Choose Team"
+                      [(ngModel)]="participant.team"
+                      [options]="teamNameSelectItemList"
+                      (onChange)="changeParticipant(participant)"
+                      (onBlur)="updateParticipant()"
+                      [autoWidth]="false"
+                      [style]="{'width':'100%'}">
+          </p-dropdown>
+        </ng-template>
+      </p-column>
+
       <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
-        <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                  styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
+        <p-column [editable]="isOrga"
+                  styleClass="{{isOrga ? 'editable-column' : ''}}, break-word"
                   field="{{participantField.field}}"
                   header="{{participantField.field}}"
                   [sortable]="true"
@@ -373,14 +444,76 @@
         </ng-template>
       </p-column>
     </p-dataTable>
-  </p-panel>
 
-  <p-panel *ngIf="matchModified">
-    <p-header>
-      <span class="ui-panel-title save-mod-heading">Games modified. Please save to publish</span>
-      <button pButton type="button" class="ui-button-success save-mod-button"
-              (click)="saveMatches()" label="Save" icon="fa-check"></button>
-    </p-header>
+    <!-- Team List-->
+    <p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
+                 [value]="teams"
+                 [editable]="isOrga"
+                 [stacked]="stackedTeams"
+                 (onEditComplete)="onEditTeam($event)"
+                 [responsive]="true"
+                 [rows]="10"
+                 [paginator]="true"
+                 [pageLinks]="3"
+                 [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
+                 [exportFilename]="'Team_Standings_Round_' + shownRound"
+                 #standingsTable>
+      <p-header>{{teams?.length}} Teams in Tournament</p-header>
+      <p-column field="name"
+                header="Name"
+                [sortable]="true"
+                [filter]="true"
+                styleClass="break-word"
+                filterPlaceholder="Search">
+      </p-column>
+      <p-column [editable]="isOrga && tournament?.actualRound === 0"
+                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
+                field="location"
+                header="Location"
+                [sortable]="true"
+                [filter]="true"
+                filterPlaceholder="Search">
+      </p-column>
+      <p-column>
+        <ng-template pTemplate="header">Team Members</ng-template>
+        <ng-template pTemplate="body" let-team="rowData">
+          <ng-container *ngIf="teamMemberMap[team.name]">
+            {{teamMemberMap[team.name]?.length}} ({{teamMemberMap[team.name]}})
+          </ng-container>
+          <ng-container *ngIf="!teamMemberMap[team.name]">
+             No Team Members yet
+          </ng-container>
+        </ng-template>
+      </p-column>
+
+      <p-column sortable="custom"
+                header="Score"
+                (sortFunction)="sortByScore($event)">
+        <ng-template let-team="rowData" pTemplate="body">
+          {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
+        </ng-template>
+      </p-column>
+
+      <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
+        <p-column header="{{scoreField.field}}">
+          <ng-template let-team="rowData" pTemplate="body">
+            {{getTeamScoreFieldValue(scoreField, team)}}
+            <i class="fa fa-info-circle" pTooltip="{{getTeamScoreFieldValue(scoreField, team)}}"></i>
+          </ng-template>
+        </p-column>
+      </ng-container>
+
+      <p-column styleClass="col-actions" *ngIf="tournament?.actualRound === 0">
+        <ng-template pTemplate="header">
+          Actions
+        </ng-template>
+        <ng-template let-team="rowData" pTemplate="body">
+          <button *ngIf="isOrga"
+                  type="button" pButton (click)="deleteTeam(team)" icon="fa-trash" label="Remove Team">
+          </button>
+        </ng-template>
+      </p-column>
+    </p-dataTable>
   </p-panel>
 
   <ng-container *ngIf="!(shownRound > tournament?.actualRound)">
@@ -389,7 +522,7 @@
              class="heading"
              header="TO is pairing. Round will be visible when new round is published.">
     </p-panel>
-      <p-panel *ngIf="shownRound > 0 &&
+    <p-panel *ngIf="shownRound > 0 &&
                     (isOrga || tournament?.actualRound === tournament?.publishedRound || shownRound < tournament?.actualRound)"
              header="Pairings Round {{shownRound}}" [toggleable]="true">
 
@@ -407,7 +540,6 @@
                (!loadingRound) &&
                (!startingTournament) &&
                (!deletingRound) &&
-               (!clearingMatch) &&
                (!pairingAgain) &&
                (!creatingNextRound) &&
                (!swappingPlayer)"
@@ -496,22 +628,24 @@
             </div>
             <div style="text-align: center" *ngIf="isOrga">
               <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
-                <p-dropdown *ngIf="chooseField.type === 'dropDown' && roundMatch.participantOne[chooseField.field]?.length > 0"
-                            placeholder="Choose"
-                            [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
-                            [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
-                            [autoWidth]="false"
-                            (onChange)="saveChoosePlayed(roundMatch)"
-                            [style]="{'width':'100%'}">
+                <p-dropdown
+                  *ngIf="chooseField.type === 'dropDown' && roundMatch.participantOne[chooseField.field]?.length > 0"
+                  placeholder="Choose"
+                  [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
+                  [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
+                  [autoWidth]="false"
+                  (onChange)="saveChoosePlayed(roundMatch)"
+                  [style]="{'width':'100%'}">
                 </p-dropdown>
-                <p-multiSelect *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantOne[chooseField.field]?.length > 0"
-                               placeholder="Choose"
-                               [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
-                               [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
-                               (onPanelHide)="saveChoosePlayed(roundMatch)"
-                               [showToggleAll]=false
-                               [maxSelectedLabels]=3
-                               [style]="{'width':'100%'}">
+                <p-multiSelect
+                  *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantOne[chooseField.field]?.length > 0"
+                  placeholder="Choose"
+                  [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
+                  [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
+                  (onPanelHide)="saveChoosePlayed(roundMatch)"
+                  [showToggleAll]=false
+                  [maxSelectedLabels]=3
+                  [style]="{'width':'100%'}">
                 </p-multiSelect>
               </ng-container>
             </div>
@@ -572,22 +706,24 @@
             </div>
             <div style="text-align: center" *ngIf="isOrga">
               <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
-                <p-dropdown *ngIf="chooseField.type === 'dropDown' && roundMatch.participantTwo[chooseField.field]?.length > 0"
-                            placeholder="Choose"
-                            [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
-                            [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
-                            [autoWidth]="false"
-                            (onChange)="saveChoosePlayed(roundMatch)"
-                            [style]="{'width':'100%'}">
+                <p-dropdown
+                  *ngIf="chooseField.type === 'dropDown' && roundMatch.participantTwo[chooseField.field]?.length > 0"
+                  placeholder="Choose"
+                  [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
+                  [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
+                  [autoWidth]="false"
+                  (onChange)="saveChoosePlayed(roundMatch)"
+                  [style]="{'width':'100%'}">
                 </p-dropdown>
-                <p-multiSelect *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantTwo[chooseField.field]?.length > 0"
-                               placeholder="Choose"
-                               [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
-                               [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
-                               (onPanelHide)="saveChoosePlayed(roundMatch)"
-                               [showToggleAll]=false
-                               [maxSelectedLabels]=3
-                               [style]="{'width':'100%'}">
+                <p-multiSelect
+                  *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantTwo[chooseField.field]?.length > 0"
+                  placeholder="Choose"
+                  [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
+                  [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
+                  (onPanelHide)="saveChoosePlayed(roundMatch)"
+                  [showToggleAll]=false
+                  [maxSelectedLabels]=3
+                  [style]="{'width':'100%'}">
                 </p-multiSelect>
               </ng-container>
             </div>

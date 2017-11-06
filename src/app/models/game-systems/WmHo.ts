@@ -2,6 +2,7 @@ import {SelectItem} from "primeng/primeng";
 import {GameSystemConfig} from "../game-systems";
 import {Participant} from "../Participant";
 import * as _ from 'lodash';
+import {Team} from "../Team";
 
 export function getWmHoFieldConfig(type: string): GameSystemConfig {
 
@@ -116,6 +117,38 @@ export function orderParticipantsForWmHo( participants: Participant[], participa
   });
 }
 
+export function orderTeamsForWmHo( teams: Team[], teamsScoreMap: any): Team[] {
+  return teams.sort((team1, team2) => {
+
+    let result = 0;
+
+    if (teamsScoreMap[team1.name] < teamsScoreMap[team2.name]) {
+      result = 1;
+    } else if (teamsScoreMap[team1.name] > teamsScoreMap[team2.name]) {
+      result = -1;
+    } else {
+      if (getSgw(team1) < getSgw(team2)) {
+        result = 1;
+      } else if (getSgw(team1) > getSgw(team2)) {
+        result = -1;
+      } else {
+        if (getCP(team1) < getCP(team2)) {
+          result = 1;
+        } else if (getCP(team1) > getCP(team2)) {
+          result = -1;
+        } else {
+          if (getVP(team1) < getVP(team2)) {
+            result = 1;
+          } else if (getVP(team1) > getVP(team2)) {
+            result = -1;
+          }
+        }
+      }
+    }
+    return result;
+  });
+}
+
 
 export function getSos(participant: Participant, participantsScoreMap: any) {
 
@@ -126,7 +159,7 @@ export function getSos(participant: Participant, participantsScoreMap: any) {
   return sosSum;
 }
 
-export function getCP(participant: Participant) {
+export function getCP(participant: any) {
 
   let cpSum = 0;
   _.forEach(participant.cp, function (cp: number) {
@@ -135,13 +168,22 @@ export function getCP(participant: Participant) {
   return cpSum;
 }
 
-export function getVP(participant: Participant) {
+export function getVP(participant: any) {
 
   let vpSum = 0;
   _.forEach(participant.vp, function (vp: number) {
     vpSum = vpSum + vp;
   });
   return vpSum;
+}
+
+export function getSgw(team: Team) {
+
+  let sgwSum = 0;
+  _.forEach(team.sgw, function (sgw: number) {
+    sgwSum = sgwSum + sgw;
+  });
+  return sgwSum;
 }
 
 

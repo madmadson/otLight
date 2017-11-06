@@ -15,7 +15,7 @@ import {
   AutoCompleteModule, ConfirmationService, ConfirmDialogModule, DataListModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputSwitchModule, InputTextModule, MessagesModule,
   MultiSelectModule,
-  PanelModule, RadioButton, RadioButtonModule,
+  PanelModule, RadioButtonModule,
   SelectButtonModule,
   SharedModule, SpinnerModule, TooltipModule
 } from "primeng/primeng";
@@ -31,6 +31,7 @@ import { TournamentComponent } from './tournament/tournament.component';
 import {RoundMatchService} from "./services/round-match.service";
 import {WindowRefService} from "./services/window-ref-service";
 import {ConnectivityService} from "./services/connectivity-service";
+import {BatchService} from "./services/batch.service";
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -78,6 +79,7 @@ export const firebaseConfig = environment.firebaseConfig;
     WindowRefService,
     ConnectivityService,
     TournamentsService,
+    BatchService,
     MessageService,
     ConfirmationService,
     GameSystemService,

@@ -43,6 +43,7 @@ export class PlayerAddDialogComponent implements OnInit {
     this.playerForm = this.fb.group({
       'name': new FormControl('', Validators.compose([Validators.required, Validators.minLength(3), Validators.maxLength(30)])),
       'location': new FormControl('', Validators.maxLength(30)),
+      'team': new FormControl('', Validators.maxLength(30)),
       'gameSystems': new FormControl([], Validators.required),
     });
   }
@@ -72,6 +73,7 @@ export class PlayerAddDialogComponent implements OnInit {
       const player: Player = {
         name: this.playerForm.value.name,
         location: this.playerForm.value.location,
+        team: this.playerForm.value.team,
         gameSystems: {}
       };
 

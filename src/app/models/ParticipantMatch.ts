@@ -1,6 +1,6 @@
 import {Participant} from "./Participant";
 
-export interface RoundMatch {
+export interface ParticipantMatch {
 
   id?: string;
   round: number;
@@ -34,7 +34,7 @@ export interface RoundMatch {
   matchDate: Date;
 }
 
-export function getRoundMatchForJSON(id: string, json: any): RoundMatch {
+export function getRoundMatchForJSON(id: string, json: any): ParticipantMatch {
   return {
     id: id,
     round: json.round,

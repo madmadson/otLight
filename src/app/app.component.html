@@ -1,12 +1,12 @@
 <div class="layout-wrapper">
-  <div id="layout-topbar">
+  <div class="layout-topbar">
     <a class="menu-button" (click)="sidebarVisible = !sidebarVisible">
       <i class="fa fa-bars"></i>
     </a>
     <div class="logo-container">
       <a class="logo-topbar">
         <img alt="logo" src="../assets/images/logo42.png"/>
-        <div class="version-label">Version 0.10.2</div>
+        <div class="version-label">Version 0.10.3</div>
       </a>
       <span>
         <i *ngIf="(isConnected$ | async)" class="fa fa-wifi fa-2x online-icon" pTooltip="Online"></i>
@@ -23,8 +23,12 @@
           [(ngModel)]="selectedGameSystem">
         </p-dropdown>
       </li>
-
     </ul>
+  </div>
+  <div class="layout-sub-topbar" *ngIf="showSubTopBar && !saveData">
+    <span>Data modified. Please save to save and publish</span>
+    <button pButton type="button" class="ui-button-success save-data-button"
+            (click)="commitUpdates()" label="Save" icon="fa-check"></button>
   </div>
   <p-sidebar [(visible)]="sidebarVisible"
              [baseZIndex]="10000">
@@ -63,9 +67,24 @@
     </div>
   </p-sidebar>
 
-  <div id="layout-content">
+  <div class="layout-content"  [ngClass]="{'with-sub-top-bar': showSubTopBar}">
     <p-growl [life]="5000" [(value)]="messages"></p-growl>
-    <router-outlet></router-outlet>
+
+    <ng-container *ngIf="(saveData && (isConnected$ | async))">
+      <div class="heading">Save and Publish Data...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="(saveData && !(isConnected$ | async))">
+      <div class="heading">Attention! Your Offline. Data will stored in Browser and synced when your online...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <router-outlet *ngIf="(!saveData)"></router-outlet>
   </div>
 </div>
 
