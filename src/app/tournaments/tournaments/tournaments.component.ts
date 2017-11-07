@@ -1,10 +1,9 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 
 import {AngularFirestore} from "angularfire2/firestore";
 import * as _ from 'lodash';
 
 import {getTournamentForJSON, Tournament} from "../../models/Tournament";
-import {Participant} from "../../models/Participant";
 import * as firebase from "firebase/app";
 import CollectionReference = firebase.firestore.CollectionReference;
 
@@ -13,11 +12,12 @@ import {GameSystemService} from "../../services/game-system.service";
 import {Subscription} from "rxjs/Subscription";
 
 import {SelectItem} from "primeng/primeng";
-import {ActivatedRoute, ParamMap, Router} from "@angular/router";
-import {Observable} from "rxjs/Observable";
+import {ActivatedRoute, Router} from "@angular/router";
+import {TournamentAddDialogComponent} from "../tournament-add-dialog/tournament-add-dialog.component";
+
 
 @Component({
-  selector: 'app-tournaments',
+  selector: 'ot-tournaments',
   templateUrl: './tournaments.component.html',
   styleUrls: ['./tournaments.component.scss']
 })
@@ -28,6 +28,8 @@ export class TournamentsComponent implements OnInit, OnDestroy {
 
   protected selectedGameSystem: string;
   protected tournaments: Tournament[] = [];
+
+  @ViewChild('tournamentDialog') tournamentDialog: TournamentAddDialogComponent;
 
   protected tournamentsColRef: CollectionReference;
   protected tournamentsUnsubscribeFunction: () => void;
@@ -127,4 +129,14 @@ export class TournamentsComponent implements OnInit, OnDestroy {
       });
   }
 
+  openTournamentEdit(tournament: Tournament) {
+
+    this.addTournamentDialogVisibility = true;
+    this.tournamentDialog.setTournament(tournament);
+  }
+
+  onHideTournamentDialog() {
+
+    this.tournamentDialog.reset();
+  }
 }

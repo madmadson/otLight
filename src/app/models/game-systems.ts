@@ -123,6 +123,20 @@ export function getColumnsForStandingsExport(gameSystem: string): number[] {
   }
 }
 
+export function getColumnsForTeamStandingsExport(gameSystem: string): number[] {
+
+  if (gameSystem === 'WmHo') {
+    // name, location, members, score, sgw, cp, vp
+    return [1, 2, 3, 4, 5, 6, 7];
+  } else if (gameSystem === 'Judgement') {
+    // name, location, score, members, sgw, souls, levels
+    return [1, 2, 3, 4, 5, 6, 7];
+  } else {
+    // name, location, score, members, sgw
+    return [1, 2, 3, 4, 5];
+  }
+}
+
 /**
  * first win score, second loose score, third draw
  *

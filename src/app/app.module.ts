@@ -28,10 +28,12 @@ import { PlayersComponent } from './players/players.component';
 import {GameSystemService} from "./services/game-system.service";
 import { PlayerAddDialogComponent } from './players/player-add-dialog/player-add-dialog.component';
 import { TournamentComponent } from './tournament/tournament.component';
-import {RoundMatchService} from "./services/round-match.service";
+import {ParticipantMatchService} from "./services/participant-match.service";
 import {WindowRefService} from "./services/window-ref-service";
 import {ConnectivityService} from "./services/connectivity-service";
 import {BatchService} from "./services/batch.service";
+import {TeamMatchService} from "./services/team-match.service";
+import {ByeService} from "./services/bye.service";
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -83,7 +85,9 @@ export const firebaseConfig = environment.firebaseConfig;
     MessageService,
     ConfirmationService,
     GameSystemService,
-    RoundMatchService
+    ParticipantMatchService,
+    TeamMatchService,
+    ByeService
   ],
   bootstrap: [AppComponent]
 })

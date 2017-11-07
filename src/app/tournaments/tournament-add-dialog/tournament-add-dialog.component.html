@@ -1,11 +1,11 @@
 <ng-container *ngIf="(tournamentSaving)">
-  <div class="heading">Save new Tournament...</div>
+  <div class="heading">Save Tournament...</div>
   <div class="centered-content-container">
     <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
   </div>
 </ng-container>
 
-<ng-container *ngIf="(!tournamentSaving)">
+<ng-container *ngIf="(!tournamentSaving) && !requestDeleteTournament && ((selectedTournament && passwordCorrect) || !selectedTournament)">
   <form class="dialog-form" [formGroup]="tournamentForm" (ngSubmit)="onSubmit()">
     <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
       <div class="ui-grid-row">
@@ -81,13 +81,82 @@
           <p-spinner [step]="2" formControlName="teamSize" [min]="3" [max]="5" [readonly]="true"></p-spinner>
         </div>
       </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-12">
+          <button *ngIf="selectedTournament" pButton class="full-width ui-button-danger"
+                  label="Delete Tournament" (click)="requestDeleteTournament = true">
+          </button>
+        </div>
+      </div>
 
       <div class="ui-grid-row bottom-button">
         <div class="ui-grid-col-12">
-          <button pButton type="submit" class="full-width" label="Save Tournament"
+          <button pButton type="submit" class="full-width ui-button-success" label="Save Tournament"
                   [disabled]="!tournamentForm.valid"></button>
         </div>
       </div>
     </div>
   </form>
+</ng-container>
+
+<ng-container *ngIf="selectedTournament && !passwordCorrect">
+  <form [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
+    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Orga:
+        </div>
+        <div class="ui-grid-col-8">
+          <input formControlName="user" id="user" name="user"
+                 tabindex="1" type="text" pInputText value="Orga">
+        </div>
+      </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Password:
+        </div>
+        <div class="ui-grid-col-8">
+          <input id="password" name="password"
+                 #orgaPasswordField
+                 type="password"
+                 (keyup.enter)="checkIfPasswordCorrect()"
+                 tabindex="1" pPassword
+                 formControlName="password"
+                 required>
+        </div>
+      </div>
+      <div class="ui-grid-row"
+           *ngIf="passwordCheckIncorrect">
+        <div class="ui-grid-col-12">
+          <div class="ui-message ui-messages-error ui-corner-all">
+            Password wrong
+          </div>
+        </div>
+      </div>
+      <div class="ui-grid-row bottom-button">
+        <div class="ui-grid-col-12">
+          <button [disabled]="orgaForm.pristine"
+                  tabindex="2" pButton type="submit" class="full-width" label="Orga access"></button>
+        </div>
+      </div>
+    </div>
+  </form>
+</ng-container>
+
+<ng-container *ngIf="(!tournamentSaving) && (requestDeleteTournament)">
+  <div class="heading">
+    WARNING! You cannot restore deleted Tournament.
+  </div>
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-6">
+      <button pButton class="full-width ui-button-success"
+              label="No" (click)="requestDeleteTournament = false">
+      </button>
+    </div>
+    <div class="ui-grid-col-6">
+      <button pButton class="full-width ui-button-danger"
+              label="Burn it with Fire!" (click)="deleteTournament()">
+      </button>
+    </div>
+  </div>
 </ng-container>

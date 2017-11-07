@@ -229,7 +229,7 @@
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
-    <div class="orga-panel-container"
+    <div class="flex-container"
          *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 ">
       <p-dataTable [value]="possiblePlayersToAdd"
                    [paginator]="true"
@@ -265,11 +265,11 @@
         </p-column>
       </p-dataTable>
     </div>
-    <div class="orga-panel-container" *ngIf="dataToSave">
+    <div class="flex-container" *ngIf="dataToSave">
       <span class="heading">There are unsaved changes. Please save first to move on.</span>
     </div>
-    <div class="orga-panel-container" *ngIf="!dataToSave && !updateData">
-      T: {{fullyLoadedTeams === teams?.length}}
+    <!-- BUTTON-PANEL -->
+    <div class="flex-container" *ngIf="!dataToSave && !updateData">
       <button *ngIf="tournament?.type === 'solo' &&
                      tournament?.actualRound === 0 &&
                      participants?.length >= 2 &&
@@ -327,6 +327,7 @@
       </button>
     </div>
   </p-panel>
+  <!-- PARTICIPANT-PANEL -->
   <p-panel header="{{getPlayerTableHeading()}}" [toggleable]="true"
            [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
 
@@ -338,13 +339,6 @@
     </ng-container>
 
     <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
-    <button *ngIf="tournament?.type === 'team'" pButton type="button" label="Players" icon="fa-user"></button>
-    <button *ngIf="tournament?.type === 'team'" pButton type="button" label="Teams" icon="fa-users"></button>
-    <button *ngIf="tournament?.type === 'team'"
-            pButton type="button"
-            label="Add Team" icon="fa-plus"
-            (click)="teamCreationDialogVisibility = true">
-    </button>
     <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
     <!-- Player List-->
     <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
@@ -456,6 +450,26 @@
         </ng-template>
       </p-column>
     </p-dataTable>
+  </p-panel>
+  <p-panel header="{{getTeamTableHeading()}}" [toggleable]="true"
+           [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
+
+    <ng-container *ngIf="(loadingTeams)">
+      <div class="heading">Load Teams...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+
+    <button pButton type="button" (click)="stackedTeams = !stackedTeams" label="Toggle" icon="fa-list"></button>
+
+    <button *ngIf="tournament?.type === 'team'"
+            pButton type="button"
+            label="Add Team" icon="fa-plus"
+            (click)="teamCreationDialogVisibility = true">
+    </button>
+    <button pButton type="button" (click)="exportTeamStandings()" label="Export" icon="fa-download"></button>
+
     <!-- Team List-->
     <p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
                  [value]="teams"
@@ -468,7 +482,7 @@
                  [pageLinks]="3"
                  [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
                  [exportFilename]="'Team_Standings_Round_' + shownRound"
-                 #standingsTable>
+                 #teamStandingsTable>
       <p-header>{{teams?.length}} Teams in Tournament</p-header>
       <p-column field="name"
                 header="Name"
@@ -491,14 +505,14 @@
           <ng-container *ngIf="teamMemberMap[team.name]">
             <div [ngClass]="{'team-over-full': (teamMemberMap[team.name]?.length > tournament?.teamSize),
                              'team-not-full-color': (teamMemberMap[team.name]?.length <= tournament?.teamSize)}">
-            {{teamMemberMap[team.name]?.length}}
+              ({{teamMemberMap[team.name]?.length}} / {{tournament?.teamSize}})
               <i *ngIf="teamMemberMap[team.name]?.length > tournament?.teamSize"
                  class="fa fa-exclamation-triangle" pTooltip="Exceeded TeamSize"></i>
-              <i class="fa fa-info-circle" pTooltip="{{teamMemberMap[team.name]}}"></i>
+              <i class="fa fa-info-circle" pTooltip="{{getTeamMemberNames(team.name)}}"></i>
             </div>
           </ng-container>
           <ng-container *ngIf="!teamMemberMap[team.name]">
-             No Team Members yet
+            No Team Members yet
           </ng-container>
         </ng-template>
       </p-column>
@@ -513,7 +527,7 @@
         <p-column header="{{scoreField.field}}">
           <ng-template let-team="rowData" pTemplate="body">
             {{getTeamScoreFieldValue(scoreField, team)}}
-            <i class="fa fa-info-circle" pTooltip="{{getTeamScoreFieldValue(scoreField, team)}}"></i>
+            <i class="fa fa-info-circle" pTooltip="{{getTeamScoreFieldValueTooltip(scoreField, team)}}"></i>
           </ng-template>
         </p-column>
       </ng-container>
@@ -541,8 +555,8 @@
                     (isOrga || tournament?.actualRound === tournament?.publishedRound || shownRound < tournament?.actualRound)"
              header="Pairings Round {{shownRound}}" [toggleable]="true">
 
-      <ng-container *ngIf="(loadingRound || roundMatches?.length === 0)">
-        <div class="heading">Load Round...</div>
+      <ng-container *ngIf="(loadingParticipantMatches || participantMatches?.length === 0)">
+        <div class="heading">Load Player Matches...</div>
         <div class="centered-content-container">
           <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
         </div>
@@ -552,13 +566,13 @@
       <button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
       <p-dataTable
         *ngIf="(!loadingParticipants) &&
-               (!loadingRound) &&
+               (!loadingParticipantMatches) &&
                (!startingTournament) &&
                (!deletingRound) &&
                (!pairingAgain) &&
                (!creatingNextRound) &&
                (!swappingPlayer)"
-        [value]="roundMatches"
+        [value]="participantMatches"
         [editable]="isOrga"
         (onEditComplete)="onEditMatch($event)"
         [responsive]="true"
@@ -573,7 +587,7 @@
         [csvSeparator]="';'"
         [exportFilename]="'Matches_Round_' + shownRound"
         #matchesTable>
-        <p-header>{{roundMatches?.length}} Matches</p-header>
+        <p-header>{{participantMatches?.length}} Matches</p-header>
         <p-column styleClass="col-result" *ngIf="isOrga">
           <ng-template pTemplate="header">Result</ng-template>
           <ng-template pTemplate="body" let-roundMatch="rowData">
@@ -781,7 +795,102 @@
         </ng-container>
       </p-dataTable>
     </p-panel>
+
+
+    <p-panel *ngIf="tournament?.type === 'team' && shownRound > 0 &&
+                    (isOrga || tournament?.actualRound === tournament?.publishedRound || shownRound < tournament?.actualRound)"
+             header="Team Pairings Round {{shownRound}}" [toggleable]="true">
+
+      <ng-container *ngIf="(loadingTeamMatches)">
+        <div class="heading">Load Team Matches...</div>
+        <div class="centered-content-container">
+          <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+        </div>
+      </ng-container>
+
+      <button pButton type="button" (click)="stackedTeamMatches = !stackedTeamMatches" label="Toggle" icon="fa-list"></button>
+      <button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+      <p-dataTable
+        *ngIf="(!loadingParticipants) &&
+               (!loadingParticipantMatches) &&
+               (!startingTournament) &&
+               (!deletingRound) &&
+               (!pairingAgain) &&
+               (!creatingNextRound) &&
+               (!swappingPlayer)"
+        [value]="teamMatches"
+        [editable]="isOrga"
+        (onEditComplete)="onEditMatch($event)"
+        [responsive]="true"
+        [rowStyleClass]="getStyleForMatchesRow"
+        [rows]="20"
+        [paginator]="true"
+        [pageLinks]="3"
+        [dataKey]="'id'"
+        [immutable]="true"
+        [stacked]="stackedTeamMatches"
+        [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
+        [csvSeparator]="';'"
+        [exportFilename]="'Team_Matches_Round_' + shownRound"
+        #matchesTable>
+        <p-header>{{teamMatches?.length}} TeamMatches</p-header>
+        <p-column styleClass="col-result" *ngIf="isOrga">
+          <ng-template pTemplate="header">Result</ng-template>
+          <ng-template pTemplate="body" let-roundMatch="rowData">
+            <div style="text-align: center">
+              <p-dropdown
+                [autoWidth]="false"
+                [style]="{'width':'100%'}"
+                placeholder="Undone"
+                [(ngModel)]="roundMatch['result']"
+                [options]="winningOptions"
+                (onChange)="changeWinner($event, roundMatch)">
+              </p-dropdown>
+            </div>
+            <div *ngIf="roundMatch?.finished" style="text-align: center">
+              <i class="fa fa-times warning-icon"
+                 aria-hidden="true"
+                 (click)="clearMatch(roundMatch)"> Clear Game</i>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column field="section"
+                  header="Tables"
+                  [editable]="isOrga"
+                  [sortable]="true"
+                  [filter]="true"
+                  styleClass="col-table"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column styleClass="col-player col-firstPlayer"
+                  field="teamOne.name"
+                  header="Team 1"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column styleClass="col-vs">
+          <ng-template pTemplate="header"></ng-template>
+          <ng-template pTemplate="body" let-roundMatch="rowData">
+            <div style="text-align: center">
+              <span class="big-text">VS</span>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column styleClass="col-player"
+                  field="teamTwo.name"
+                  header="Team 2"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+        </p-column>
+      </p-dataTable>
+    </p-panel>
+
+    <!-- SHOW ONLY ROUND -->
   </ng-container>
+
+  <!-- LOAD TOURNAMENT -->
 </ng-container>
 
 

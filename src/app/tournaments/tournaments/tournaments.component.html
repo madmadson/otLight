@@ -7,6 +7,7 @@
 
 <ng-container *ngIf="(tournamentsLoaded)">
   <p-dialog [(visible)]="addTournamentDialogVisibility"
+            (onHide)="onHideTournamentDialog()"
             [contentStyle]="{'overflow':'visible', 'height':'100%'}"
             [modal]=true
             [width]="600"
@@ -15,6 +16,7 @@
       New Tournament {{selectedGameSystem}}
     </p-header>
     <ot-tournament-add-dialog
+      #tournamentDialog
       [gameSystem]="selectedGameSystem"
       [allTournaments]="tournaments"
       (onTournamentSaved)="handleTournamentSaved()">
@@ -41,7 +43,8 @@
       </ng-template>
       <ng-template let-tournament="rowData" pTemplate="body">
         <button type="button" pButton (click)="router.navigate(['/tournament', tournament?.id]);"  icon="fa-eye" label="Show"></button>
-      </ng-template>
+        <button type="button" pButton (click)="openTournamentEdit(tournament)" pButton icon="fa-edit" label="Edit"></button>
+       </ng-template>
     </p-column>
   </p-dataTable>
 </ng-container>

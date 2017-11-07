@@ -13,6 +13,9 @@ export interface TeamMatch {
   scoreTeamOne: number;
   scoreTeamTwo: number;
 
+  sgwTeamOne: number;
+  sgwTeamTwo: number;
+
   // WARMACHINE
   cpParticipantOne?: number;
   vpParticipantOne?: number;
@@ -30,18 +33,21 @@ export interface TeamMatch {
   matchDate: Date;
 }
 
-export function getRoundMatchForJSON(id: string, json: any): TeamMatch {
+export function getTeamMatchForJSON(id: string, json: any): TeamMatch {
   return {
     id: id,
     round: json.round,
 
     teamOne: json.teamOne,
-    teamTwo: json.teamOne,
+    teamTwo: json.teamTwo,
 
     section: json.section ? json.section : 0,
 
     scoreTeamOne: json.scoreTeamOne ? json.scoreTeamOne : 0,
     scoreTeamTwo: json.scoreTeamTwo ? json.scoreTeamTwo : 0,
+
+    sgwTeamOne: json.sgwTeamOne ? json.sgwTeamOne : 0,
+    sgwTeamTwo: json.sgwTeamTwo ? json.sgwTeamTwo : 0,
 
     result: json.result ? json.result : '',
     finished: json.finished ? json.finished : false,

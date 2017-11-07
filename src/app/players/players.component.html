@@ -21,10 +21,10 @@
     <p-header>
       New Player
     </p-header>
-    <app-player-add-dialog
+    <ot-player-add-dialog
       [allPlayersToCheck]="allPlayers"
       (onPlayerSaved)="handlePlayerSaved()">
-    </app-player-add-dialog>
+    </ot-player-add-dialog>
   </p-dialog>
   <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
   <button pButton type="button" (click)="addPlayerDialogVisibility = true" label="New Player" icon="fa-plus"></button>

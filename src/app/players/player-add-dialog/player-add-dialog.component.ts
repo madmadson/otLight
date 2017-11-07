@@ -12,7 +12,7 @@ import {UUID} from "angular2-uuid";
 import {ConnectivityService} from "../../services/connectivity-service";
 
 @Component({
-  selector: 'app-player-add-dialog',
+  selector: 'ot-player-add-dialog',
   templateUrl: './player-add-dialog.component.html',
   styleUrls: ['./player-add-dialog.component.scss']
 })
