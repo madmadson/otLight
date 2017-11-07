@@ -1,4 +1,5 @@
 import {Team} from "./Team";
+import {ParticipantMatch} from "./ParticipantMatch";
 
 export interface TeamMatch {
 
@@ -7,6 +8,8 @@ export interface TeamMatch {
 
   teamOne: Team;
   teamTwo: Team;
+
+  participantMatches?: ParticipantMatch[];
 
   section: number;
 
@@ -40,6 +43,8 @@ export function getTeamMatchForJSON(id: string, json: any): TeamMatch {
 
     teamOne: json.teamOne,
     teamTwo: json.teamTwo,
+
+    participantMatches: json.participantMatches ? json.participantMatches : [],
 
     section: json.section ? json.section : 0,
 

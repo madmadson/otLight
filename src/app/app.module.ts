@@ -34,6 +34,7 @@ import {ConnectivityService} from "./services/connectivity-service";
 import {BatchService} from "./services/batch.service";
 import {TeamMatchService} from "./services/team-match.service";
 import {ByeService} from "./services/bye.service";
+import { ParticipantMatchesTableComponent } from './tournament/participant-matches-table/participant-matches-table.component';
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -46,7 +47,8 @@ export const firebaseConfig = environment.firebaseConfig;
     TournamentAddDialogComponent,
     PlayersComponent,
     PlayerAddDialogComponent,
-    TournamentComponent
+    TournamentComponent,
+    ParticipantMatchesTableComponent
   ],
   imports: [
     BrowserAnimationsModule,

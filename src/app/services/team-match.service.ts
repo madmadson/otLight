@@ -74,6 +74,7 @@ export class TeamMatchService {
       const uuid = UUID.UUID();
       newTeamMatch.id = uuid;
       const teamMatchDocRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/teamMatches/' + uuid);
+      const partMatches: ParticipantMatch[] = [];
 
       _.forEach(teamMemberMap[newTeamMatch.teamOne.name], function (participantTeamOne: Participant, index: number) {
 
@@ -84,8 +85,6 @@ export class TeamMatchService {
 
         const participantMatchUuid = UUID.UUID();
         newMatch.id = participantMatchUuid;
-        const participantMatchDocRef =
-          that.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + participantMatchUuid);
         newMatch.table = index + 1;
 
         if (newTeamMatch.teamOne.name === 'bye') {
@@ -95,7 +94,7 @@ export class TeamMatchService {
           that.byeService.modifyParticipantMatchAgainstPlayerTwoBye(tournament, newMatch, allParticipants, batch);
         }
 
-        batch.set(participantMatchDocRef, newMatch);
+        partMatches.push(newMatch);
       });
 
       if (newTeamMatch.teamOne.name === 'bye') {
@@ -110,6 +109,7 @@ export class TeamMatchService {
       const sectionNumber: number = listOfSections[randomIndex];
       listOfSections.splice(randomIndex, 1);
       newTeamMatch.section = sectionNumber;
+      newTeamMatch.participantMatches = partMatches;
 
       batch.set(teamMatchDocRef, newTeamMatch);
 
@@ -184,6 +184,7 @@ export class TeamMatchService {
             round: round,
             teamOne: team1,
             teamTwo: team2,
+            participantMatches: [],
             section: 0,
             scoreTeamOne: 0,
             scoreTeamTwo: 0,
