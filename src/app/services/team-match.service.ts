@@ -53,12 +53,13 @@ export class TeamMatchService {
       });
     }
     // console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
-    const newRoundTeamMatches: TeamMatch[] = [];
+    let newRoundTeamMatches: TeamMatch[] = [];
 
     const megaSuccess = this.matchTeam(orderedTeams, newRoundTeamMatches, round, locationRestriction, true);
 
     if (!megaSuccess) {
       console.log('distance check failed. try again without');
+      newRoundTeamMatches = [];
       const success = this.matchTeam(orderedTeams, newRoundTeamMatches, round, locationRestriction, false);
       if (!success) {
         return null;
@@ -83,8 +84,7 @@ export class TeamMatchService {
         const newMatch: ParticipantMatch =
           createEmptyParticipantMatch(round, participantTeamOne, teamMemberMap[newTeamMatch.teamTwo.name][index]);
 
-        const participantMatchUuid = UUID.UUID();
-        newMatch.id = participantMatchUuid;
+        newMatch.id = UUID.UUID();
         newMatch.table = index + 1;
 
         if (newTeamMatch.teamOne.name === 'bye') {

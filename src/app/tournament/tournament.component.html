@@ -164,7 +164,8 @@
 
 <ng-container *ngIf="(!loadingTournament)">
   <p-panel [style]="{'text-align':'center'}"
-           header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament - ActualRound {{tournament?.actualRound}}"
+           header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament -
+                    {{tournament?.state === 'FINISHED' ? 'FINISHED' : 'Actual Round: ' + tournament?.actualRound }}"
            [toggleable]="true">
     <div *ngIf="isOrga" class="sub-heading">Hello Organizer</div>
 
@@ -233,7 +234,7 @@
                    [paginator]="true"
                    [pageLinks]="3"
                    [rows]="5">
-        <p-header>Global list of Players</p-header>
+        <p-header>Global List of Players</p-header>
         <p-column field="name"
                   header="Name"
                   [sortable]="true"
@@ -450,6 +451,7 @@
     </p-dataTable>
   </p-panel>
   <p-panel header="{{getTeamTableHeading()}}" [toggleable]="true"
+           *ngIf="tournament.type === 'team'"
            [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
 
     <ng-container *ngIf="(loadingTeams)">

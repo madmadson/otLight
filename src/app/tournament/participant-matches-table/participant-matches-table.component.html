@@ -9,13 +9,7 @@
 <button pButton type="button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
 <button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
 <p-dataTable
-  *ngIf="(!loadingParticipants) &&
-               (!loadingParticipantMatches) &&
-               (!startingTournament) &&
-               (!deletingRound) &&
-               (!pairingAgain) &&
-               (!creatingNextRound) &&
-               (!swappingPlayer)"
+  *ngIf="!swappingPlayer"
   [value]="participantMatches"
   [editable]="isOrga"
   (onEditComplete)="onEditMatch($event)"

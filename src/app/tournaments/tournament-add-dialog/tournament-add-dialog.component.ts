@@ -126,7 +126,8 @@ export class TournamentAddDialogComponent implements OnInit {
       } else {
         this.afs.firestore.doc('tournaments/' + tournament.id).set(tournament).then(function () {
           // ignored is offline :/
-        }).catch(function () {});
+        }).catch(function () {
+        });
 
         console.log("Tournament written with ID: ", tournament.id);
 
@@ -187,8 +188,45 @@ export class TournamentAddDialogComponent implements OnInit {
     const that = this;
     this.tournamentSaving = true;
 
+    const batch = this.afs.firestore.batch();
+
+    const participantsColRef = this.afs.firestore.collection('tournaments/' + this.selectedTournament.id + '/participants');
+
+    participantsColRef.get().then(playersSnapshot => {
+      playersSnapshot.docs.forEach(function (doc) {
+        batch.delete(doc.ref);
+      });
+
+      if (this.selectedTournament.type === 'team') {
+
+        const teamsColRef = this.afs.firestore.collection('tournaments/' + this.selectedTournament.id + '/teams');
+
+        teamsColRef.get().then(teamsSnapshot => {
+          teamsSnapshot.docs.forEach(function (doc) {
+            batch.delete(doc.ref);
+          });
+
+          that.commitTournamentDeletion(batch);
+        });
+
+      } else {
+
+        that.commitTournamentDeletion(batch);
+      }
+    });
+
+
+  }
+
+  private commitTournamentDeletion(batch: firebase.firestore.WriteBatch) {
+
+    const that = this;
+
+    const tournamentDocRef = this.afs.firestore.doc('tournaments/' + this.selectedTournament.id);
+    batch.delete(tournamentDocRef);
+
     if (this.conService.isOnline()) {
-      this.afs.firestore.doc('tournaments/' + this.selectedTournament.id).delete().then(function () {
+      batch.commit().then(function () {
         console.log("Tournament deleted!");
 
         that.onTournamentSaved.emit();
@@ -199,7 +237,7 @@ export class TournamentAddDialogComponent implements OnInit {
         that.tournamentSaving = false;
       });
     } else {
-      this.afs.firestore.doc('tournaments/' + that.selectedTournament.id).delete().then(function () {
+      batch.commit().then(function () {
         // ignored is offline :/
       }).catch(function () {
       });

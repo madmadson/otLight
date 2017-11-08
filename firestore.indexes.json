@@ -1,13 +1,32 @@
 {
   // Example:
   //
-   "indexes": [
-     {
-       "collectionId": "roundMatches",
-       "fields": [
-         { "fieldPath": "round", "mode": "ASCENDING" },
-         { "fieldPath": "matchDate", "mode": "DESCENDING" }
-       ]
-     }
-   ]
+  "indexes": [
+    {
+      "collectionId": "roundMatches",
+      "fields": [
+        {
+          "fieldPath": "round",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "matchDate",
+          "mode": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionId": "teamMatches",
+      "fields": [
+        {
+          "fieldPath": "round",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "matchDate",
+          "mode": "DESCENDING"
+        }
+      ]
+    }
+  ]
 }

@@ -45,12 +45,13 @@ export class ParticipantMatchService {
     }
     // console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
 
-    const newRoundMatches: ParticipantMatch[] = [];
+    let newRoundMatches: ParticipantMatch[] = [];
 
     const megaSuccess = this.match(orderedParticipants, newRoundMatches, round, locationRestriction, true);
 
     if (!megaSuccess) {
       console.log('distance check failed. try again without');
+      newRoundMatches = [];
       const success = this.match(orderedParticipants, newRoundMatches, round, locationRestriction, false);
       if (!success) {
         return null;
@@ -65,7 +66,7 @@ export class ParticipantMatchService {
 
       const uuid = UUID.UUID();
       newMatch.id = uuid;
-      const matchDocRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + uuid);
+      const matchDocRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + uuid);
 
       if (newMatch.participantOne.name === 'bye') {
         that.byeService.modifyParticipantMatchAgainstPlayerOneBye(tournament, newMatch, allParticipant, batch);
@@ -170,7 +171,7 @@ export class ParticipantMatchService {
       const batch = that.afs.firestore.batch();
 
       _.forEach(roundMatches, function (match: ParticipantMatch) {
-        const docRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + match.id);
+        const docRef = that.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + match.id);
         batch.delete(docRef);
       });
       _.forEach(participants, function (participant: Participant) {
@@ -240,7 +241,7 @@ export class ParticipantMatchService {
     roundMatch.result = 'p1';
     roundMatch.finished = true;
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
   }
 
@@ -290,7 +291,7 @@ export class ParticipantMatchService {
     roundMatch.result = 'p2';
     roundMatch.finished = true;
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
   }
 
@@ -313,7 +314,7 @@ export class ParticipantMatchService {
     roundMatch.scoreParticipantOne = scorePerGameSystem[1];
     roundMatch.finished = true;
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
   }
 
@@ -336,7 +337,7 @@ export class ParticipantMatchService {
     roundMatch.scoreParticipantTwo = scorePerGameSystem[1];
     roundMatch.finished = true;
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
 
   }
@@ -385,11 +386,8 @@ export class ParticipantMatchService {
     roundMatch.finished = true;
     roundMatch.result = 'draw';
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
   }
 
-  createParticipantMatch(){
-
-  }
 }

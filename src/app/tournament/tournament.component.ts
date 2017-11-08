@@ -138,10 +138,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.tournamentDocRef = this.afs.firestore.doc('tournaments/' + this.tournamentId);
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participants');
     this.teamsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teams');
-    this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/participantMatches');
+    this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
     this.teamMatchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teamMatches');
 
-    this.isOrga = true;
+    // this.isOrga = true;
 
     this.orgaForm = this.formBuilder.group({
       user: [{value: 'Orga', disabled: true}, Validators.required],

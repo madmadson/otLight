@@ -57,7 +57,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
               protected participantMatchService: ParticipantMatchService) {}
 
   ngOnInit() {
-    this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/participantMatches');
+    this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/roundMatches');
 
   }
 
@@ -179,7 +179,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
     roundMatch.finished = false;
     roundMatch.result = '';
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
   }
 
@@ -255,10 +255,10 @@ export class ParticipantMatchesTableComponent implements OnInit {
           droppedMatch.participantTwo = this.playerToSwap;
         }
 
-        const matchOneDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + this.matchToSwap.id);
+        const matchOneDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + this.matchToSwap.id);
         batch.update(matchOneDocRef, this.matchToSwap);
 
-        const matchTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + droppedMatch.id);
+        const matchTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + droppedMatch.id);
         batch.update(matchTwoDocRef, droppedMatch);
 
         this.stopSwapPlayer();
@@ -332,7 +332,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
       batch.update(participantTwoDocRef, participantTwoToUpdate);
     }
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
     batch.update(matchDocRef, roundMatch);
   }
 
@@ -375,7 +375,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
 
     console.log('save choose played: ' + JSON.stringify(roundMatch));
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
 
     if (this.conService.isOnline()) {
       matchDocRef.update(roundMatch).then(function () {
@@ -409,7 +409,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
       const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
       this.batchService.update(participantTwoDocRef, participantToUpdate);
     }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
 
   }
@@ -428,7 +428,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
       this.batchService.update(participantTwoDocRef, participantToUpdate);
 
     }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participantMatches/' + roundMatch.id);
+    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
     this.batchService.update(matchDocRef, roundMatch);
 
   }
