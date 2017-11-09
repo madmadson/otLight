@@ -7,7 +7,7 @@ import {Participant} from "../Participant";
 import * as _ from 'lodash';
 import {Team} from "../Team";
 
-export function getJudgementFieldConfig(type: string): GameSystemConfig {
+export function getJudgementFieldConfig(): GameSystemConfig {
 
   const gameConfig: GameSystemConfig = {playerFields: [], participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
 
@@ -23,14 +23,6 @@ export function getJudgementFieldConfig(type: string): GameSystemConfig {
     field: 'Warband',
     fieldValues: getJudgementHeroesAsSelectItem()
   });
-
-   if (type === 'team') {
-    gameConfig.standingFields.push({
-      defaultValue: 0,
-      type: 'number',
-      field: 'sgw',
-    });
-  }
 
   gameConfig.standingFields.push({
     defaultValue: 0,

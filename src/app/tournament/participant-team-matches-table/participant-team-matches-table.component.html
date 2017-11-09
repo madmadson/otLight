@@ -5,11 +5,11 @@
   </div>
 </ng-container>
 
-<button pButton type="button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
-<button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+{{teamsMap | json}}
+
 <p-dataTable
   *ngIf="!swappingPlayer"
-  [value]="participantMatches"
+  [value]="teamMatch.participantMatches"
   [editable]="isOrga"
   (onEditComplete)="onEditMatch($event)"
   [responsive]="true"
@@ -21,13 +21,11 @@
   [immutable]="true"
   [stacked]="stackedMatches"
   [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
-  [csvSeparator]="';'"
-  [exportFilename]="'Matches_Round_' + shownRound"
   #matchesTable>
-  <p-header>{{participantMatches?.length}} Matches</p-header>
+  <p-header>{{teamMatch.teamOne.name + ' VS ' + teamMatch.teamTwo.name}}</p-header>
   <p-column styleClass="col-result" *ngIf="isOrga">
     <ng-template pTemplate="header">Result</ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
       <div style="text-align: center">
         <p-dropdown
           [autoWidth]="false"
@@ -35,7 +33,7 @@
           placeholder="Undone"
           [(ngModel)]="roundMatch['result']"
           [options]="winningOptions"
-          (onChange)="changeWinner($event, roundMatch)">
+          (onChange)="changeWinner($event, roundMatch, index)">
         </p-dropdown>
       </div>
       <div *ngIf="roundMatch?.finished" style="text-align: center">
@@ -66,10 +64,10 @@
              class="ui-column-filter"
              (keyup)="filterParticipantOneMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
       <div style="text-align: center"
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo)}}"
-           (click)="dropPlayer(roundMatch, roundMatch.participantOne, roundMatch.participantTwo, 'one')"
+           (click)="dropPlayer(roundMatch, roundMatch.participantOne, roundMatch.participantTwo, 'one', index)"
            [ngClass]="{
                      'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'swap'),
                      'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'not'),
@@ -85,7 +83,7 @@
         <span class="very-big-text" *ngIf="roundMatch.participantOne.name === 'bye'">BYE</span>
         <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap && !tournamentFinished"
            class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player1"
-           (click)="swapPlayerOne(roundMatch)">
+           (click)="swapPlayerOne(roundMatch, index)">
         </i>
         <i *ngIf="playerToSwap && isOrga"
            class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
@@ -143,10 +141,10 @@
              class="ui-column-filter"
              (keyup)="filterParticipantTwoMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
       <div style="text-align: center"
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne)}}"
-           (click)="dropPlayer(roundMatch, roundMatch.participantTwo, roundMatch.participantOne, 'two')"
+           (click)="dropPlayer(roundMatch, roundMatch.participantTwo, roundMatch.participantOne, 'two', index)"
            [ngClass]="{
                      'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'swap'),
                      'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'not'),
@@ -163,7 +161,7 @@
         <span class="very-big-text" *ngIf="roundMatch.participantTwo.name === 'bye'">BYE</span>
         <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap  && !tournamentFinished"
            class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player2"
-           (click)="swapPlayerTwo(roundMatch)">
+           (click)="swapPlayerTwo(roundMatch, index)">
         </i>
         <i *ngIf="playerToSwap && isOrga"
            class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"

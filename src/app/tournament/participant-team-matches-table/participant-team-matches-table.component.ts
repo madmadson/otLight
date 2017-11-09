@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {DataTable, SelectItem} from "primeng/primeng";
 import {getParticipantMatchForJSON, ParticipantMatch} from "../../models/ParticipantMatch";
 import * as firebase from "firebase/app";
@@ -7,22 +7,27 @@ import {BatchService} from "../../services/batch.service";
 import {AngularFirestore} from "angularfire2/firestore";
 import {ParticipantMatchService} from "../../services/participant-match.service";
 import {Participant} from "../../models/Participant";
+
 import {FieldValues, getScoreByGameSystem} from "../../models/game-systems";
 import * as _ from 'lodash';
 import {MessageService} from "primeng/components/common/messageservice";
 import {ConnectivityService} from "../../services/connectivity-service";
 import WriteBatch = firebase.firestore.WriteBatch;
+import {TeamMatch} from "../../models/TeamMatch";
+import {Tournament} from "../../models/Tournament";
+import {TeamMatchService} from "../../services/team-match.service";
 
 @Component({
-  selector: 'ot-participant-matches-table',
-  templateUrl: './participant-matches-table.component.html',
-  styleUrls: ['./participant-matches-table.component.scss']
+  selector: 'ot-participant-team-matches-table',
+  templateUrl: './participant-team-matches-table.component.html',
+  styleUrls: ['./participant-team-matches-table.component.scss']
 })
-export class ParticipantMatchesTableComponent implements OnInit {
+export class ParticipantTeamMatchesTableComponent implements OnInit {
 
-  @Input() participantMatches: ParticipantMatch[];
-  @Input() participantsMap: any;
-  @Input() tournament: any;
+  @Input() teamMatch: TeamMatch;
+  @Input() participantsMap: {};
+  @Input() teamsMap: {};
+  @Input() tournament: Tournament;
   @Input() isOrga: boolean;
   @Input() shownRound: number;
   @Input() gameSystemConfig: any;
@@ -42,6 +47,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
   ];
 
   playerToSwap: Participant;
+  playerToSwapIndex: number;
   opponentOfPlayerToSwap: Participant;
   matchToSwap: ParticipantMatch;
   messageAlreadyPlayed: string;
@@ -54,12 +60,9 @@ export class ParticipantMatchesTableComponent implements OnInit {
               protected batchService: BatchService,
               protected conService: ConnectivityService,
               protected messageService: MessageService,
-              protected participantMatchService: ParticipantMatchService) {}
+              protected teamMatchService: TeamMatchService) {}
 
-  ngOnInit() {
-    this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/roundMatches');
-
-  }
+  ngOnInit() {}
 
   filterParticipantOneMatchesTable() {
 
@@ -71,9 +74,6 @@ export class ParticipantMatchesTableComponent implements OnInit {
     this.matchesTable.filter(this.participantTwoFilter, 'participantTwo.name', 'startsWith');
   }
 
-  exportMatches() {
-    this.matchesTable.exportCSV();
-  }
 
   onEditMatch(event: any) {
 
@@ -91,97 +91,98 @@ export class ParticipantMatchesTableComponent implements OnInit {
     return rowData.finished ? 'row-finished' : '';
   }
 
-  changeWinner(event: any, roundMatch: ParticipantMatch) {
+  changeWinner(event: any, participantMatch: ParticipantMatch, index: number) {
 
-    const cloneMatch: ParticipantMatch = _.cloneDeep(roundMatch);
+    const cloneMatch: ParticipantMatch = _.cloneDeep(participantMatch);
 
-    console.log('Match winner changed: ' + event.value);
+    console.log('Match value: ' + event.value);
+    console.log('Match winner changed from teamMatch: ' + JSON.stringify(this.teamMatch.participantMatches[index]));
 
     if (event.value === 'p1') {
-      this.participantMatchService.playerOneWon(this.tournament, roundMatch, this.participantsMap);
+      this.teamMatchService.playerOneWon(this.tournament, this.teamMatch, participantMatch, this.participantsMap, this.teamsMap);
 
       if (cloneMatch.finished) {
-        this.participantMatchService.playerTwoLost(this.tournament, roundMatch, this.participantsMap);
+        // this.participantMatchService.playerTwoLost(this.tournament, roundMatch, this.participantsMap);
       }
     }
-
-    if (event.value === 'p2') {
-      this.participantMatchService.playerTwoWon(this.tournament, roundMatch, this.participantsMap);
-
-      if (cloneMatch.finished) {
-        this.participantMatchService.playerOneLost(this.tournament, roundMatch, this.participantsMap);
-      }
-    }
-
-    if (event.value === 'draw') {
-      this.participantMatchService.resultDraw(this.tournament, roundMatch, this.participantsMap);
-    }
+    //
+    // if (event.value === 'p2') {
+    //   this.participantMatchService.playerTwoWon(this.tournament, roundMatch, this.participants);
+    //
+    //   if (cloneMatch.finished) {
+    //     this.participantMatchService.playerOneLost(this.tournament, roundMatch, this.participants);
+    //   }
+    // }
+    //
+    // if (event.value === 'draw') {
+    //   this.participantMatchService.resultDraw(this.tournament, roundMatch, this.participants);
+    // }
   }
 
-  clearMatch(roundMatch: ParticipantMatch) {
-
-    const that = this;
-    console.log('clear Match: ' + JSON.stringify(roundMatch));
-
-    if (roundMatch.finished) {
-
-      const scorePerGameSystem = getScoreByGameSystem(this.tournament.gameSystem);
-
-      if (roundMatch.scoreParticipantOne === scorePerGameSystem[0]) {
-        this.participantMatchService.playerOneLost(this.tournament, roundMatch, this.participantsMap);
-      }
-      if (roundMatch.scoreParticipantTwo === scorePerGameSystem[0]) {
-        this.participantMatchService.playerTwoLost(this.tournament, roundMatch, this.participantsMap);
-      }
-    }
-
-    const participantOneToUpdate: Participant = _.find(this.participantsMap, function (par: Participant) {
-      return par.id === roundMatch.participantOne.id;
-    });
-
-    const participantTwoToUpdate: Participant = _.find(this.participantsMap, function (par: Participant) {
-      return par.id === roundMatch.participantTwo.id;
-    });
-
-    _.forEach(this.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
-      roundMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
-      roundMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
-
-      if (participantOneToUpdate) {
-        participantOneToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
-      }
-      if (participantTwoToUpdate) {
-        participantTwoToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
-      }
-    });
-
-    _.forEach(this.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
-      roundMatch[choosePlayed.fieldPlayerOne] = choosePlayed.defaultValue;
-      roundMatch[choosePlayed.fieldPlayerTwo] = choosePlayed.defaultValue;
-    });
-
-    if (participantOneToUpdate) {
-      participantOneToUpdate.opponentParticipantsNames.splice(that.shownRound - 1, 1);
-      participantOneToUpdate.roundScores.splice(that.shownRound - 1, 1);
-      const participantOneDocRef = this.afs.firestore
-        .doc('tournaments/' + this.tournament.id + '/participants/' + participantOneToUpdate.id);
-      this.batchService.update(participantOneDocRef, participantOneToUpdate);
-    }
-
-    if (participantTwoToUpdate) {
-      participantTwoToUpdate.opponentParticipantsNames.splice(that.shownRound - 1, 1);
-      participantTwoToUpdate.roundScores.splice(that.shownRound - 1, 1);
-      const participantTwoDocRef = this.afs.firestore
-        .doc('tournaments/' + this.tournament.id + '/participants/' + participantTwoToUpdate.id);
-      this.batchService.update(participantTwoDocRef, participantTwoToUpdate);
-    }
-
-    roundMatch.finished = false;
-    roundMatch.result = '';
-
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
-    this.batchService.update(matchDocRef, roundMatch);
-  }
+  // clearMatch(roundMatch: ParticipantMatch) {
+  //
+  //   const that = this;
+  //   console.log('clear Match: ' + JSON.stringify(roundMatch));
+  //
+  //   if (roundMatch.finished) {
+  //
+  //     const scorePerGameSystem = getScoreByGameSystem(this.tournament.gameSystem);
+  //
+  //     if (roundMatch.scoreParticipantOne === scorePerGameSystem[0]) {
+  //       this.participantMatchService.playerOneLost(this.tournament, roundMatch, this.participants);
+  //     }
+  //     if (roundMatch.scoreParticipantTwo === scorePerGameSystem[0]) {
+  //       this.participantMatchService.playerTwoLost(this.tournament, roundMatch, this.participants);
+  //     }
+  //   }
+  //
+  //   const participantOneToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+  //     return par.id === roundMatch.participantOne.id;
+  //   });
+  //
+  //   const participantTwoToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+  //     return par.id === roundMatch.participantTwo.id;
+  //   });
+  //
+  //   _.forEach(this.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+  //     roundMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
+  //     roundMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
+  //
+  //     if (participantOneToUpdate) {
+  //       participantOneToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
+  //     }
+  //     if (participantTwoToUpdate) {
+  //       participantTwoToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
+  //     }
+  //   });
+  //
+  //   _.forEach(this.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
+  //     roundMatch[choosePlayed.fieldPlayerOne] = choosePlayed.defaultValue;
+  //     roundMatch[choosePlayed.fieldPlayerTwo] = choosePlayed.defaultValue;
+  //   });
+  //
+  //   if (participantOneToUpdate) {
+  //     participantOneToUpdate.opponentParticipantsNames.splice(that.shownRound - 1, 1);
+  //     participantOneToUpdate.roundScores.splice(that.shownRound - 1, 1);
+  //     const participantOneDocRef = this.afs.firestore
+  //       .doc('tournaments/' + this.tournament.id + '/participants/' + participantOneToUpdate.id);
+  //     this.batchService.update(participantOneDocRef, participantOneToUpdate);
+  //   }
+  //
+  //   if (participantTwoToUpdate) {
+  //     participantTwoToUpdate.opponentParticipantsNames.splice(that.shownRound - 1, 1);
+  //     participantTwoToUpdate.roundScores.splice(that.shownRound - 1, 1);
+  //     const participantTwoDocRef = this.afs.firestore
+  //       .doc('tournaments/' + this.tournament.id + '/participants/' + participantTwoToUpdate.id);
+  //     this.batchService.update(participantTwoDocRef, participantTwoToUpdate);
+  //   }
+  //
+  //   roundMatch.finished = false;
+  //   roundMatch.result = '';
+  //
+  //   const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
+  //   this.batchService.update(matchDocRef, roundMatch);
+  // }
 
   getToolTipForSwap(roundMatchToCheck: ParticipantMatch, participantToCheck: Participant, opponentOfHovered: Participant) {
 
@@ -202,6 +203,8 @@ export class ParticipantMatchesTableComponent implements OnInit {
     if (this.playerToSwap) {
       if (participantToCheck.name === this.playerToSwap.name) {
         return 'impo';
+      } else if (participantToCheck.team !== this.playerToSwap.team) {
+        return 'impo';
       } else if (roundMatchToCheck.finished) {
         return 'impo';
       } else if (participantToCheck.name === this.opponentOfPlayerToSwap.name) {
@@ -218,13 +221,15 @@ export class ParticipantMatchesTableComponent implements OnInit {
     }
   }
 
-  dropPlayer(droppedMatch: ParticipantMatch, droppedParticipant: Participant, opponentOfDropped: Participant, witchPlayerDropped: string) {
+  dropPlayer(droppedMatch: ParticipantMatch, droppedParticipant: Participant,
+             opponentOfDropped: Participant, witchPlayerDropped: string, index: number) {
 
     if (this.playerToSwap) {
       const that = this;
       const state = this.checkSwap(droppedMatch, droppedParticipant, opponentOfDropped);
 
       if (state !== 'impo') {
+
         console.log("start swaping");
 
         that.swappingPlayer = true;
@@ -255,11 +260,8 @@ export class ParticipantMatchesTableComponent implements OnInit {
           droppedMatch.participantTwo = this.playerToSwap;
         }
 
-        const matchOneDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + this.matchToSwap.id);
-        batch.update(matchOneDocRef, this.matchToSwap);
-
-        const matchTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + droppedMatch.id);
-        batch.update(matchTwoDocRef, droppedMatch);
+        const teamMatchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/teamMatches/' + this.teamMatch.id);
+        batch.update(teamMatchDocRef, this.teamMatch);
 
         this.stopSwapPlayer();
 
@@ -287,18 +289,18 @@ export class ParticipantMatchesTableComponent implements OnInit {
     }
   }
 
-  private clearSubScores(partiMatch: ParticipantMatch, batch: WriteBatch) {
+  private clearSubScores(participantMatch: ParticipantMatch, batch: WriteBatch) {
 
     const that = this;
 
     // PlayerOne
-    const participantOneToUpdate: Participant = this.participantsMap[partiMatch.participantOne.name];
+    const participantOneToUpdate: Participant = this.participantsMap[participantMatch.participantOne.name];
     // PlayerTwo
-    const participantTwoToUpdate: Participant = this.participantsMap[partiMatch.participantTwo.name];
+    const participantTwoToUpdate: Participant = this.participantsMap[participantMatch.participantTwo.name];
 
     _.forEach(this.gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
-      partiMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
-      partiMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
+      participantMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
+      participantMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
 
       if (participantOneToUpdate) {
         participantOneToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
@@ -309,8 +311,8 @@ export class ParticipantMatchesTableComponent implements OnInit {
     });
 
     _.forEach(this.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
-      partiMatch[choosePlayed.fieldPlayerOne] = choosePlayed.defaultValue;
-      partiMatch[choosePlayed.fieldPlayerTwo] = choosePlayed.defaultValue;
+      participantMatch[choosePlayed.fieldPlayerOne] = choosePlayed.defaultValue;
+      participantMatch[choosePlayed.fieldPlayerTwo] = choosePlayed.defaultValue;
     });
 
     if (participantOneToUpdate) {
@@ -329,8 +331,6 @@ export class ParticipantMatchesTableComponent implements OnInit {
       batch.update(participantTwoDocRef, participantTwoToUpdate);
     }
 
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
-    batch.update(matchDocRef, partiMatch);
   }
 
   getScoreTillRoundForParticipant(participant: Participant) {
@@ -342,18 +342,20 @@ export class ParticipantMatchesTableComponent implements OnInit {
     return scoreSum;
   }
 
-  swapPlayerOne(roundMatch: ParticipantMatch) {
+  swapPlayerOne(roundMatch: ParticipantMatch, indexOfPlayer: number) {
 
     this.matchToSwap = roundMatch;
     this.playerToSwap = roundMatch.participantOne;
+    this.playerToSwapIndex = indexOfPlayer;
     this.opponentOfPlayerToSwap = roundMatch.participantTwo;
 
     this.playerOneSwapped = true;
   }
 
-  swapPlayerTwo(roundMatch: ParticipantMatch) {
+  swapPlayerTwo(roundMatch: ParticipantMatch, indexOfPlayer: number) {
     this.matchToSwap = roundMatch;
     this.playerToSwap = roundMatch.participantTwo;
+    this.playerToSwapIndex = indexOfPlayer;
     this.opponentOfPlayerToSwap = roundMatch.participantOne;
 
     this.playerTwoSwapped = true;
@@ -362,6 +364,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
   stopSwapPlayer() {
     this.matchToSwap = null;
     this.playerToSwap = null;
+    this.playerToSwapIndex = null;
     this.opponentOfPlayerToSwap = null;
 
     this.playerOneSwapped = false;
@@ -394,35 +397,39 @@ export class ParticipantMatchesTableComponent implements OnInit {
     }
   }
 
-  changeScoringForPlayerOne(partiMatch: ParticipantMatch, field: string, value: number) {
-
-    // PlayerOne
-    const participantToUpdate: Participant = this.participantsMap[partiMatch.participantOne.name];
-
-    if (participantToUpdate) {
-      participantToUpdate[field][this.shownRound - 1] = value;
-      const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
-      this.batchService.update(participantTwoDocRef, participantToUpdate);
-    }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
-    this.batchService.update(matchDocRef, partiMatch);
-
-  }
-
-  changeScoringPlayerTwo(partiMatch: ParticipantMatch, field: string, value: number) {
-
-    // PlayerTwo
-    const participantToUpdate: Participant = this.participantsMap[partiMatch.participantTwo.name];
-
-    if (participantToUpdate) {
-      participantToUpdate[field][this.shownRound - 1] = value;
-
-      const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
-      this.batchService.update(participantTwoDocRef, participantToUpdate);
-
-    }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
-    this.batchService.update(matchDocRef, partiMatch);
-
-  }
+  // changeScoringForPlayerOne(roundMatch: ParticipantMatch, field: string, value: number) {
+  //
+  //
+  //   const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+  //     return par.id === roundMatch.participantOne.id;
+  //   });
+  //
+  //   if (participantToUpdate) {
+  //     participantToUpdate[field][this.shownRound - 1] = value;
+  //     const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
+  //     this.batchService.update(participantTwoDocRef, participantToUpdate);
+  //   }
+  //   const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
+  //   this.batchService.update(matchDocRef, roundMatch);
+  //
+  // }
+  //
+  // changeScoringPlayerTwo(roundMatch: ParticipantMatch, field: string, value: number) {
+  //
+  //
+  //   const participantToUpdate: Participant = _.find(this.participants, function (par: Participant) {
+  //     return par.id === roundMatch.participantTwo.id;
+  //   });
+  //
+  //   if (participantToUpdate) {
+  //     participantToUpdate[field][this.shownRound - 1] = value;
+  //
+  //     const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
+  //     this.batchService.update(participantTwoDocRef, participantToUpdate);
+  //
+  //   }
+  //   const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + roundMatch.id);
+  //   this.batchService.update(matchDocRef, roundMatch);
+  //
+  // }
 }

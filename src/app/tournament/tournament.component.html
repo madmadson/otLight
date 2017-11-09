@@ -254,6 +254,15 @@
                   [filter]="true"
                   filterPlaceholder="Search">
         </p-column>
+        <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
+          <p-column styleClass="break-word"
+                    field="{{playerField.field}}"
+                    header="{{playerField.field}}"
+                    [sortable]="true"
+                    [filter]="true"
+                    filterPlaceholder="Search">
+          </p-column>
+        </ng-container>
         <p-column styleClass="col-actions">
           <ng-template pTemplate="header">
             Actions
@@ -339,7 +348,7 @@
 
     <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
     <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
-    <!-- Player List-->
+    <!-- Participants List-->
     <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
                  [value]="participants"
                  [editable]="isOrga"
@@ -353,6 +362,14 @@
                  [exportFilename]="'Standings_Round_' + shownRound"
                  #standingsTable>
       <p-header>{{participants?.length}} Players in Tournament</p-header>
+      <p-column styleClass="col-rank">
+        <ng-template pTemplate="header"></ng-template>
+        <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
+          <div style="text-align: center">
+            <span class="big-text">{{index + 1}}</span>
+          </div>
+        </ng-template>
+      </p-column>
       <p-column field="name"
                 header="Name"
                 [sortable]="true"
@@ -368,7 +385,6 @@
                 [filter]="true"
                 filterPlaceholder="Search">
       </p-column>
-
       <p-column *ngIf="tournament?.type === 'team'"
                 [editable]="isOrga && tournament?.actualRound === 0"
                 styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
@@ -520,16 +536,23 @@
                 header="Score"
                 (sortFunction)="sortByScore($event)">
         <ng-template let-team="rowData" pTemplate="body">
+          {{getTeamStandingFieldValue('sgw', team)}} <i class="fa fa-info-circle" pTooltip="{{getTeamStandingFieldValueTooltip('sgw',team)}}"></i>
+        </ng-template>
+      </p-column>
+      <p-column header="sgw">
+        <ng-template let-team="rowData" pTemplate="body">
           {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
         </ng-template>
       </p-column>
-      <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
-        <p-column header="{{scoreField.field}}">
-          <ng-template let-team="rowData" pTemplate="body">
-            {{getTeamScoreFieldValue(scoreField, team)}}
-            <i class="fa fa-info-circle" pTooltip="{{getTeamScoreFieldValueTooltip(scoreField, team)}}"></i>
-          </ng-template>
-        </p-column>
+      <ng-container *ngFor="let standingField of gameSystemConfig.standingFields">
+        <ng-container *ngIf="standingField.isTeam">
+          <p-column header="{{standingField.field}}">
+            <ng-template let-team="rowData" pTemplate="body">
+              {{getTeamStandingFieldValue(standingField, team)}}
+              <i class="fa fa-info-circle" pTooltip="{{getTeamStandingFieldValueTooltip(standingField, team)}}"></i>
+            </ng-template>
+          </p-column>
+        </ng-container>
       </ng-container>
 
       <p-column styleClass="col-actions" *ngIf="tournament?.actualRound === 0">
@@ -568,7 +591,7 @@
         [participantMatches]="participantMatches"
         [isOrga]="isOrga"
         [tournament]="tournament"
-        [participants]="participants"
+        [participantsMap]="participantsMap"
         [gameSystemConfig]="gameSystemConfig"
         [participantsChoosePlayedMap]="participantsChoosePlayedMap"
         [shownRound]="shownRound">
@@ -592,9 +615,7 @@
       <button pButton type="button" (click)="expandTeamMatches()" label="Expand All" icon="fa-expand"></button>
       <button pButton type="button" (click)="collapseTeamMatches()" label="Collapse All" icon="fa-compress"></button>
       <p-dataTable
-        *ngIf="(!loadingParticipants) &&
-               (!loadingParticipantMatches) &&
-               (!startingTournament) &&
+        *ngIf="(!startingTournament) &&
                (!deletingRound) &&
                (!pairingAgain) &&
                (!creatingNextRound) &&
@@ -613,8 +634,8 @@
         [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
         [csvSeparator]="';'"
         [exportFilename]="'Team_Matches_Round_' + shownRound"
-        expandableRows="true"
-        [expandedRows]="isOrga ? teamMatchesTable.value : []"
+        [expandableRows]="true"
+        [expandedRows]="expandedRowsTeamMatchTable"
         #teamMatchesTable>
         <p-header>{{teamMatches?.length}} TeamMatches</p-header>
         <p-column expander="true" styleClass="col-expand"></p-column>
@@ -635,7 +656,7 @@
         </p-column>
         <p-column styleClass="col-vs">
           <ng-template pTemplate="header"></ng-template>
-          <ng-template pTemplate="body" let-roundMatch="rowData">
+          <ng-template pTemplate="body" let-teamMatch="rowData">
             <div style="text-align: center">
               <span class="big-text">VS</span>
             </div>
@@ -648,17 +669,17 @@
                   [filter]="true"
                   filterPlaceholder="Search">
         </p-column>
-        <ng-template let-roundMatch pTemplate="rowexpansion">
-          <ot-participant-matches-table
-            *ngIf="tournament && participants && participantMatches"
-            [participantMatches]="roundMatch.participantMatches"
+        <ng-template let-teamMatch let-index="rowIndex" pTemplate="rowexpansion">
+          <ot-participant-team-matches-table
+            [teamMatch]="teamMatch"
             [isOrga]="isOrga"
             [tournament]="tournament"
-            [participants]="participants"
+            [participantsMap]="participantsMap"
+            [teamsMap]="teamsMap"
             [gameSystemConfig]="gameSystemConfig"
             [participantsChoosePlayedMap]="participantsChoosePlayedMap"
             [shownRound]="shownRound">
-          </ot-participant-matches-table>
+          </ot-participant-team-matches-table>
         </ng-template>
       </p-dataTable>
     </p-panel>

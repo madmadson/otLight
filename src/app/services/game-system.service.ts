@@ -1,5 +1,4 @@
 import {Injectable} from '@angular/core';
-import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
 import {getGameSystems} from "../models/game-systems";
 
@@ -7,7 +6,7 @@ import {getGameSystems} from "../models/game-systems";
 @Injectable()
 export class GameSystemService {
 
-  private gameSystemStream: Subject<String>;
+  private gameSystemStream: Subject<string>;
   private gameSystem: string;
   private allGameSystems: string[];
 
@@ -15,7 +14,7 @@ export class GameSystemService {
 
     this.allGameSystems = getGameSystems();
 
-     this.gameSystemStream = new Subject<String>();
+     this.gameSystemStream = new Subject<string>();
   }
 
   getGameSystem(): string {
@@ -23,7 +22,7 @@ export class GameSystemService {
   }
 
 
-  getGameSystemAsStream(): Observable<string> {
+  getGameSystemAsStream(): Subject<string> {
 
     return this.gameSystemStream;
   }

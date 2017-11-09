@@ -15,6 +15,7 @@ import {SelectItem} from "primeng/primeng";
 import {ConnectivityService} from "../services/connectivity-service";
 import {MessageService} from "primeng/components/common/messageservice";
 import {ActivatedRoute} from "@angular/router";
+import {BatchService} from "../services/batch.service";
 
 
 @Component({
@@ -43,15 +44,14 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   private routerSub: Subscription;
 
   constructor(private afs: AngularFirestore,
-              private conService: ConnectivityService,
-              private messageService: MessageService,
+              private batchService: BatchService,
               private route: ActivatedRoute,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
 
     this.selectedGameSystem = this.gameSystemService.getGameSystem();
 
-    this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem, '');
+    this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem);
 
     this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
     this.gameSystems = getGameSystems();
@@ -73,7 +73,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     this.gameSystemSubscription = this.gameSystemService.getGameSystemAsStream().subscribe(gameSystem => {
       console.log("gameSystem updated: " + gameSystem);
       this.selectedGameSystem = gameSystem;
-      this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem, '');
+      this.gameSystemConfig = getGameSystemConfig(this.selectedGameSystem);
       this.subscribeOnPlayers();
     });
   }
@@ -193,40 +193,42 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     const that = this;
 
     if (this.playerToChange) {
-      this.updatePlayer = true;
+
       console.log('save player: ' + JSON.stringify(this.playerToChange));
       delete this.playerToChange.myGameSystems;
 
       const playerDocRef = this.playersColRef.doc(this.playerToChange.id);
 
-      if (this.conService.isOnline()) {
-        playerDocRef.update(this.playerToChange).then(function () {
-          console.log("Player updated");
-          that.updatePlayer = false;
-          that.playerToChange = undefined;
-        }).catch(function (error) {
-          console.error("Error updating player: ", error);
-          that.updatePlayer = false;
-          that.playerToChange = undefined;
-        });
-      } else {
+      that.batchService.set(playerDocRef, this.playerToChange);
 
-        playerDocRef.update(this.playerToChange).then(function () {
-          // offline ignored :(
-        }).catch(function () {
-        });
-
-        console.log("Player updated");
-        that.updatePlayer = false;
-        that.playerToChange = undefined;
-        that.messageService.add(
-          {
-            severity: 'success',
-            summary: 'Update',
-            detail: 'ATTENTION Player updated offline! Go online to sync data'
-          }
-        );
-      }
+      // if (this.conService.isOnline()) {
+      //   playerDocRef.update(this.playerToChange).then(function () {
+      //     console.log("Player updated");
+      //     that.updatePlayer = false;
+      //     that.playerToChange = undefined;
+      //   }).catch(function (error) {
+      //     console.error("Error updating player: ", error);
+      //     that.updatePlayer = false;
+      //     that.playerToChange = undefined;
+      //   });
+      // } else {
+      //
+      //   playerDocRef.update(this.playerToChange).then(function () {
+      //     // offline ignored :(
+      //   }).catch(function () {
+      //   });
+      //
+      //   console.log("Player updated");
+      //   that.updatePlayer = false;
+      //   that.playerToChange = undefined;
+      //   that.messageService.add(
+      //     {
+      //       severity: 'success',
+      //       summary: 'Update',
+      //       detail: 'ATTENTION Player updated offline! Go online to sync data'
+      //     }
+      //   );
+      // }
     }
   }
 
@@ -234,36 +236,36 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     console.log(event.data);
     const that = this;
 
-    this.updatePlayer = true;
-
     const playerDocRef = this.playersColRef.doc(event.data.id);
     const player: Player = getPlayerForJSON(event.data.id, event.data);
     delete player.myGameSystems;
 
-    if (this.conService.isOnline()) {
-      playerDocRef.update(player).then(function () {
-        console.log("Player updated");
-        that.updatePlayer = false;
-      }).catch(function (error) {
-        console.error("Error updating player: ", error);
-        that.updatePlayer = false;
-      });
-    } else {
-      playerDocRef.update(player).then(function () {
-        // offline ignored :(
-      }).catch(function () {
-      });
+    that.batchService.set(playerDocRef, player);
 
-      console.log("Player updated");
-      that.updatePlayer = false;
-      that.messageService.add(
-        {
-          severity: 'success',
-          summary: 'Update',
-          detail: 'ATTENTION Player updated offline! Go online to sync data'
-        }
-      );
-    }
+    // if (this.conService.isOnline()) {
+    //   playerDocRef.update(player).then(function () {
+    //     console.log("Player updated");
+    //     that.updatePlayer = false;
+    //   }).catch(function (error) {
+    //     console.error("Error updating player: ", error);
+    //     that.updatePlayer = false;
+    //   });
+    // } else {
+    //   playerDocRef.update(player).then(function () {
+    //     // offline ignored :(
+    //   }).catch(function () {
+    //   });
+    //
+    //   console.log("Player updated");
+    //   that.updatePlayer = false;
+    //   that.messageService.add(
+    //     {
+    //       severity: 'success',
+    //       summary: 'Update',
+    //       detail: 'ATTENTION Player updated offline! Go online to sync data'
+    //     }
+    //   );
+    // }
   }
 
   changeGameSystems(event: any, player: Player) {

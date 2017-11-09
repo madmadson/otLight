@@ -16,6 +16,8 @@ export interface Player {
   Faction?: string;
   ArmyLists?: string[];
 
+  // Malifaux
+  mfFaction?: string;
 }
 
 export function getPlayerForJSON(id: string, json: any): Player {

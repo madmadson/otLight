@@ -24,10 +24,16 @@ export interface ParticipantMatch {
   // JUDGEMENT
   soulsParticipantOne?: number;
   levelsParticipantOne?: number;
+  warbandParticipantOne?: string[];
   soulsParticipantTwo?: number;
   levelsParticipantTwo?: number;
-  warbandParticipantOne?: string[];
   warbandParticipantTwo?: string[];
+
+  // Malifaux
+  mfDiffParticipantOne?: number;
+  mfVpParticipantOne?: number;
+  mfDiffParticipantTwo?: number;
+  mfVpParticipantTwo?: number;
 
   result: string;
   finished: boolean;

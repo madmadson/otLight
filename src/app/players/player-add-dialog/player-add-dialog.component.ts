@@ -39,7 +39,10 @@ export class PlayerAddDialogComponent implements OnInit {
   }
 
   ngOnInit() {
+      this.setEmptyForm();
+  }
 
+  setEmptyForm() {
     this.playerForm = this.fb.group({
       'name': new FormControl('', Validators.compose([Validators.required, Validators.minLength(3), Validators.maxLength(30)])),
       'location': new FormControl('', Validators.maxLength(30)),
@@ -94,6 +97,7 @@ export class PlayerAddDialogComponent implements OnInit {
 
           that.messageService.add({severity: 'success', summary: 'Creation', detail: 'Player created'});
           that.playerSaving = false;
+          that.setEmptyForm();
         }).catch(function (error) {
           console.error("Error writing Player: ", error);
           that.messageService.add({severity: 'error', summary: 'Creation', detail: 'Player creation failed'});
@@ -110,6 +114,7 @@ export class PlayerAddDialogComponent implements OnInit {
 
         that.onPlayerSaved.emit();
         that.playerSaving = false;
+        that.setEmptyForm();
 
         that.messageService.add(
           {

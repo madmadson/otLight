@@ -20,6 +20,11 @@ export interface Participant {
   levels?: number[];
   souls?: number[];
   Warband?: string[];
+
+  // Malifaux
+  mfDiff?: number[];
+  mfVp?: number[];
+  MfFaction?: string[];
 }
 
 

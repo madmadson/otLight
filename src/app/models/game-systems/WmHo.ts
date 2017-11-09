@@ -4,7 +4,7 @@ import {Participant} from "../Participant";
 import * as _ from 'lodash';
 import {Team} from "../Team";
 
-export function getWmHoFieldConfig(type: string): GameSystemConfig {
+export function getWmHoFieldConfig(): GameSystemConfig {
 
   const gameConfig: GameSystemConfig = {playerFields: [],
     participantFields: [], scoreFields: [], standingFields: [], choosePlayed: []};
@@ -32,28 +32,23 @@ export function getWmHoFieldConfig(type: string): GameSystemConfig {
     fieldValues: getWmHoCasterAsSelectItem()
   });
 
-  if (type === 'solo') {
-    gameConfig.standingFields.push({
-      defaultValue: 0,
-      type: 'number',
-      field: 'sos',
-    });
-  } else if (type === 'team') {
-    gameConfig.standingFields.push({
-      defaultValue: 0,
-      type: 'number',
-      field: 'sgw',
-    });
-  }
+  gameConfig.standingFields.push({
+    defaultValue: 0,
+    type: 'number',
+    field: 'sos',
+    isTeam: false,
+  });
 
   gameConfig.standingFields.push({
     defaultValue: 0,
     type: 'number',
     field: 'cp',
+    isTeam: true,
   }, {
     defaultValue: 0,
     type: 'number',
     field: 'vp',
+    isTeam: true,
   });
 
   gameConfig.scoreFields.push({

@@ -25,7 +25,7 @@ export class ByeService {
                                             batch: WriteBatch) {
 
     const byeScoring = getByeScoring(tournament.gameSystem);
-    const gameConfig = getGameSystemConfig(tournament.gameSystem, tournament.type);
+    const gameConfig = getGameSystemConfig(tournament.gameSystem);
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
     match.finished = true;
@@ -57,7 +57,7 @@ export class ByeService {
                                             batch: WriteBatch) {
 
     const byeScoring = getByeScoring(tournament.gameSystem);
-    const gameConfig = getGameSystemConfig(tournament.gameSystem, tournament.type);
+    const gameConfig = getGameSystemConfig(tournament.gameSystem);
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
     match.finished = true;
@@ -90,7 +90,7 @@ export class ByeService {
                                             batch: WriteBatch) {
 
     const byeScoring = getByeScoring(tournament.gameSystem);
-    const gameConfig = getGameSystemConfig(tournament.gameSystem, tournament.type);
+    const gameConfig = getGameSystemConfig(tournament.gameSystem);
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
     match.finished = true;
@@ -122,7 +122,7 @@ export class ByeService {
                                    batch: WriteBatch) {
 
     const byeScoring = getByeScoring(tournament.gameSystem);
-    const gameConfig = getGameSystemConfig(tournament.gameSystem, tournament.type);
+    const gameConfig = getGameSystemConfig(tournament.gameSystem);
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
 
     match.finished = true;
