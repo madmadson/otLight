@@ -536,12 +536,12 @@
                 header="Score"
                 (sortFunction)="sortByScore($event)">
         <ng-template let-team="rowData" pTemplate="body">
-          {{getTeamStandingFieldValue('sgw', team)}} <i class="fa fa-info-circle" pTooltip="{{getTeamStandingFieldValueTooltip('sgw',team)}}"></i>
+          {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
         </ng-template>
       </p-column>
       <p-column header="sgw">
         <ng-template let-team="rowData" pTemplate="body">
-          {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
+          {{getSgwSum(team)}} <i class="fa fa-info-circle" pTooltip="{{getSgwSumTooltip(team)}}"></i>
         </ng-template>
       </p-column>
       <ng-container *ngFor="let standingField of gameSystemConfig.standingFields">
@@ -638,37 +638,7 @@
         [expandedRows]="expandedRowsTeamMatchTable"
         #teamMatchesTable>
         <p-header>{{teamMatches?.length}} TeamMatches</p-header>
-        <p-column expander="true" styleClass="col-expand"></p-column>
-        <p-column field="section"
-                  header="Tables"
-                  [editable]="isOrga"
-                  [sortable]="true"
-                  [filter]="true"
-                  styleClass="col-table"
-                  filterPlaceholder="Search">
-        </p-column>
-        <p-column styleClass="col-player col-firstPlayer"
-                  field="teamOne.name"
-                  header="Team 1"
-                  [sortable]="true"
-                  [filter]="true"
-                  filterPlaceholder="Search">
-        </p-column>
-        <p-column styleClass="col-vs">
-          <ng-template pTemplate="header"></ng-template>
-          <ng-template pTemplate="body" let-teamMatch="rowData">
-            <div style="text-align: center">
-              <span class="big-text">VS</span>
-            </div>
-          </ng-template>
-        </p-column>
-        <p-column styleClass="col-player"
-                  field="teamTwo.name"
-                  header="Team 2"
-                  [sortable]="true"
-                  [filter]="true"
-                  filterPlaceholder="Search">
-        </p-column>
+
         <ng-template let-teamMatch let-index="rowIndex" pTemplate="rowexpansion">
           <ot-participant-team-matches-table
             [teamMatch]="teamMatch"
@@ -681,6 +651,91 @@
             [shownRound]="shownRound">
           </ot-participant-team-matches-table>
         </ng-template>
+
+        <p-column expander="true" styleClass="col-expand"></p-column>
+        <p-column field="section"
+                  header="Tables"
+                  [editable]="isOrga"
+                  [sortable]="true"
+                  [filter]="true"
+                  styleClass="col-table"
+                  filterPlaceholder="Search">
+        </p-column>
+        <p-column styleClass="col-player col-firstPlayer"
+                  header="Team 1"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+          <ng-template let-teamMatch="rowData" pTemplate="body">
+            <div  [ngClass]="{
+                     'swappable-item': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'swap'),
+                     'not-intended-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'not'),
+                     'impossible-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'impo'),
+                     'winner-label': (teamMatch.scoreTeamOne > teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'looser-label': (teamMatch.scoreTeamOne < teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'draw-label': (teamMatch.scoreTeamOne === teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'winning-label': (!teamMatch.finnished && teamMatch.sgwTeamOne > teamMatch.sgwTeamTwo),
+                     'losing-label': (!teamMatch.finnished && teamMatch.sgwTeamOne < teamMatch.sgwTeamTwo),
+                     'tie-label': (!teamMatch.finnished && teamMatch.finishedParticipantGames > 0 && teamMatch.sgwTeamOne === teamMatch.sgwTeamTwo)
+                  }">
+
+              <span class="very-big-text break-word" *ngIf="teamMatch.teamOne.name !== 'bye'">
+                    ({{getScoreTillRoundForTeam(teamMatch.teamOne)}})
+                    {{teamMatch.teamOne.name}}
+              </span>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column styleClass="col-sgw">
+          <ng-template pTemplate="header">SGW Team2</ng-template>
+          <ng-template pTemplate="body" let-teamMatch="rowData">
+            <div style="text-align: center">
+              <span class="big-text">{{teamMatch.sgwTeamOne}}</span>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column styleClass="col-vs">
+          <ng-template pTemplate="header"></ng-template>
+          <ng-template pTemplate="body" let-teamMatch="rowData">
+            <div style="text-align: center">
+              <span class="big-text">VS</span>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column styleClass="col-sgw">
+          <ng-template pTemplate="header">SGW Team2</ng-template>
+          <ng-template pTemplate="body" let-teamMatch="rowData">
+            <div style="text-align: center">
+              <span class="big-text">{{teamMatch.sgwTeamTwo}}</span>
+            </div>
+          </ng-template>
+        </p-column>
+        <p-column styleClass="col-player"
+                  header="Team 2"
+                  [sortable]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search">
+          <ng-template let-teamMatch="rowData" pTemplate="body">
+            <div  [ngClass]="{
+                     'swappable-item': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'swap'),
+                     'not-intended-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'not'),
+                     'impossible-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'impo'),
+                     'winner-label': (teamMatch.scoreTeamOne < teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'looser-label': (teamMatch.scoreTeamOne > teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'draw-label': (teamMatch.scoreTeamOne === teamMatch.scoreTeamTwo && teamMatch.finished),
+                     'winning-label': (!teamMatch.finnished && teamMatch.sgwTeamOne < teamMatch.sgwTeamTwo),
+                     'losing-label': (!teamMatch.finnished && teamMatch.sgwTeamOne > teamMatch.sgwTeamTwo),
+                     'tie-label': (!teamMatch.finnished && teamMatch.finishedParticipantGames > 0 && teamMatch.sgwTeamOne === teamMatch.sgwTeamTwo)
+                  }">
+
+              <span class="very-big-text break-word" *ngIf="teamMatch.teamTwo.name !== 'bye'">
+                    ({{getScoreTillRoundForTeam(teamMatch.teamTwo)}})
+                    {{teamMatch.teamTwo.name}}
+              </span>
+            </div>
+          </ng-template>
+        </p-column>
+
       </p-dataTable>
     </p-panel>
 

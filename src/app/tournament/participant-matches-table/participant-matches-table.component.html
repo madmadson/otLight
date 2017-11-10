@@ -71,7 +71,7 @@
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo)}}"
            (click)="dropPlayer(roundMatch, roundMatch.participantOne, roundMatch.participantTwo, 'one')"
            [ngClass]="{
-                     'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'swap'),
+                     'swappable-item': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'swap'),
                      'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'not'),
                      'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'impo'),
                      'winner-label': (roundMatch.scoreParticipantOne >= 1 && roundMatch.finished),
@@ -148,7 +148,7 @@
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne)}}"
            (click)="dropPlayer(roundMatch, roundMatch.participantTwo, roundMatch.participantOne, 'two')"
            [ngClass]="{
-                     'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'swap'),
+                     'swappable-item': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'swap'),
                      'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'not'),
                      'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'impo'),
                      'winner-label': (roundMatch.scoreParticipantTwo >= 1 && roundMatch.finished),

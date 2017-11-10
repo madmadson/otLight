@@ -155,6 +155,12 @@ export function getColumnsForTeamStandingsExport(gameSystem: string): number[] {
   }
 }
 
+export enum ScoreEnum {
+  WON = 0,
+  LOOSE = 1,
+  DRAW = 2
+}
+
 /**
  * first win score, second loose score, third draw
  *

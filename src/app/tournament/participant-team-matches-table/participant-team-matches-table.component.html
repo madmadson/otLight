@@ -5,8 +5,6 @@
   </div>
 </ng-container>
 
-{{teamsMap | json}}
-
 <p-dataTable
   *ngIf="!swappingPlayer"
   [value]="teamMatch.participantMatches"
@@ -25,65 +23,58 @@
   <p-header>{{teamMatch.teamOne.name + ' VS ' + teamMatch.teamTwo.name}}</p-header>
   <p-column styleClass="col-result" *ngIf="isOrga">
     <ng-template pTemplate="header">Result</ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
+    <ng-template pTemplate="body" let-partiMatch="rowData" let-index="rowIndex">
       <div style="text-align: center">
         <p-dropdown
           [autoWidth]="false"
           [style]="{'width':'100%'}"
           placeholder="Undone"
-          [(ngModel)]="roundMatch['result']"
+          [(ngModel)]="partiMatch['result']"
           [options]="winningOptions"
-          (onChange)="changeWinner($event, roundMatch, index)">
+          (onChange)="changeWinner($event, partiMatch, index)">
         </p-dropdown>
       </div>
-      <div *ngIf="roundMatch?.finished" style="text-align: center">
+      <div *ngIf="partiMatch?.finished" style="text-align: center">
         <i class="fa fa-times warning-icon"
            aria-hidden="true"
-           (click)="clearMatch(roundMatch)"> Clear Game</i>
+           (click)="clearParticipantMatch(partiMatch)"> Clear Game</i>
       </div>
     </ng-template>
   </p-column>
   <p-column field="table"
             header="Table"
             [editable]="isOrga"
-            [sortable]="true"
-            [filter]="true"
-            styleClass="col-table"
-            filterPlaceholder="Search">
+            styleClass="col-table">
   </p-column>
   <p-column styleClass="col-player col-firstPlayer"
-            field="participantOne.name"
-            header="Player 1"
-            [sortable]="true"
-            [filter]="true"
-            filterPlaceholder="Search">
-    <ng-template pTemplate="filter" let-col let-roundMatch="rowData">
+            field="participantOne.name">
+    <ng-template pTemplate="filter" let-col let-partiMatch="rowData">
       <input type="text"
              [(ngModel)]="participantOneFilter"
              pInputText
              class="ui-column-filter"
              (keyup)="filterParticipantOneMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
+    <ng-template pTemplate="body" let-partiMatch="rowData" let-index="rowIndex">
       <div style="text-align: center"
-           pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo)}}"
-           (click)="dropPlayer(roundMatch, roundMatch.participantOne, roundMatch.participantTwo, 'one', index)"
+           pTooltip="{{getToolTipForSwap(partiMatch, partiMatch.participantOne, partiMatch.participantTwo)}}"
+           (click)="dropPlayer(partiMatch, partiMatch.participantOne, partiMatch.participantTwo, 'one')"
            [ngClass]="{
-                     'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'swap'),
-                     'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'not'),
-                     'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo) === 'impo'),
-                     'winner-label': (roundMatch.scoreParticipantOne >= 1 && roundMatch.finished),
-                     'looser-label': (roundMatch.scoreParticipantTwo >= 1 && roundMatch.finished),
-                     'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
+                     'swappable-item': (playerToSwap && checkSwap(partiMatch, partiMatch.participantOne, partiMatch.participantTwo) === 'swap'),
+                     'not-intended-to-swap-player': (playerToSwap && checkSwap(partiMatch, partiMatch.participantOne, partiMatch.participantTwo) === 'not'),
+                     'impossible-to-swap-player': (playerToSwap && checkSwap(partiMatch, partiMatch.participantOne, partiMatch.participantTwo) === 'impo'),
+                     'winner-label': (partiMatch.scoreParticipantOne > partiMatch.scoreParticipantTwo && partiMatch.finished),
+                     'looser-label': (partiMatch.scoreParticipantOne < partiMatch.scoreParticipantTwo && partiMatch.finished),
+                     'draw-label': (partiMatch.scoreParticipantOne === partiMatch.scoreParticipantTwo && partiMatch.finished)
                   }">
-              <span class="very-big-text break-word" *ngIf="roundMatch.participantOne.name !== 'bye'">
-                ({{getScoreTillRoundForParticipant(roundMatch.participantOne)}})
-                {{roundMatch.participantOne.name}}
+              <span class="very-big-text break-word" *ngIf="partiMatch.participantOne.name !== 'bye'">
+                ({{getScoreTillRoundForParticipant(partiMatch.participantOne)}})
+                {{partiMatch.participantOne.name}}
               </span>
-        <span class="very-big-text" *ngIf="roundMatch.participantOne.name === 'bye'">BYE</span>
-        <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap && !tournamentFinished"
+        <span class="very-big-text" *ngIf="partiMatch.participantOne.name === 'bye'">BYE</span>
+        <i *ngIf="!partiMatch?.finished && isOrga && !playerToSwap && !tournamentFinished"
            class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player1"
-           (click)="swapPlayerOne(roundMatch, index)">
+           (click)="swapPlayerOne(partiMatch)">
         </i>
         <i *ngIf="playerToSwap && isOrga"
            class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
@@ -93,20 +84,20 @@
       <div style="text-align: center" *ngIf="isOrga">
         <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
           <p-dropdown
-            *ngIf="chooseField.type === 'dropDown' && roundMatch.participantOne[chooseField.field]?.length > 0"
+            *ngIf="chooseField.type === 'dropDown' && partiMatch.participantOne[chooseField.field]?.length > 0"
             placeholder="Choose"
-            [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
-            [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
+            [(ngModel)]="partiMatch[chooseField.fieldPlayerOne]"
+            [options]="participantsChoosePlayedMap[partiMatch.participantOne.name]"
             [autoWidth]="false"
-            (onChange)="saveChoosePlayed(roundMatch)"
+            (onChange)="saveChoosePlayed(partiMatch)"
             [style]="{'width':'100%'}">
           </p-dropdown>
           <p-multiSelect
-            *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantOne[chooseField.field]?.length > 0"
+            *ngIf="chooseField.type === 'multiSelect' && partiMatch.participantOne[chooseField.field]?.length > 0"
             placeholder="Choose"
-            [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
-            [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
-            (onPanelHide)="saveChoosePlayed(roundMatch)"
+            [(ngModel)]="partiMatch[chooseField.fieldPlayerOne]"
+            [options]="participantsChoosePlayedMap[partiMatch.participantOne.name]"
+            (onPanelHide)="saveChoosePlayed(partiMatch)"
             [showToggleAll]=false
             [maxSelectedLabels]=3
             [style]="{'width':'100%'}">
@@ -115,53 +106,49 @@
       </div>
       <div style="text-align: center" *ngIf="!isOrga">
         <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
-          {{roundMatch[chooseField.fieldPlayerOne]}}
+          {{partiMatch[chooseField.fieldPlayerOne]}}
         </ng-container>
       </div>
     </ng-template>
   </p-column>
   <p-column styleClass="col-vs">
     <ng-template pTemplate="header"></ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-partiMatch="rowData">
       <div style="text-align: center">
         <span class="big-text">VS</span>
       </div>
     </ng-template>
   </p-column>
   <p-column styleClass="col-player"
-            field="participantTwo.name"
-            header="Player 2"
-            [sortable]="true"
-            [filter]="true"
-            filterPlaceholder="Search">
-    <ng-template pTemplate="filter" let-col let-roundMatch="rowData">
+            field="participantTwo.name">
+    <ng-template pTemplate="filter" let-col let-partiMatch="rowData">
       <input type="text"
              [(ngModel)]="participantTwoFilter"
              pInputText
              class="ui-column-filter"
              (keyup)="filterParticipantTwoMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
+    <ng-template pTemplate="body" let-partiMatch="rowData" let-index="rowIndex">
       <div style="text-align: center"
-           pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne)}}"
-           (click)="dropPlayer(roundMatch, roundMatch.participantTwo, roundMatch.participantOne, 'two', index)"
+           pTooltip="{{getToolTipForSwap(partiMatch, partiMatch.participantTwo, partiMatch.participantOne)}}"
+           (click)="dropPlayer(partiMatch, partiMatch.participantTwo, partiMatch.participantOne, 'two')"
            [ngClass]="{
-                     'swappable-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'swap'),
-                     'not-intended-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'not'),
-                     'impossible-to-swap-player': (playerToSwap && checkSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne) === 'impo'),
-                     'winner-label': (roundMatch.scoreParticipantTwo >= 1 && roundMatch.finished),
-                     'looser-label': (roundMatch.scoreParticipantOne >= 1 && roundMatch.finished),
-                     'draw-label': (roundMatch.scoreParticipantOne === roundMatch.scoreParticipantTwo && roundMatch.finished)
+                     'swappable-item': (playerToSwap && checkSwap(partiMatch, partiMatch.participantTwo, partiMatch.participantOne) === 'swap'),
+                     'not-intended-to-swap-player': (playerToSwap && checkSwap(partiMatch, partiMatch.participantTwo, partiMatch.participantOne) === 'not'),
+                     'impossible-to-swap-player': (playerToSwap && checkSwap(partiMatch, partiMatch.participantTwo, partiMatch.participantOne) === 'impo'),
+                     'winner-label': (partiMatch.scoreParticipantTwo > partiMatch.scoreParticipantOne && partiMatch.finished),
+                     'looser-label': (partiMatch.scoreParticipantTwo < partiMatch.scoreParticipantOne && partiMatch.finished),
+                     'draw-label': (partiMatch.scoreParticipantOne === partiMatch.scoreParticipantTwo && partiMatch.finished)
                   }">
 
-              <span class="very-big-text break-word" *ngIf="roundMatch.participantTwo.name !== 'bye'">
-                    ({{getScoreTillRoundForParticipant(roundMatch.participantTwo)}})
-                    {{roundMatch.participantTwo.name}}
+              <span class="very-big-text break-word" *ngIf="partiMatch.participantTwo.name !== 'bye'">
+                    ({{getScoreTillRoundForParticipant(partiMatch.participantTwo)}})
+                    {{partiMatch.participantTwo.name}}
               </span>
-        <span class="very-big-text" *ngIf="roundMatch.participantTwo.name === 'bye'">BYE</span>
-        <i *ngIf="!roundMatch?.finished && isOrga && !playerToSwap  && !tournamentFinished"
+        <span class="very-big-text" *ngIf="partiMatch.participantTwo.name === 'bye'">BYE</span>
+        <i *ngIf="!partiMatch?.finished && isOrga && !playerToSwap  && !tournamentFinished"
            class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Player2"
-           (click)="swapPlayerTwo(roundMatch, index)">
+           (click)="swapPlayerTwo(partiMatch)">
         </i>
         <i *ngIf="playerToSwap && isOrga"
            class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
@@ -171,20 +158,20 @@
       <div style="text-align: center" *ngIf="isOrga">
         <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
           <p-dropdown
-            *ngIf="chooseField.type === 'dropDown' && roundMatch.participantTwo[chooseField.field]?.length > 0"
+            *ngIf="chooseField.type === 'dropDown' && partiMatch.participantTwo[chooseField.field]?.length > 0"
             placeholder="Choose"
-            [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
-            [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
+            [(ngModel)]="partiMatch[chooseField.fieldPlayerTwo]"
+            [options]="participantsChoosePlayedMap[partiMatch.participantTwo.name]"
             [autoWidth]="false"
-            (onChange)="saveChoosePlayed(roundMatch)"
+            (onChange)="saveChoosePlayed(partiMatch)"
             [style]="{'width':'100%'}">
           </p-dropdown>
           <p-multiSelect
-            *ngIf="chooseField.type === 'multiSelect' && roundMatch.participantTwo[chooseField.field]?.length > 0"
+            *ngIf="chooseField.type === 'multiSelect' && partiMatch.participantTwo[chooseField.field]?.length > 0"
             placeholder="Choose"
-            [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
-            [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
-            (onPanelHide)="saveChoosePlayed(roundMatch)"
+            [(ngModel)]="partiMatch[chooseField.fieldPlayerTwo]"
+            [options]="participantsChoosePlayedMap[partiMatch.participantTwo.name]"
+            (onPanelHide)="saveChoosePlayed(partiMatch)"
             [showToggleAll]=false
             [maxSelectedLabels]=3
             [style]="{'width':'100%'}">
@@ -193,7 +180,7 @@
       </div>
       <div style="text-align: center" *ngIf="!isOrga">
         <ng-container *ngFor="let chooseField of gameSystemConfig.choosePlayed">
-          {{roundMatch[chooseField.fieldPlayerTwo]}}
+          {{partiMatch[chooseField.fieldPlayerTwo]}}
         </ng-container>
       </div>
     </ng-template>
@@ -202,28 +189,25 @@
   <ng-container *ngFor="let scoreField of gameSystemConfig.scoreFields">
     <p-column *ngIf="isOrga"
               styleClass="col-scoring break-word">
-      <ng-template pTemplate="header">
-        {{scoreField.field}}
-      </ng-template>
-      <ng-template let-col let-roundMatch="rowData" pTemplate="body">
+      <ng-template let-col let-partiMatch="rowData" pTemplate="body">
         <div>
           <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
-                 [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
+                 [(ngModel)]="partiMatch[scoreField.fieldPlayerOne]"
                  size="50"
-                 (blur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])"
+                 (blur)="changeScoringForPlayerOne(partiMatch, scoreField.field, scoreField.fieldPlayerOne, partiMatch[scoreField.fieldPlayerOne])"
                  (keyup.enter)="forceBlurForScore($event)"
           />
-          <span class="small-text"> {{scoreField.field}} {{roundMatch.participantOne.name}}</span>
+          <span class="small-text"> {{scoreField.field}} {{partiMatch.participantOne.name}}</span>
         </div>
         <div class="breaking-line"></div>
         <div>
           <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
-                 [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
+                 [(ngModel)]="partiMatch[scoreField.fieldPlayerTwo]"
                  size="50"
-                 (blur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
+                 (blur)="changeScoringForPlayerTwo(partiMatch, scoreField.field, scoreField.fieldPlayerTwo, partiMatch[scoreField.fieldPlayerTwo])"
                  (keyup.enter)="forceBlurForScore($event)"
           />
-          <span class="small-text">{{scoreField.field}} {{roundMatch.participantTwo.name}}</span>
+          <span class="small-text">{{scoreField.field}} {{partiMatch.participantTwo.name}}</span>
         </div>
       </ng-template>
     </p-column>

@@ -33,6 +33,7 @@ export interface TeamMatch {
 
   result: string;
   finished: boolean;
+  finishedParticipantGames: number;
   matchDate: Date;
 }
 
@@ -56,7 +57,15 @@ export function getTeamMatchForJSON(id: string, json: any): TeamMatch {
 
     result: json.result ? json.result : '',
     finished: json.finished ? json.finished : false,
+    finishedParticipantGames: json.finishedParticipantGames ? json.finishedParticipantGames : 0,
 
     matchDate: json.matchDate ? json.matchDate : new Date(),
   };
+}
+
+export enum TeamMatchResult {
+  teamOneWin = 't1',
+  teamTwoWin = 't2',
+  draw = 'draw',
+
 }
