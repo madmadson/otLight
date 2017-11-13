@@ -75,6 +75,7 @@ export class BatchService {
 
       that.updateAvailable = false;
       this.batchEventStream.next(BatchServiceState.COMMIT_STARTED);
+      this.messageService.add({severity: 'info', summary: 'Info', detail: 'update started.'});
 
       if (this.conService.isOnline()) {
         this.batch.commit().then(function () {
@@ -109,5 +110,4 @@ export enum BatchServiceState {
   DELETE = 'delete',
   COMMIT_STARTED = 'commit_started',
   COMMIT_COMPLETED = 'commit_completed'
-
 }

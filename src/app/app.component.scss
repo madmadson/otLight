@@ -194,8 +194,11 @@ body {
   }
 
   .span-sub-topbar{
-
     font-size: 0.7em;
+  }
+  .save-data-button {
+    font-size: 0.7em;
+    padding: 5px !important;
   }
 
   .topbar-menu {
@@ -225,6 +228,17 @@ body {
   .with-sub-top-bar {
     margin-left: 0;
     padding-top: 164px;
+  }
+}
+
+@media screen and (max-width: 32em) {
+  .span-sub-topbar{
+    font-size: 0.5em;
+  }
+
+  .save-data-button {
+    font-size: 0.5em;
+    padding: 1px !important;
   }
 }
 

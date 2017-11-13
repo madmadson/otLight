@@ -185,7 +185,7 @@
 </ng-container>
 
 
-<ng-container *ngIf="(!loadingTournament) && (!addingPlayer)">
+<ng-container *ngIf="(!loadingTournament) && (!addingPlayer) && !(savingData)">
   <p-panel [style]="{'text-align':'center'}"
            header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament -
                     {{tournament?.state === 'FINISHED' ? 'FINISHED' : 'Actual Round: ' + tournament?.actualRound }}"
@@ -257,11 +257,15 @@
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
+    <button pButton type="button" class="table-manage-button" (click)="stackedGlobalPlayers = !stackedGlobalPlayers" label="Toggle" icon="fa-list"></button>
+
     <div class="flex-container"
          *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 ">
       <p-dataTable [value]="possiblePlayersToAdd"
                    [paginator]="true"
                    [pageLinks]="3"
+                   [stacked]="stackedGlobalPlayers"
+                   [responsive]="true"
                    [rows]="5">
         <p-header>Global List of Players</p-header>
         <p-column field="name"
@@ -300,7 +304,7 @@
             Actions
           </ng-template>
           <ng-template let-player="rowData" pTemplate="body">
-            <button type="button" pButton (click)="addParticipant(player)" icon="fa-plus" label="Add Player"></button>
+            <button type="button" pButton (click)="addParticipant(player)" icon="fa-plus" label="Add"></button>
           </ng-template>
         </p-column>
       </p-dataTable>

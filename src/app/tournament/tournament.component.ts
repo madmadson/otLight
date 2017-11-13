@@ -75,6 +75,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected participantsChoosePlayedMap: {};
 
   stackedPlayers: boolean;
+  stackedGlobalPlayers: boolean;
 
   teamCreationDialogVisibility: boolean;
   fullyLoadedTeams: number;
