@@ -6,7 +6,7 @@
     <div class="logo-container">
       <a class="logo-topbar">
         <img alt="logo" src="../assets/images/logo42.png"/>
-        <div class="version-label">Version 0.12.6</div>
+        <div class="version-label">Version 0.12.7</div>
       </a>
       <span>
         <i *ngIf="(isConnected$ | async)" class="fa fa-wifi fa-2x online-icon" pTooltip="Online"></i>
@@ -70,21 +70,7 @@
   <div class="layout-content"  [ngClass]="{'with-sub-top-bar': showSubTopBar}">
     <p-growl [life]="5000" [(value)]="messages"></p-growl>
 
-    <ng-container *ngIf="(saveData && (isConnected$ | async))">
-      <div class="heading">Save and Publish Data...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="(saveData && !(isConnected$ | async))">
-      <div class="heading">Attention! Your Offline. Data will stored in Browser and synced when your online...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
-
-    <router-outlet *ngIf="(!saveData)"></router-outlet>
+    <router-outlet></router-outlet>
   </div>
 </div>
 

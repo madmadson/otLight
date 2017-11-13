@@ -200,35 +200,6 @@ export class PlayersComponent implements OnInit, OnDestroy  {
       const playerDocRef = this.playersColRef.doc(this.playerToChange.id);
 
       that.batchService.set(playerDocRef, this.playerToChange);
-
-      // if (this.conService.isOnline()) {
-      //   playerDocRef.update(this.playerToChange).then(function () {
-      //     console.log("Player updated");
-      //     that.updatePlayer = false;
-      //     that.playerToChange = undefined;
-      //   }).catch(function (error) {
-      //     console.error("Error updating player: ", error);
-      //     that.updatePlayer = false;
-      //     that.playerToChange = undefined;
-      //   });
-      // } else {
-      //
-      //   playerDocRef.update(this.playerToChange).then(function () {
-      //     // offline ignored :(
-      //   }).catch(function () {
-      //   });
-      //
-      //   console.log("Player updated");
-      //   that.updatePlayer = false;
-      //   that.playerToChange = undefined;
-      //   that.messageService.add(
-      //     {
-      //       severity: 'success',
-      //       summary: 'Update',
-      //       detail: 'ATTENTION Player updated offline! Go online to sync data'
-      //     }
-      //   );
-      // }
     }
   }
 
@@ -241,31 +212,6 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     delete player.myGameSystems;
 
     that.batchService.set(playerDocRef, player);
-
-    // if (this.conService.isOnline()) {
-    //   playerDocRef.update(player).then(function () {
-    //     console.log("Player updated");
-    //     that.updatePlayer = false;
-    //   }).catch(function (error) {
-    //     console.error("Error updating player: ", error);
-    //     that.updatePlayer = false;
-    //   });
-    // } else {
-    //   playerDocRef.update(player).then(function () {
-    //     // offline ignored :(
-    //   }).catch(function () {
-    //   });
-    //
-    //   console.log("Player updated");
-    //   that.updatePlayer = false;
-    //   that.messageService.add(
-    //     {
-    //       severity: 'success',
-    //       summary: 'Update',
-    //       detail: 'ATTENTION Player updated offline! Go online to sync data'
-    //     }
-    //   );
-    // }
   }
 
   changeGameSystems(event: any, player: Player) {

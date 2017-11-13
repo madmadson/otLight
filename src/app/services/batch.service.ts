@@ -18,13 +18,13 @@ export class BatchService {
   private batch: WriteBatch;
   private updateAvailable: boolean;
 
-  private batchEventStream: Subject<String>;
+  private batchEventStream: Subject<BatchServiceState>;
 
   constructor(private afs: AngularFirestore,
               private conService: ConnectivityService,
               private messageService: MessageService) {
 
-    this.batchEventStream = new Subject<String>();
+    this.batchEventStream = new Subject<BatchServiceState>();
   }
 
   getBatchEventAsStream() {
@@ -41,7 +41,7 @@ export class BatchService {
     this.updateAvailable = true;
     this.batch.update(docRef, updateData);
 
-    this.batchEventStream.next('update');
+    this.batchEventStream.next(BatchServiceState.UPDATE);
   }
 
 
@@ -53,7 +53,7 @@ export class BatchService {
     this.updateAvailable = true;
     this.batch.set(docRef, updateData);
 
-    this.batchEventStream.next('set');
+    this.batchEventStream.next(BatchServiceState.SET);
   }
 
   delete(docRef: DocumentReference) {
@@ -64,7 +64,7 @@ export class BatchService {
     this.updateAvailable = true;
     this.batch.delete(docRef);
 
-    this.batchEventStream.next('delete');
+    this.batchEventStream.next(BatchServiceState.DELETE);
   }
 
   commit() {
@@ -74,6 +74,7 @@ export class BatchService {
     if (that.updateAvailable) {
 
       that.updateAvailable = false;
+      this.batchEventStream.next(BatchServiceState.COMMIT_STARTED);
 
       if (this.conService.isOnline()) {
         this.batch.commit().then(function () {
@@ -97,8 +98,16 @@ export class BatchService {
 
   private afterCommitBatch() {
     this.messageService.add({severity: 'success', summary: 'Update', detail: 'Update Data'});
-    this.batchEventStream.next('commit');
+    this.batchEventStream.next(BatchServiceState.COMMIT_COMPLETED);
     this.batch = this.afs.firestore.batch();
   }
+
+}
+export enum BatchServiceState {
+  UPDATE = 'update',
+  SET = 'set',
+  DELETE = 'delete',
+  COMMIT_STARTED = 'commit_started',
+  COMMIT_COMPLETED = 'commit_completed'
 
 }

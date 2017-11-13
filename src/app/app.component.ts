@@ -4,14 +4,13 @@ import {getGameSystemsAsSelectItems} from "./models/game-systems";
 import {Message, SelectItem} from "primeng/primeng";
 import {GameSystemService} from "./services/game-system.service";
 import {Observable} from 'rxjs/Rx';
-import {WindowRefService} from "./services/window-ref-service";
 import {ConnectivityService} from "./services/connectivity-service";
 import {Router} from "@angular/router";
-import {BatchService} from "./services/batch.service";
+import {BatchService, BatchServiceState} from "./services/batch.service";
 import {Subscription} from "rxjs/Subscription";
 
 @Component({
-  selector: 'app-root',
+  selector: 'ot-app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -27,7 +26,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   gameSystems: SelectItem[];
   isConnected$: Observable<boolean>;
-  saveData: boolean;
   private batchServiceSub: Subscription;
 
   constructor(private afs: AngularFirestore,
@@ -66,15 +64,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.batchServiceSub = this.batchService.getBatchEventAsStream().subscribe((batchEvent: string) => {
       console.log('batchEvent: ' + batchEvent);
-      if (batchEvent === 'update') {
+      if (batchEvent === BatchServiceState.SET ||
+          batchEvent === BatchServiceState.UPDATE ||
+          batchEvent === BatchServiceState.DELETE) {
         this.showSubTopBar = true;
-      } else if (batchEvent === 'set') {
-        this.showSubTopBar = true;
-      } else if (batchEvent === 'delete') {
-        this.showSubTopBar = true;
-      } else if (batchEvent === 'commit') {
+      } else if (batchEvent === BatchServiceState.COMMIT_STARTED ||
+                 batchEvent === BatchServiceState.COMMIT_COMPLETED) {
         this.showSubTopBar = false;
-        this.saveData = false;
       }
     });
   }
@@ -101,8 +97,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   commitUpdates() {
-
-    this.saveData = true;
 
     this.batchService.commit();
   }

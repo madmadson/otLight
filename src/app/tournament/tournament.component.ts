@@ -21,7 +21,7 @@ import {ConfirmationService, DataTable, SelectItem} from "primeng/primeng";
 import {ConnectivityService} from "../services/connectivity-service";
 
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {BatchService} from "../services/batch.service";
+import {BatchService, BatchServiceState} from "../services/batch.service";
 import {Subscription} from "rxjs/Subscription";
 import {getTeamForJSON, Team} from "../models/Team";
 
@@ -47,6 +47,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   loadingParticipants: boolean;
   loadingTeams: boolean;
   swappingPlayer: boolean;
+  savingData: boolean;
 
   orgaDialogVisibility: boolean;
   orgaForm: FormGroup;
@@ -127,6 +128,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   expandedRowsTeamMatchTable: any[] = [];
 
+
   constructor(protected afs: AngularFirestore,
               private formBuilder: FormBuilder,
               private messageService: MessageService,
@@ -136,6 +138,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
               private batchService: BatchService,
               private teamMatchService: TeamMatchService,
               private participantMatchService: ParticipantMatchService) {
+
+    console.log('tournaments.component.create');
 
     this.tournamentId = this.activeRouter.snapshot.paramMap.get('id');
 
@@ -159,11 +163,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
 
+    console.log('tournaments.component.init');
+
     this.batchServiceSub = this.batchService.getBatchEventAsStream().subscribe((batchEvent: string) => {
-      if (batchEvent === 'commit') {
+      if (batchEvent === BatchServiceState.COMMIT_STARTED) {
+        this.savingData = true;
+      } else if (batchEvent === BatchServiceState.COMMIT_COMPLETED) {
         this.dataToSave = false;
-      } else if (batchEvent !== 'commit') {
-        this.dataToSave = true;
+        this.savingData = false;
       }
     });
 
@@ -382,10 +389,14 @@ export class TournamentComponent implements OnInit, OnDestroy {
             const newParticipants = _.cloneDeep(that.participants);
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
+
             newParticipants.splice(index, 1);
             that.participants = newParticipants;
 
-            that.participantsMap[that.participants[index].name] = undefined;
+            if (that.participantsMap[change.doc.data().name]) {
+              delete that.participantsMap[change.doc.data().name];
+            }
+
             const nameIndex = _.findIndex(that.participants, ['name', change.doc.data().name.toLowerCase()]);
             that.participantsNameList.splice(nameIndex, 1);
           }
@@ -503,7 +514,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
             newTeams.splice(index, 1);
             that.teams = newTeams;
 
-            that.teamsMap[that.teams[index].name] = undefined;
+            if (that.teamsMap[change.doc.data().name]) {
+              delete that.teamsMap[change.doc.data().name];
+            }
           }
         });
         that.loadingTeams = false;
@@ -882,6 +895,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     newPlayers.splice(indexPlayers, 0, that.allPlayers[indexPlayers]);
     that.possiblePlayersToAdd = newPlayers;
 
+    if (that.participantsMap[participant.name]) {
+      delete that.participantsMap[participant.name];
+    }
+
     that.messageService.add({
       severity: 'success',
       summary: 'Update', detail: 'Player removed. Save to start tournament and publish new list of participants'
@@ -900,6 +917,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     that.teams = newTeams;
 
     this.batchService.delete(teamDocRef);
+
+    if (that.teamsMap[team.name]) {
+      delete that.teamsMap[team.name];
+    }
 
     that.messageService.add({
       severity: 'success',

@@ -177,6 +177,14 @@
   </div>
 </ng-container>
 
+<ng-container *ngIf="(savingData)">
+  <div class="heading">Save and Publish Data...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+
 <ng-container *ngIf="(!loadingTournament) && (!addingPlayer)">
   <p-panel [style]="{'text-align':'center'}"
            header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament -
@@ -415,8 +423,16 @@
                 [sortable]="true"
                 [filter]="true"
                 filterPlaceholder="Search">
+        <ng-template let-participant="rowData" pTemplate="body">
+          <ng-container *ngIf="isOrga">
+          <span class="span-team">{{participant?.team ? participant?.team : 'Please select'}}</span>
+          </ng-container>
+          <ng-container *ngIf="!isOrga">
+            {{participant?.team}}
+          </ng-container>
+        </ng-template>
         <ng-template let-col let-participant="rowData" pTemplate="editor">
-          <p-dropdown placeholder="Please Choose Team"
+           <p-dropdown placeholder="Please Choose Team"
                       [(ngModel)]="participant.team"
                       [options]="teamNameSelectItemList"
                       (onChange)="changeTeam(participant)"

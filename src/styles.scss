@@ -133,6 +133,8 @@ input.ng-invalid.ng-dirty{
 
 .col-rank{
   width: 5%;
+  font-size: 0.7em;
+  word-wrap: break-word;
 }
 
 .col-expand{
@@ -167,6 +169,10 @@ input.ng-invalid.ng-dirty{
 .col-player{
   width: 20%;
   text-align: center !important;
+}
+
+.span-team{
+  color: $color_secondary;
 }
 
 .col-firstPlayer{
