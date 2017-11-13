@@ -17,7 +17,7 @@
             [contentStyle]="{'overflow':'visible', 'height':'100%'}"
             [modal]=true
             [width]="600"
-            [height]="400">
+            [height]="280">
     <p-header>
       New Player
     </p-header>
@@ -26,8 +26,8 @@
       (onPlayerSaved)="handlePlayerSaved()">
     </ot-player-add-dialog>
   </p-dialog>
-  <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
-  <button pButton type="button" (click)="addPlayerDialogVisibility = true" label="New Player" icon="fa-plus"></button>
+  <button pButton class="table-manage-button" type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
+  <button pButton class="table-manage-button" type="button" (click)="addPlayerDialogVisibility = true" label="New Player" icon="fa-plus"></button>
 
   <p-dataTable [value]="allPlayersForSelectedGameSystem"
                [stacked]="stacked"

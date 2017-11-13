@@ -5,8 +5,8 @@
   </div>
 </ng-container>
 
-<button pButton type="button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
-<button pButton type="button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+<button pButton type="button" class="table-manage-button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
+<button pButton type="button" class="table-manage-button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
 <p-dataTable
   *ngIf="!swappingPlayer"
   [value]="participantMatches"

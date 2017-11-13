@@ -81,11 +81,12 @@ $color_secondary_text: #cccccc;
 }
 
 .bottom-button{
-  position: absolute;
-  bottom: $quad_tick;
-  width: 97%;
+  padding-top: $double_tick;
 }
 
+.table-manage-button{
+  margin: $halve_tick;
+}
 
 input.ng-invalid.ng-dirty{
   background-color: $color_secondary !important;

@@ -179,6 +179,10 @@ body {
   background-color: #f5f7f8;
 }
 
+.span-sub-topbar{
+  font-size: 1.4em;
+}
+
 @media screen and (max-width: 64em) {
 
   .layout-sub-topbar{
@@ -186,7 +190,12 @@ body {
     float: none;
     width: 100%;
     height: 60px;
-    margin-top: 60px;
+    margin-top: 40px;
+  }
+
+  .span-sub-topbar{
+
+    font-size: 0.7em;
   }
 
   .topbar-menu {

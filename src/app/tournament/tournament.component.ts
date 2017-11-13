@@ -36,6 +36,8 @@ import {ParticipantMatchService} from "../services/participant-match.service";
 })
 export class TournamentComponent implements OnInit, OnDestroy {
 
+  accessAsOrga: boolean;
+  addingPlayer: boolean;
   loadingTournament: boolean;
   loadingPlayers: boolean;
   startingTournament: boolean;
@@ -142,7 +144,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.teamsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teams');
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
     this.teamMatchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teamMatches');
-    this.isOrga = true;
+    // this.isOrga = true;
 
     this.orgaForm = this.formBuilder.group({
       user: [{value: 'Orga', disabled: true}, Validators.required],
@@ -257,14 +259,22 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   checkIfPasswordCorrect() {
 
-    this.passwordWrong = false;
+    this.accessAsOrga = true;
 
-    if ((this.orgaForm.get('password').value ? this.orgaForm.get('password').value : "") === this.tournament.password) {
-      this.isOrga = true;
-      this.orgaDialogVisibility = false;
-    } else {
-      this.passwordWrong = true;
-    }
+      setTimeout(() => {
+        this.passwordWrong = false;
+
+      if ((this.orgaForm.get('password').value ? this.orgaForm.get('password').value : "") === this.tournament.password) {
+        this.isOrga = true;
+        this.orgaDialogVisibility = false;
+        this.accessAsOrga = false;
+      } else {
+        this.passwordWrong = true;
+        this.accessAsOrga = false;
+      }
+    });
+
+
   }
 
   protected subscribeOnParticipants() {
@@ -739,75 +749,77 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   addParticipant(playerToAdd: Player) {
 
+    this.addingPlayer = true;
     const that = this;
 
-    const participant: Participant = {
-      name: playerToAdd.name,
-      location: playerToAdd.location ? playerToAdd.location : '',
-      team: playerToAdd.team ? playerToAdd.team : '',
-      opponentParticipantsNames: [],
-      roundScores: []
-    };
+    setTimeout(() => {
+      const participant: Participant = {
+        name: playerToAdd.name,
+        location: playerToAdd.location ? playerToAdd.location : '',
+        team: playerToAdd.team ? playerToAdd.team : '',
+        opponentParticipantsNames: [],
+        roundScores: []
+      };
 
-    console.log("this.playerToAdd: ", playerToAdd);
+      console.log("this.playerToAdd: ", playerToAdd);
 
-    let field;
-    _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
-      field = playerToAdd[participantField.field] ? playerToAdd[participantField.field] : participantField.defaultValue;
-      participant[participantField.field] = field;
-    });
+      let field;
+      _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
+        field = playerToAdd[participantField.field] ? playerToAdd[participantField.field] : participantField.defaultValue;
+        participant[participantField.field] = field;
+      });
 
-    _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-      participant[standingValue.field] = [standingValue.defaultValue];
-    });
+      _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+        participant[standingValue.field] = [standingValue.defaultValue];
+      });
 
-    const uuid = UUID.UUID();
-    participant.id = uuid;
+      const uuid = UUID.UUID();
+      participant.id = uuid;
 
-    this.batchService.set(this.participantsColRef.doc(uuid), participant);
+      this.batchService.set(this.participantsColRef.doc(uuid), participant);
+      // modify both lists
+      const newParticipants = _.cloneDeep(that.participants);
+      newParticipants.push(participant);
+      that.participants = newParticipants;
 
+      const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
+      const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
+      newPlayers.splice(index, 1);
+      that.possiblePlayersToAdd = newPlayers;
 
-    // modify both lists
-    const newParticipants = _.cloneDeep(that.participants);
-    newParticipants.push(participant);
-    that.participants = newParticipants;
+      if (this.tournament.type === 'team' && participant.team) {
 
-    const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
-    const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
-    newPlayers.splice(index, 1);
-    that.possiblePlayersToAdd = newPlayers;
+        if (!this.teamMemberMap[participant.team]) {
+          console.log("create team of participant  ", playerToAdd);
 
-    that.messageService.add({
-      severity: 'success',
-      summary: 'Update', detail: 'Player added. Save to start tournament and publish new list of participants'
-    });
+          const team: Team = {
+            name: participant.team,
+            location: participant.team ? participant.team : "",
+            sgw: [0],
+            opponentTeamNames: [],
+            roundScores: []
+          };
 
-    if (this.tournament.type === 'team' && participant.team) {
+          _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+            team[standingValue.field] = [standingValue.defaultValue];
+          });
 
-      if (!this.teamMemberMap[participant.team]) {
-        console.log("create team of participant  ", playerToAdd);
+          const teamUuid = UUID.UUID();
+          team.id = teamUuid;
 
-        const team: Team = {
-          name: participant.team,
-          location: participant.team ? participant.team : "",
-          sgw: [0],
-          opponentTeamNames: [],
-          roundScores: []
-        };
-
-        _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-          team[standingValue.field] = [standingValue.defaultValue];
-        });
-
-        const teamUuid = UUID.UUID();
-        team.id = teamUuid;
-
-        this.batchService.set(this.teamsColRef.doc(teamUuid), team);
-      } else {
-        that.teamMemberMap[participant.team] =
-          _.concat(that.teamMemberMap[participant.team], participant);
+          this.batchService.set(this.teamsColRef.doc(teamUuid), team);
+        } else {
+          that.teamMemberMap[participant.team] =
+            _.concat(that.teamMemberMap[participant.team], participant);
+        }
       }
-    }
+
+      that.addingPlayer = false;
+      that.messageService.add({
+        severity: 'success',
+        summary: 'Update', detail: 'Player added. Save to start tournament and publish new list of participants'
+      });
+    }, 1000);
   }
 
   addTeam() {
@@ -1332,8 +1344,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     console.log('create next Round: ' + nextRound);
 
-    const promiseCreate = this.participantMatchService.
-      createNextRound(this.tournament, this.participants, nextRound, this.locationRestriction);
+    const promiseCreate = this.participantMatchService.createNextRound(
+      this.tournament, this.participants, nextRound, this.locationRestriction);
 
     if (promiseCreate != null) {
       that.pairRoundDialogVisibility = false;

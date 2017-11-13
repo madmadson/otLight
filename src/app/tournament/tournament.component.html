@@ -4,19 +4,27 @@
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
           [width]="400"
-          [height]="200">
+          [height]="220">
   <p-header>
     Organizer password required
   </p-header>
-  <form [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
-    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+
+  <ng-container *ngIf="(accessAsOrga)">
+    <div class="heading">Access as Orga...</div>
+    <div class="centered-content-container">
+      <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+    </div>
+  </ng-container>
+
+  <form *ngIf="!accessAsOrga" [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
+    <div class="ui-grid  ui-grid-pad ui-fluid">
       <div class="ui-grid-row">
         <div class="ui-grid-col-4">
           Orga:
         </div>
         <div class="ui-grid-col-8">
           <input formControlName="user" id="user" name="user"
-                 tabindex="1" type="text" pInputText value="Orga">
+                 tabindex="1" type="text" size="30" pInputText value="Orga">
         </div>
       </div>
       <div class="ui-grid-row">
@@ -41,7 +49,7 @@
           </div>
         </div>
       </div>
-      <div class="ui-grid-row bottom-button">
+      <div class="ui-grid-row">
         <div class="ui-grid-col-12">
           <button [disabled]="orgaForm.pristine"
                   tabindex="2" pButton type="submit" class="full-width" label="Orga access"></button>
@@ -55,12 +63,12 @@
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
           [width]="400"
-          [height]="200">
+          [height]="240">
   <p-header>
-    Organizer password required
+    Create Team
   </p-header>
   <form [formGroup]="teamCreationForm" (ngSubmit)="addTeam()" novalidate>
-    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+    <div class="ui-grid ui-grid-pad ui-fluid">
       <div class="ui-grid-row">
         <div class="ui-grid-col-4">
           Team name:
@@ -162,7 +170,14 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="(!loadingTournament)">
+<ng-container *ngIf="(addingPlayer)">
+  <div class="heading">Add Player...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="(!loadingTournament) && (!addingPlayer)">
   <p-panel [style]="{'text-align':'center'}"
            header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament -
                     {{tournament?.state === 'FINISHED' ? 'FINISHED' : 'Actual Round: ' + tournament?.actualRound }}"
@@ -181,6 +196,10 @@
   </p-panel>
 
   <p-panel *ngIf="isOrga" header="Orga Area" [toggleable]="true">
+
+    <div class="flex-container" *ngIf="dataToSave">
+      <span class="heading">There are unsaved changes. Please save first to move on.</span>
+    </div>
 
     <ng-container *ngIf="(startingTournament)">
       <div class="heading">Start Tournament...</div>
@@ -223,7 +242,9 @@
     </ng-container>
 
     <div
-      *ngIf="(!loadingPlayers) && (!loadingParticipants) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0"
+      *ngIf="(!loadingPlayers) &&
+             (!loadingParticipants) &&
+             tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0"
       class="sub-heading">
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
@@ -239,12 +260,14 @@
                   header="Name"
                   [sortable]="true"
                   [filter]="true"
+                  styleClass="break-word"
                   filterPlaceholder="Search">
         </p-column>
         <p-column field="location"
                   header="Location"
                   [sortable]="true"
                   [filter]="true"
+                  styleClass="break-word"
                   filterPlaceholder="Search">
         </p-column>
         <p-column *ngIf="tournament?.type === 'team'"
@@ -252,6 +275,7 @@
                   header="Team"
                   [sortable]="true"
                   [filter]="true"
+                  styleClass="break-word"
                   filterPlaceholder="Search">
         </p-column>
         <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
@@ -273,9 +297,7 @@
         </p-column>
       </p-dataTable>
     </div>
-    <div class="flex-container" *ngIf="dataToSave">
-      <span class="heading">There are unsaved changes. Please save first to move on.</span>
-    </div>
+
     <!-- BUTTON-PANEL -->
     <div class="flex-container" *ngIf="!dataToSave && !updateData">
       <button *ngIf="tournament?.type === 'solo' &&
@@ -346,8 +368,8 @@
       </div>
     </ng-container>
 
-    <button pButton type="button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
-    <button pButton type="button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
+    <button pButton type="button" class="table-manage-button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
+    <button pButton type="button" class="table-manage-button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
     <!-- Participants List-->
     <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
                  [value]="participants"
@@ -437,7 +459,7 @@
         </p-column>
       </ng-container>
 
-      <p-column sortable="custom"
+      <p-column *ngIf="tournament?.actualRound > 0" sortable="custom"
                 header="Score"
                 (sortFunction)="sortByScore($event)">
         <ng-template let-participant="rowData" pTemplate="body">
@@ -446,7 +468,7 @@
       </p-column>
 
       <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
-        <p-column header="{{scoreField.field}}">
+        <p-column header="{{scoreField.field}}" *ngIf="tournament?.actualRound > 0">
           <ng-template let-participant="rowData" pTemplate="body">
             {{getScoreFieldValue(scoreField, participant)}}
             <i class="fa fa-info-circle" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"></i>
@@ -477,14 +499,15 @@
       </div>
     </ng-container>
 
-    <button pButton type="button" (click)="stackedTeams = !stackedTeams" label="Toggle" icon="fa-list"></button>
+    <button pButton class="table-manage-button" type="button" (click)="stackedTeams = !stackedTeams" label="Toggle" icon="fa-list"></button>
 
     <button *ngIf="tournament?.type === 'team'"
+            class="table-manage-button"
             pButton type="button"
             label="Add Team" icon="fa-plus"
             (click)="teamCreationDialogVisibility = true">
     </button>
-    <button pButton type="button" (click)="exportTeamStandings()" label="Export" icon="fa-download"></button>
+    <button class="table-manage-button" pButton type="button" (click)="exportTeamStandings()" label="Export" icon="fa-download"></button>
 
     <!-- Team List-->
     <p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
@@ -532,20 +555,21 @@
           </ng-container>
         </ng-template>
       </p-column>
-      <p-column sortable="custom"
+      <p-column *ngIf="tournament?.actualRound > 0"
+                sortable="custom"
                 header="Score"
                 (sortFunction)="sortByScore($event)">
         <ng-template let-team="rowData" pTemplate="body">
           {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
         </ng-template>
       </p-column>
-      <p-column header="sgw">
+      <p-column *ngIf="tournament?.actualRound > 0" header="sgw">
         <ng-template let-team="rowData" pTemplate="body">
           {{getSgwSum(team)}} <i class="fa fa-info-circle" pTooltip="{{getSgwSumTooltip(team)}}"></i>
         </ng-template>
       </p-column>
       <ng-container *ngFor="let standingField of gameSystemConfig.standingFields">
-        <ng-container *ngIf="standingField.isTeam">
+        <ng-container *ngIf="standingField.isTeam && tournament?.actualRound > 0">
           <p-column header="{{standingField.field}}">
             <ng-template let-team="rowData" pTemplate="body">
               {{getTeamStandingFieldValue(standingField, team)}}
@@ -610,10 +634,10 @@
         </div>
       </ng-container>
 
-      <button pButton type="button" (click)="stackedTeamMatches = !stackedTeamMatches" label="Toggle" icon="fa-list"></button>
-      <button pButton type="button" (click)="exportTeamMatches()" label="Export" icon="fa-download"></button>
-      <button pButton type="button" (click)="expandTeamMatches()" label="Expand All" icon="fa-expand"></button>
-      <button pButton type="button" (click)="collapseTeamMatches()" label="Collapse All" icon="fa-compress"></button>
+      <button pButton class="table-manage-button" type="button" (click)="stackedTeamMatches = !stackedTeamMatches" label="Toggle" icon="fa-list"></button>
+      <button pButton class="table-manage-button" type="button" (click)="exportTeamMatches()" label="Export" icon="fa-download"></button>
+      <button pButton class="table-manage-button" type="button" (click)="expandTeamMatches()" label="Expand All" icon="fa-expand"></button>
+      <button pButton class="table-manage-button" type="button" (click)="collapseTeamMatches()" label="Collapse All" icon="fa-compress"></button>
       <p-dataTable
         *ngIf="(!startingTournament) &&
                (!deletingRound) &&

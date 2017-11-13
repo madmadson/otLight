@@ -11,7 +11,7 @@
             [contentStyle]="{'overflow':'visible', 'height':'100%'}"
             [modal]=true
             [width]="600"
-            [height]="400">
+            [height]="280">
     <p-header>
       New Tournament {{selectedGameSystem}}
     </p-header>
@@ -23,8 +23,8 @@
     </ot-tournament-add-dialog>
   </p-dialog>
 
-  <button pButton type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
-  <button pButton type="button" (click)="addTournamentDialogVisibility = true" label="New Tournament" icon="fa-plus"></button>
+  <button pButton class="table-manage-button" type="button" (click)="stacked = !stacked" label="Toggle" icon="fa-list"></button>
+  <button pButton class="table-manage-button"  type="button" (click)="addTournamentDialogVisibility = true" label="New Tournament" icon="fa-plus"></button>
   <p-dataTable [value]="tournaments"
                [stacked]="stacked"
                [responsive]="true"
@@ -42,8 +42,8 @@
         Actions
       </ng-template>
       <ng-template let-tournament="rowData" pTemplate="body">
-        <button type="button" pButton (click)="router.navigate(['/tournament', tournament?.id]);"  icon="fa-eye" label="Show"></button>
-        <button type="button" pButton (click)="openTournamentEdit(tournament)" pButton icon="fa-edit" label="Edit"></button>
+        <button type="button" class="table-manage-button" pButton (click)="router.navigate(['/tournament', tournament?.id]);"  icon="fa-eye" label="Show"></button>
+        <button type="button" class="table-manage-button" pButton (click)="openTournamentEdit(tournament)" pButton icon="fa-edit" label="Edit"></button>
        </ng-template>
     </p-column>
   </p-dataTable>
