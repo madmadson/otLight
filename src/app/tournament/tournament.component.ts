@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {AngularFirestore} from "angularfire2/firestore";
 import * as firebase from "firebase/app";
@@ -38,6 +38,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   accessAsOrga: boolean;
   addingPlayer: boolean;
+  removingPlayer: boolean;
+  addingTeam: boolean;
+  removingTeam: boolean;
   loadingTournament: boolean;
   loadingPlayers: boolean;
   startingTournament: boolean;
@@ -169,6 +172,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.batchServiceSub = this.batchService.getBatchEventAsStream().subscribe((batchEvent: string) => {
       if (batchEvent === BatchServiceState.COMMIT_STARTED) {
         this.savingData = true;
+      } else if (batchEvent === BatchServiceState.SET ||
+                 batchEvent === BatchServiceState.DELETE ||
+                 batchEvent === BatchServiceState.UPDATE) {
+        this.dataToSave = true;
       } else if (batchEvent === BatchServiceState.COMMIT_COMPLETED) {
         this.dataToSave = false;
         this.savingData = false;
@@ -307,56 +314,54 @@ export class TournamentComponent implements OnInit, OnDestroy {
         snapshot.docChanges.forEach(function (change) {
           if (change.type === "added") {
 
-            const newParticipants = _.cloneDeep(that.participants);
-            const participant = getParticipantForJSON(change.doc.id, change.doc.data());
+            if (!that.participantsMap[ change.doc.data().name]) {
 
-            _.forEach(that.gameSystemConfig.participantFields, function (playerField: FieldValues) {
-              participant[playerField.field] = change.doc.data()[playerField.field] ?
-                change.doc.data()[playerField.field] : playerField.defaultValue;
-            });
+              const participant = getParticipantForJSON(change.doc.id, change.doc.data());
 
-            _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-              participant[standingValue.field] = change.doc.data()[standingValue.field] ?
-                change.doc.data()[standingValue.field] : [standingValue.defaultValue];
-            });
-
-            _.forEach(that.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
-
-              const items: SelectItem[] = [];
-              _.forEach(participant[choosePlayed.field], function (choosingItem: string) {
-                items.push({label: choosingItem, value: choosingItem});
+              _.forEach(that.gameSystemConfig.participantFields, function (playerField: FieldValues) {
+                participant[playerField.field] = change.doc.data()[playerField.field] ?
+                  change.doc.data()[playerField.field] : playerField.defaultValue;
               });
-              that.participantsChoosePlayedMap[participant.name] = items;
-            });
 
-            newParticipants.push(participant);
+              _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+                participant[standingValue.field] = change.doc.data()[standingValue.field] ?
+                  change.doc.data()[standingValue.field] : [standingValue.defaultValue];
+              });
 
-            that.participants = newParticipants;
-            that.participantsNameList.push(participant.name.toLowerCase());
+              _.forEach(that.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
 
-            that.participantsMap[participant.name] = participant;
-            that.participantsScoreMap[participant.name] = getScore(participant);
-            orderParticipantsForGameSystem(that.tournament.gameSystem, newParticipants, that.participantsScoreMap);
+                const items: SelectItem[] = [];
+                _.forEach(participant[choosePlayed.field], function (choosingItem: string) {
+                  items.push({label: choosingItem, value: choosingItem});
+                });
+                that.participantsChoosePlayedMap[participant.name] = items;
+              });
 
-            if (that.tournament.type === 'team' && participant.team) {
-              // console.log('found player ' + participant.name + ' with team: ' + participant.team);
+              that.participants.splice(0, 0, participant);
+              that.participantsNameList.push(participant.name.toLowerCase());
 
-              if (that.teamMemberMap[participant.team]) {
-                that.teamMemberMap[participant.team] =
-                  _.concat(that.teamMemberMap[participant.team], participant);
+              that.participantsMap[participant.name] = participant;
+              that.participantsScoreMap[participant.name] = getScore(participant);
+              orderParticipantsForGameSystem(that.tournament.gameSystem, that.participants, that.participantsScoreMap);
 
-                if (that.teamMemberMap[participant.team].length === that.tournament.teamSize) {
-                  // console.log('found fully loaded team: ' + participant.team);
-                  that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+              if (that.tournament.type === 'team' && participant.team) {
+                // console.log('found player ' + participant.name + ' with team: ' + participant.team);
+
+                if (that.teamMemberMap[participant.team]) {
+                  that.teamMemberMap[participant.team] =
+                    _.concat(that.teamMemberMap[participant.team], participant);
+
+                  if (that.teamMemberMap[participant.team].length === that.tournament.teamSize) {
+                    // console.log('found fully loaded team: ' + participant.team);
+                    that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+                  }
+                } else {
+                  that.teamMemberMap[participant.team] = [participant];
                 }
-              } else {
-                that.teamMemberMap[participant.team] = [participant];
               }
             }
           }
           if (change.type === "modified") {
-
-            const newParticipants = _.cloneDeep(that.participants);
             const participant = getParticipantForJSON(change.doc.id, change.doc.data());
 
             let field;
@@ -375,24 +380,23 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
             const oldParticipant = that.participants[index];
-            newParticipants[index] = participant;
-            that.participants = newParticipants;
+            that.participants[index] = participant;
 
             that.participantsMap[participant.name] = participant;
             that.participantsScoreMap[participant.name] = getScore(participant);
-            orderParticipantsForGameSystem(that.tournament.gameSystem, newParticipants, that.participantsScoreMap);
+            orderParticipantsForGameSystem(that.tournament.gameSystem, that.participants, that.participantsScoreMap);
 
             if (that.tournament.type === 'team' && participant.team && oldParticipant.team !== participant.team) {
               console.log('found player with modified team: ' + oldParticipant.team + ' to ' + participant.team);
             }
           }
           if (change.type === "removed") {
-            const newParticipants = _.cloneDeep(that.participants);
 
             const index = _.findIndex(that.participants, ['id', change.doc.id]);
 
-            newParticipants.splice(index, 1);
-            that.participants = newParticipants;
+            if (index !== -1) {
+              that.participants.splice(index, 1);
+            }
 
             if (that.participantsMap[change.doc.data().name]) {
               delete that.participantsMap[change.doc.data().name];
@@ -404,7 +408,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
         });
 
         that.loadingParticipants = false;
-        if (that.tournament.actualRound === 0) {
+        if (that.tournament.actualRound === 0 && that.allPlayers.length === 0) {
           console.log('round 0: subscribeOnPlayers');
           that.subscribeOnPlayers();
         }
@@ -464,30 +468,26 @@ export class TournamentComponent implements OnInit, OnDestroy {
       .onSnapshot(function (snapshot) {
         snapshot.docChanges.forEach(function (change) {
           if (change.type === "added") {
-            const newTeams = _.cloneDeep(that.teams);
-            const team = getTeamForJSON(change.doc.id, change.doc.data());
+            if (!that.teamsMap[ change.doc.data().name]) {
 
-            _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-              if (standingValue.isTeam) {
-                team[standingValue.field] = change.doc.data()[standingValue.field];
-              }
-            });
-            newTeams.push(team);
+              const team = getTeamForJSON(change.doc.id, change.doc.data());
 
-            that.teams = newTeams;
-            that.teamNameSelectItemList.push({value: team.name, label: team.name});
+              _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+                if (standingValue.isTeam) {
+                  team[standingValue.field] = change.doc.data()[standingValue.field];
+                }
+              });
 
-            console.log('team: ' + JSON.stringify(team));
+              that.teams.push(team);
+              that.teamNameSelectItemList.push({value: team.name, label: team.name});
 
-            const newTeamMap = _.cloneDeep(that.teamsMap);
-            newTeamMap[team.name] = team;
-            that.teamsMap = newTeamMap;
+              that.teamsMap[team.name] = team;
 
-            that.teamsScoreMap[team.name] = getScoreForTeam(team);
-            orderTeamsForGameSystem(that.tournament.gameSystem, newTeams, that.teamsScoreMap);
+              that.teamsScoreMap[team.name] = getScoreForTeam(team);
+              orderTeamsForGameSystem(that.tournament.gameSystem, that.teams, that.teamsScoreMap);
+            }
           }
           if (change.type === "modified") {
-            const newTeams = _.cloneDeep(that.teams);
             const team = getTeamForJSON(change.doc.id, change.doc.data());
 
             _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
@@ -496,24 +496,21 @@ export class TournamentComponent implements OnInit, OnDestroy {
               }
             });
             const index = _.findIndex(that.teams, ['id', change.doc.id]);
-            newTeams[index] = team;
+            that.teams[index] = team;
 
-            that.teams = newTeams;
             that.teamNameSelectItemList.push({value: team.name, label: team.name});
 
-            const newTeamMap = _.cloneDeep(that.teamsMap);
-            newTeamMap[team.name] = team;
-            that.teamsMap = newTeamMap;
+            that.teamsMap[team.name] = team;
 
             that.teamsScoreMap[team.name] = getScoreForTeam(team);
-            orderTeamsForGameSystem(that.tournament.gameSystem, newTeams, that.teamsScoreMap);
+            orderTeamsForGameSystem(that.tournament.gameSystem, that.teams, that.teamsScoreMap);
           }
           if (change.type === "removed") {
-            const newTeams = _.cloneDeep(that.teams);
-
             const index = _.findIndex(that.teams, ['id', change.doc.id]);
-            newTeams.splice(index, 1);
-            that.teams = newTeams;
+
+            if (index !== -1) {
+              that.teams.splice(index, 1);
+            }
 
             if (that.teamsMap[change.doc.data().name]) {
               delete that.teamsMap[change.doc.data().name];
@@ -791,15 +788,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
       participant.id = uuid;
 
       this.batchService.set(this.participantsColRef.doc(uuid), participant);
-      // modify both lists
-      const newParticipants = _.cloneDeep(that.participants);
-      newParticipants.push(participant);
-      that.participants = newParticipants;
 
-      const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
-      const index = _.findIndex(that.possiblePlayersToAdd, ['id', playerToAdd.id]);
-      newPlayers.splice(index, 1);
-      that.possiblePlayersToAdd = newPlayers;
+      // modify both lists
+      const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
+      that.participants.splice(indexParticipants, 0, participant);
+
+      const indexPlayers = _.findIndex(that.possiblePlayersToAdd, ['name', participant.name]);
+      that.possiblePlayersToAdd.splice(indexPlayers, 1);
+
+      that.participantsMap[participant.name] = participant;
 
       if (this.tournament.type === 'team' && participant.team) {
 
@@ -838,6 +835,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   addTeam() {
 
+    this.addingTeam = true;
     const that = this;
 
     const team: Team = {
@@ -874,11 +872,16 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
       that.teamCreationDialogVisibility = false;
       that.teamNameSelectItemList.push({value: team.name, label: team.name});
+
+      that.teamsMap[team.name] = team;
+
+      that.addingTeam = false;
     }
   }
 
-  deleteParticipant(participant: Participant) {
+  removeParticipant(participant: Participant) {
 
+    this.removingPlayer = true;
     const that = this;
 
     const participantDocRef = this.participantsColRef.doc(participant.id);
@@ -886,15 +889,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.batchService.delete(participantDocRef);
 
     // modify both lists
-    const newParticipants = _.cloneDeep(that.participants);
     const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
-    newParticipants.splice(indexParticipants, 1);
-    that.participants = newParticipants;
+    that.participants.splice(indexParticipants, 1);
 
-    const newPlayers = _.cloneDeep(that.possiblePlayersToAdd);
     const indexPlayers = _.findIndex(that.allPlayers, ['name', participant.name]);
-    newPlayers.splice(indexPlayers, 0, that.allPlayers[indexPlayers]);
-    that.possiblePlayersToAdd = newPlayers;
+    that.possiblePlayersToAdd.splice(indexPlayers, 0, that.allPlayers[indexPlayers]);
 
     if (that.participantsMap[participant.name]) {
       delete that.participantsMap[participant.name];
@@ -904,20 +903,18 @@ export class TournamentComponent implements OnInit, OnDestroy {
       severity: 'success',
       summary: 'Update', detail: 'Player removed. Save to start tournament and publish new list of participants'
     });
+    that.removingPlayer = false;
   }
 
-  deleteTeam(team: Team) {
+  removeTeam(team: Team) {
 
     const that = this;
 
     const teamDocRef = this.teamsColRef.doc(team.id);
-
-    const newTeams = _.cloneDeep(that.teams);
-    const index = _.findIndex(that.teams, ['id', team.id]);
-    newTeams.splice(index, 1);
-    that.teams = newTeams;
-
     this.batchService.delete(teamDocRef);
+
+    const indexTeam = _.findIndex(that.teams, ['id', team.id]);
+    that.teams.splice(indexTeam, 1);
 
     if (that.teamsMap[team.name]) {
       delete that.teamsMap[team.name];
@@ -1234,7 +1231,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
             this.tournament, this.participantMatches, this.participants, this.teamMatches, this.teams);
         } else {
           promise = this.participantMatchService.deleteRound(this.tournament, this.participantMatches, this.participants);
-
         }
 
         if (this.conService.isOnline()) {

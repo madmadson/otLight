@@ -177,6 +177,27 @@
   </div>
 </ng-container>
 
+<ng-container *ngIf="(removingPlayer)">
+  <div class="heading">Remove Player...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="(addingTeam)">
+  <div class="heading">Add Team...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="(removingTeam)">
+  <div class="heading">Remove Team...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
+
 <ng-container *ngIf="(savingData)">
   <div class="heading">Save and Publish Data...</div>
   <div class="centered-content-container">
@@ -184,8 +205,14 @@
   </div>
 </ng-container>
 
+<ng-container *ngIf="(updateData)">
+  <div class="heading">Update Data...</div>
+  <div class="centered-content-container">
+    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+  </div>
+</ng-container>
 
-<ng-container *ngIf="(!loadingTournament) && (!addingPlayer) && !(savingData)">
+<ng-container *ngIf="(!loadingTournament)">
   <p-panel [style]="{'text-align':'center'}"
            header="{{tournament?.name}} - {{tournament?.type?.toUpperCase()}} Tournament -
                     {{tournament?.state === 'FINISHED' ? 'FINISHED' : 'Actual Round: ' + tournament?.actualRound }}"
@@ -242,13 +269,6 @@
       </div>
     </ng-container>
 
-    <ng-container *ngIf="(updateData)">
-      <div class="heading">Update Data...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
-
     <div
       *ngIf="(!loadingPlayers) &&
              (!loadingParticipants) &&
@@ -257,7 +277,12 @@
       <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
       GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
     </div>
-    <button pButton type="button" class="table-manage-button" (click)="stackedGlobalPlayers = !stackedGlobalPlayers" label="Toggle" icon="fa-list"></button>
+    <button *ngIf="tournament?.actualRound === 0"
+            pButton type="button"
+            class="table-manage-button"
+            (click)="stackedGlobalPlayers = !stackedGlobalPlayers"
+            label="Toggle" icon="fa-list">
+    </button>
 
     <div class="flex-container"
          *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 ">
@@ -267,7 +292,7 @@
                    [stacked]="stackedGlobalPlayers"
                    [responsive]="true"
                    [rows]="5">
-        <p-header>Global List of Players</p-header>
+        <p-header>Global List of Players ({{possiblePlayersToAdd.length}})</p-header>
         <p-column field="name"
                   header="Name"
                   [sortable]="true"
@@ -502,7 +527,7 @@
         </ng-template>
         <ng-template let-participant="rowData" pTemplate="body">
           <button *ngIf="isOrga"
-                  type="button" pButton (click)="deleteParticipant(participant)" icon="fa-trash" label="Remove Player">
+                  type="button" pButton (click)="removeParticipant(participant)" icon="fa-trash" label="Del">
           </button>
         </ng-template>
       </p-column>
@@ -605,7 +630,7 @@
         </ng-template>
         <ng-template let-team="rowData" pTemplate="body">
           <button *ngIf="!teamMemberMap[team.name] && isOrga"
-                  type="button" pButton (click)="deleteTeam(team)" icon="fa-trash" label="Remove Team">
+                  type="button" pButton (click)="removeTeam(team)" icon="fa-trash" label="Remove Team">
           </button>
         </ng-template>
       </p-column>
