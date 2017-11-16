@@ -5,9 +5,9 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="(!playerSaving)">
+<ng-container *ngIf="(!playerSaving) && ((selectedPlayer && passwordCorrect) || !selectedPlayer)">
 
-  <form class="dialog-form" [formGroup]="playerForm" (ngSubmit)="onSubmit()">
+  <form *ngIf="!passwordCorrect" class="dialog-form" [formGroup]="playerForm" (ngSubmit)="onSubmit()">
     <div class="ui-grid ui-grid-pad ui-fluid">
       <div class="ui-grid-row">
         <div class="ui-grid-col-4">
@@ -76,7 +76,8 @@
           </div>
         </div>
       </div>
-      <div class="ui-grid-row bottom-button">
+
+      <div class="ui-grid-row bottom-button" *ngIf="!passwordCorrect">
         <div class="ui-grid-col-12">
           <button pButton type="submit" class="full-width ui-button-success" label="Save Player"
                   [disabled]="!playerForm.valid"></button>
@@ -84,4 +85,84 @@
       </div>
     </div>
   </form>
+  <div class="ui-grid ui-grid-pad ui-fluid" *ngIf="passwordCorrect">
+    <div class="ui-grid-row">
+      <div class="ui-grid-col-4">
+        Name*:
+      </div>
+      <div class="ui-grid-col-8">
+        {{selectedPlayer.name}}
+      </div>
+    </div>
+    <div class="ui-grid-row bottom-button">
+      <div class="ui-grid-col-12">
+        <button pButton class="full-width ui-button-danger"
+                label="Delete Player" (click)="requestDeletePlayer = true">
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="selectedPlayer && !passwordCorrect">
+  <form [formGroup]="orgaForm" (ngSubmit)="checkIfPasswordCorrect()" novalidate>
+    <div class="ui-grid ui-grid-responsive ui-grid-pad ui-fluid">
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Orga:
+        </div>
+        <div class="ui-grid-col-8">
+          <input formControlName="user" id="user" name="user"
+                 tabindex="1" type="text" pInputText value="Orga">
+        </div>
+      </div>
+      <div class="ui-grid-row">
+        <div class="ui-grid-col-4">
+          Password:
+        </div>
+        <div class="ui-grid-col-8">
+          <input id="password" name="password"
+                 #orgaPasswordField
+                 type="password"
+                 (keyup.enter)="checkIfPasswordCorrect()"
+                 tabindex="1" pPassword
+                 formControlName="password"
+                 required>
+        </div>
+      </div>
+      <div class="ui-grid-row"
+           *ngIf="passwordCheckIncorrect">
+        <div class="ui-grid-col-12">
+          <div class="ui-message ui-messages-error ui-corner-all">
+            Password wrong
+          </div>
+        </div>
+      </div>
+      <div class="ui-grid-row bottom-button">
+        <div class="ui-grid-col-12">
+          <button [disabled]="orgaForm.pristine"
+                  tabindex="2" pButton type="submit" class="full-width" label="Orga access"></button>
+        </div>
+      </div>
+    </div>
+  </form>
+</ng-container>
+
+
+<ng-container *ngIf="(!playerSaving) && (requestDeletePlayer)">
+  <div class="heading">
+    WARNING! You cannot restore deleted Player.
+  </div>
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-6">
+      <button pButton class="full-width ui-button-success"
+              label="No" (click)="requestDeletePlayer = false">
+      </button>
+    </div>
+    <div class="ui-grid-col-6">
+      <button pButton class="full-width ui-button-danger"
+              label="Burn it with Fire!" (click)="deletePlayer()">
+      </button>
+    </div>
+  </div>
 </ng-container>

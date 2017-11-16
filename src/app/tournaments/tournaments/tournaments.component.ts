@@ -14,6 +14,7 @@ import {Subscription} from "rxjs/Subscription";
 import {SelectItem} from "primeng/primeng";
 import {ActivatedRoute, Router} from "@angular/router";
 import {TournamentAddDialogComponent} from "../tournament-add-dialog/tournament-add-dialog.component";
+import {TopBarMenuService} from "../../services/topBarMenu.service";
 
 
 @Component({
@@ -42,6 +43,7 @@ export class TournamentsComponent implements OnInit, OnDestroy {
   constructor(protected afs: AngularFirestore,
               protected router: Router,
               private route: ActivatedRoute,
+              private topBarMenuService: TopBarMenuService,
               protected gameSystemService: GameSystemService) {
 
     this.routerSub  = this.route
@@ -56,6 +58,8 @@ export class TournamentsComponent implements OnInit, OnDestroy {
     this.tournamentsColRef = this.afs.firestore.collection('tournaments');
 
     this.selectedGameSystem = this.gameSystemService.getGameSystem();
+
+    this.topBarMenuService.setTopBarVisibility(true);
   }
 
   ngOnInit() {

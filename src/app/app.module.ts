@@ -36,6 +36,8 @@ import {TeamMatchService} from "./services/team-match.service";
 import {ByeService} from "./services/bye.service";
 import { ParticipantMatchesTableComponent } from './tournament/participant-matches-table/participant-matches-table.component';
 import {ParticipantTeamMatchesTableComponent} from "./tournament/participant-team-matches-table/participant-team-matches-table.component";
+import { ParticipantTableComponent } from './tournament/participant-table/participant-table.component';
+import {TopBarMenuService} from "./services/topBarMenu.service";
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -50,7 +52,8 @@ export const firebaseConfig = environment.firebaseConfig;
     PlayerAddDialogComponent,
     TournamentComponent,
     ParticipantMatchesTableComponent,
-    ParticipantTeamMatchesTableComponent
+    ParticipantTeamMatchesTableComponent,
+    ParticipantTableComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -91,7 +94,8 @@ export const firebaseConfig = environment.firebaseConfig;
     GameSystemService,
     ParticipantMatchService,
     TeamMatchService,
-    ByeService
+    ByeService,
+    TopBarMenuService
   ],
   bootstrap: [AppComponent]
 })

@@ -71,7 +71,6 @@ body {
   background-color: #4a4f52;
 }
 
-
 .layout-topbar .menu-button i {
   line-height: inherit;
 }
@@ -97,19 +96,19 @@ body {
   }
 }
 
-.online-icon{
+.online-icon {
   color: $success_color;
   margin-top: 18px;
   margin-left: $main_tick;
 }
 
-.offline-icon{
+.offline-icon {
   color: $fail_color;
   margin-top: 18px;
   margin-left: $main_tick;
 }
 
-.version-label{
+.version-label {
   color: $color_text;
   font-size: 0.7em;
   font-weight: bold;
@@ -117,32 +116,68 @@ body {
 
 .topbar-menu {
   position: absolute;
+  background-color: #363c3f;
+  float: none;
+  width: 100%;
+  height: 40px;
+  margin: 72px 0 0;
+  text-align: center;
   list-style-type: none;
+  padding: 0;
   top: 0;
   right: 0;
-  margin: 0 $double_tick 0 0;
-  padding: 0;
-  height: 100%;
-}
 
-.topbar-menu > li {
-  display: inline-block;
-  height: 100%;
-  margin-top: $double_tick;
+  > li {
+    display: inline-block;
+    margin-top: $halve_tick;
+    height: 100%;
 
-  > label {
-    color: $color_text;
+    > a {
+      padding-bottom: 0;
+      line-height: 40px;
+      min-width: 100px;
+    }
+    > label {
+      color: $color_text;
+    }
   }
 }
 
-.nav-welcome{
+.layout-show-data-modified {
+
+  position: absolute;
+  background-color: #363c3f;
+  float: none;
+  width: 100%;
+  height: 28px;
+  margin: 72px 0 0;
+  text-align: center;
+  padding: $halve_tick 0;
+  top: 0;
+  right: 0;
+
+  span {
+    font-size: 0.7em;
+    color: $color_text;
+  }
+  .save-data-button {
+    font-size: 0.7em;
+    padding: 5px !important;
+  }
+}
+
+.layout-show-data-modified-with-menu{
+  margin-top: 112px !important;
+}
+
+.nav-welcome {
   padding: 10px 10px;
   font-size: 1.4em;
   font-weight: bold;
   text-align: center;
 }
 
-.nav-menu{
+.nav-menu {
   padding: 10px 10px;
   text-decoration: none;
   border-radius: 4px;
@@ -150,7 +185,7 @@ body {
   color: $color_text;
   cursor: pointer;
 
-  :hover{
+  :hover {
     color: $hover_color;
   }
   > a {
@@ -163,12 +198,20 @@ body {
 }
 
 .layout-content {
-  padding-top: $six_tick;
+  padding-top: 64px;
   background-color: #ffffff;
 }
 
-.with-sub-top-bar {
-  padding-top: 125px;
+.content-data-modified {
+  padding-top: 104px !important;
+}
+
+.content-top-bar-menu {
+  padding-top: 104px !important;
+}
+
+.content-data-modified-and-menu {
+  padding-top: 144px !important;
 }
 
 .content-section {
@@ -179,66 +222,24 @@ body {
   background-color: #f5f7f8;
 }
 
-.span-sub-topbar{
-  font-size: 1.4em;
-}
+@media screen and (min-width: 400px) {
 
-@media screen and (max-width: 64em) {
-
-  .layout-sub-topbar{
-    background-color: #363c3f;
-    float: none;
-    width: 100%;
-    height: 60px;
-    margin-top: 40px;
-  }
-
-  .span-sub-topbar{
-    font-size: 0.7em;
-  }
-  .save-data-button {
-    font-size: 0.7em;
-    padding: 5px !important;
-  }
-
-  .topbar-menu {
-    background-color: #363c3f;
-    float: none;
-    width: 100%;
-    height: 40px;
-    margin: 0;
-    margin-top: 72px;
-    text-align: center;
-
-    > li {
-      margin-top: $halve_tick;
-
-      > a {
-        padding-bottom: 0;
-        line-height: 40px;
-        min-width: 100px;
-      }
+  .layout-show-data-modified{
+    height: 44px;
+    span {
+      font-size: 1em;
+    }
+    .save-data-button {
+      font-size: 1em;
+      padding: 10px !important;
     }
   }
 
-  .layout-content {
-    margin-left: 0;
-    padding-top: 104px;
+  .content-data-modified {
+    padding-top: 120px !important;
   }
-  .with-sub-top-bar {
-    margin-left: 0;
-    padding-top: 164px;
+
+  .content-data-modified-and-menu {
+    padding-top: 158px !important;
   }
 }
-
-@media screen and (max-width: 32em) {
-  .span-sub-topbar{
-    font-size: 0.5em;
-  }
-
-  .save-data-button {
-    font-size: 0.5em;
-    padding: 1px !important;
-  }
-}
-

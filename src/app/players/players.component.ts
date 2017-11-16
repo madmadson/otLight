@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {AngularFirestore} from "angularfire2/firestore";
 import {GameSystemService} from "../services/game-system.service";
 import {getPlayerForJSON, Player} from "../models/Player";
@@ -16,6 +16,8 @@ import {ConnectivityService} from "../services/connectivity-service";
 import {MessageService} from "primeng/components/common/messageservice";
 import {ActivatedRoute} from "@angular/router";
 import {BatchService} from "../services/batch.service";
+import {TopBarMenuService} from "../services/topBarMenu.service";
+import {PlayerAddDialogComponent} from "./player-add-dialog/player-add-dialog.component";
 
 
 @Component({
@@ -30,6 +32,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   updatePlayer: boolean;
   selectedGameSystem: string;
 
+  @ViewChild('playerDialog') playerDialog: PlayerAddDialogComponent;
+
   protected allPlayers: Player[] = [];
   protected allPlayersForSelectedGameSystem: Player[] = [];
   protected gameSystemSubscription: Subscription;
@@ -40,12 +44,16 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   protected gameSystems: string[];
   protected playerToChange: Player;
 
+  protected playerNamesMap: {};
+  protected displayedPlayerNamesMap: {};
+
   addPlayerDialogVisibility: boolean;
   private routerSub: Subscription;
 
   constructor(private afs: AngularFirestore,
               private batchService: BatchService,
               private route: ActivatedRoute,
+              private topBarMenuService: TopBarMenuService,
               protected gameSystemService: GameSystemService) {
     this.playersColRef = this.afs.firestore.collection('players');
 
@@ -64,6 +72,8 @@ export class PlayersComponent implements OnInit, OnDestroy  {
           this.addPlayerDialogVisibility = true;
         }
       }).subscribe();
+
+    this.topBarMenuService.setTopBarVisibility(true);
   }
 
   ngOnInit() {
@@ -90,19 +100,21 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     that.playersLoaded = false;
     that.allPlayers = [];
     that.allPlayersForSelectedGameSystem = [];
+    that.playerNamesMap = {};
+    that.displayedPlayerNamesMap   = {};
 
     if (this.playersUnsubscribeFunction) {
       this.playersUnsubscribeFunction();
     }
 
-    this.playersUnsubscribeFunction = this.playersColRef.onSnapshot(function (snapshot) {
+    this.playersUnsubscribeFunction = this.playersColRef
+      .orderBy('name', 'asc')
+      .onSnapshot(function (snapshot) {
+        const clonedPlayers = _.cloneDeep(that.allPlayers);
+        const clonedPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
 
         snapshot.docChanges.forEach(function (change) {
           if (change.type === "added") {
-
-            const newPlayers = _.cloneDeep(that.allPlayers);
-            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
-
             const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
 
             _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
@@ -117,21 +129,17 @@ export class PlayersComponent implements OnInit, OnDestroy  {
               }
             });
 
-            newPlayers.push(player);
-            that.allPlayers = newPlayers;
+            clonedPlayers.push(player);
+            that.playerNamesMap[player.name.toLowerCase()] = player;
 
             if (_.includes(player.myGameSystems, that.selectedGameSystem)) {
-              newPlayersForSelectedGameSystem.push(player);
-              that.allPlayersForSelectedGameSystem = newPlayersForSelectedGameSystem;
+              clonedPlayersForSelectedGameSystem.push(player);
+              that.displayedPlayerNamesMap[player.name.toLowerCase()] = player;
             }
           }
           if (change.type === "modified") {
 
-            const newPlayers = _.cloneDeep(that.allPlayers);
-            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
-
             const player: Player = getPlayerForJSON(change.doc.id, change.doc.data());
-
             _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
               const fieldValue = change.doc.data()[playerField.field] ? change.doc.data()[playerField.field] : playerField.defaultValue;
               player[playerField.field] = fieldValue;
@@ -143,34 +151,29 @@ export class PlayersComponent implements OnInit, OnDestroy  {
               }
             });
 
-            const index = _.findIndex(newPlayers, ['id', change.doc.id]);
-            newPlayers[index] = player;
-            that.allPlayers = newPlayers;
+            const index = _.findIndex(clonedPlayers, ['id', change.doc.id]);
+            clonedPlayers[index] = player;
 
-            if (_.includes(player.myGameSystems, that.selectedGameSystem)) {
-              const indexForSelected = _.findIndex(newPlayersForSelectedGameSystem, ['id', change.doc.id]);
-              newPlayersForSelectedGameSystem[indexForSelected] = player;
-              newPlayersForSelectedGameSystem.push(player);
-              that.allPlayersForSelectedGameSystem = newPlayers;
+            if (that.displayedPlayerNamesMap[player.name.toLowerCase()]) {
+              const indexForSelected = _.findIndex(clonedPlayersForSelectedGameSystem, ['id', change.doc.id]);
+              clonedPlayersForSelectedGameSystem[indexForSelected] = player;
+              clonedPlayersForSelectedGameSystem.push(player);
+
             }
           }
           if (change.type === "removed") {
+            const index = _.findIndex(clonedPlayers, ['id', change.doc.id]);
+            const playerToDelete = clonedPlayers[index];
+            clonedPlayers.splice(index, 1);
 
-            const newPlayers = _.cloneDeep(that.allPlayers);
-            const newPlayersForSelectedGameSystem = _.cloneDeep(that.allPlayersForSelectedGameSystem);
-
-            const index = _.findIndex(newPlayers, ['id', change.doc.id]);
-            newPlayers.splice(index, 1);
-
-            that.allPlayers = newPlayers;
-
-            if (_.includes(change.doc.data().myGameSystems, that.selectedGameSystem)) {
-              const indexForSelected = _.findIndex(newPlayers, ['id', change.doc.id]);
-              newPlayersForSelectedGameSystem.splice(indexForSelected, 1);
-              that.allPlayersForSelectedGameSystem = newPlayersForSelectedGameSystem;
+            if (that.displayedPlayerNamesMap[playerToDelete.name.toLowerCase()]) {
+              const indexForSelected = _.findIndex(clonedPlayersForSelectedGameSystem, ['id', change.doc.id]);
+              clonedPlayersForSelectedGameSystem.splice(indexForSelected, 1);
             }
           }
         });
+        that.allPlayers = clonedPlayers;
+        that.allPlayersForSelectedGameSystem = clonedPlayersForSelectedGameSystem;
 
         that.playersLoaded = true;
       });
@@ -223,5 +226,16 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     });
 
     this.playerToChange = player;
+  }
+
+  openPlayerEdit(player: Player) {
+
+    this.addPlayerDialogVisibility = true;
+    this.playerDialog.setPlayer(player);
+  }
+
+  onHidePlayerDialog() {
+
+    this.playerDialog.reset();
   }
 }

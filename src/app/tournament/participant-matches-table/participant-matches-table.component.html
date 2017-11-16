@@ -7,6 +7,11 @@
 
 <button pButton type="button" class="table-manage-button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
 <button pButton type="button" class="table-manage-button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+<input type="text"
+       pInputText
+       placeholder="Search for player/table"
+       #matchesTableFilter
+       (keyup)="filterMatchesTable()"/>
 <p-dataTable
   *ngIf="!swappingPlayer"
   [value]="participantMatches"

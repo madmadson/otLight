@@ -6,14 +6,14 @@
     <div class="logo-container">
       <a class="logo-topbar">
         <img alt="logo" src="../assets/images/logo42.png"/>
-        <div class="version-label">Version 0.12.11</div>
+        <div class="version-label">Version 0.13.5</div>
       </a>
       <span>
         <i *ngIf="(isConnected$ | async)" class="fa fa-wifi fa-2x online-icon" pTooltip="Online"></i>
         <i *ngIf="(!(isConnected$ | async))" class="fa fa-wifi fa-2x offline-icon" pTooltip="Offline"></i>
       </span>
     </div>
-    <ul class="topbar-menu">
+    <ul class="topbar-menu" *ngIf="showTopBarMenu">
       <li>
         <label for="gameSelect">GameSystem</label>
         <p-dropdown
@@ -24,12 +24,15 @@
         </p-dropdown>
       </li>
     </ul>
+    <div *ngIf="showDataModified"
+         class="layout-show-data-modified"
+         [ngClass]="{'layout-show-data-modified-with-menu': showTopBarMenu}">
+      <span>Data modified. Please save to save and publish</span>
+      <button pButton type="button" class="ui-button-success save-data-button"
+              (click)="commitUpdates()" label="Save" icon="fa-check"></button>
+    </div>
   </div>
-  <div class="layout-sub-topbar" *ngIf="showSubTopBar">
-    <span class="span-sub-topbar">Data modified. Please save to save and publish</span>
-    <button pButton type="button" class="ui-button-success save-data-button"
-            (click)="commitUpdates()" label="Save" icon="fa-check"></button>
-  </div>
+
   <p-sidebar [(visible)]="sidebarVisible"
              [baseZIndex]="10000">
     <div>
@@ -67,7 +70,14 @@
     </div>
   </p-sidebar>
 
-  <div class="layout-content"  [ngClass]="{'with-sub-top-bar': showSubTopBar}">
+  <div class="layout-content"
+       [ngClass]="{'content-top-bar-menu': showTopBarMenu,
+                   'content-data-modified': showDataModified,
+                   'content-data-modified-and-menu': (showDataModified && showTopBarMenu)}">
+                 <!--'with-sub-top-bar-without-top-bar-menu': !showTopBarMenu}">-->
+
+    <!--STB: {{showSubTopBar}}-->
+    <!--STBWM: {{showTopBarMenu}}-->
     <p-growl [life]="5000" [(value)]="messages"></p-growl>
 
     <router-outlet></router-outlet>

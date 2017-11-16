@@ -1,0 +1,19 @@
+
+@import '../../../styles';
+
+.dropped-span{
+  font-size: 0.6em;
+  color: $fail_color;
+}
+
+@media screen and (min-width: 800px) {
+  .dropped-span {
+    font-size: 1em;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .dropped-span {
+    font-size: 1.6em;
+  }
+}

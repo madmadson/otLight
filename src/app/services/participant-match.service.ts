@@ -25,7 +25,11 @@ export class ParticipantMatchService {
   createNextRound(tournament: Tournament, allParticipant: Participant[], round: number, locationRestriction: boolean) {
     const that = this;
 
-    const shuffledParticipants = _.shuffle(allParticipant);
+    const filteredParticipants = _.filter(allParticipant, function (part: Participant) {
+      return part.droppedInRound === 0;
+    });
+
+    const shuffledParticipants = _.shuffle(filteredParticipants);
     const orderedParticipants: Participant[] = shuffledParticipants.sort((part1, part2) => {
       let result = 0;
       if (getScore(part1) < getScore(part2)) {
@@ -40,10 +44,11 @@ export class ParticipantMatchService {
       orderedParticipants.push({
         name: 'bye',
         opponentParticipantsNames: [],
-        roundScores: []
+        roundScores: [],
+        droppedInRound: 0
       });
     }
-    // console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
+    console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
 
     let newRoundMatches: ParticipantMatch[] = [];
 
@@ -80,6 +85,7 @@ export class ParticipantMatchService {
       listOfTables.splice(randomIndex, 1);
       newMatch.table = tableNumber;
 
+      console.log('setMatch: ' + JSON.stringify(newMatch));
       batch.set(matchDocRef, newMatch);
     });
 

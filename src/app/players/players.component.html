@@ -14,15 +14,17 @@
 
 <ng-container *ngIf="(playersLoaded) && !updatePlayer">
   <p-dialog [(visible)]="addPlayerDialogVisibility"
+            (onHide)="onHidePlayerDialog()"
             [contentStyle]="{'overflow':'visible', 'height':'100%'}"
             [modal]=true
             [width]="600"
-            [height]="280">
+            [height]="300">
     <p-header>
       New Player
     </p-header>
     <ot-player-add-dialog
-      [allPlayersToCheck]="allPlayers"
+      #playerDialog
+      [allPlayersNamesMap]="playerNamesMap"
       (onPlayerSaved)="handlePlayerSaved()">
     </ot-player-add-dialog>
   </p-dialog>
@@ -33,15 +35,16 @@
                [stacked]="stacked"
                [editable]="true"
                [responsive]="true"
-               [rows]="20"
+               [rows]="10"
                [paginator]="true"
+               [dataKey]="'id'"
+               [immutable]="true"
                [pageLinks]="3"
                (onEditComplete)="onEditPlayer($event)"
                [rowsPerPageOptions]="[5, 10, 20, 50, 100]">
     <p-header>{{allPlayersForSelectedGameSystem?.length}} {{selectedGameSystem}} Players</p-header>
     <p-column field="name"
-              [editable]="true"
-              styleClass="{{'editable-column'}}, break-word"
+              styleClass="break-word"
               header="Name"
               [sortable]="true"
               [filter]="true"
@@ -113,5 +116,13 @@
         </ng-template>
       </p-column>
     </ng-container>
+    <p-column styleClass="col-actions">
+      <ng-template pTemplate="header">
+        Actions
+      </ng-template>
+      <ng-template let-player="rowData" pTemplate="body">
+        <button type="button" class="table-manage-button" pButton (click)="openPlayerEdit(player)" pButton icon="fa-edit" label="Edit"></button>
+      </ng-template>
+    </p-column>
   </p-dataTable>
 </ng-container>

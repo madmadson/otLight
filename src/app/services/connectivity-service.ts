@@ -29,7 +29,7 @@ export class ConnectivityService {
     });
   }
 
-  unSubscribe() {
+  unsubscribe() {
     this.conSub.unsubscribe();
   }
 

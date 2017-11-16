@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, OnInit, ViewChild, ViewEncapsulation, ElementRef} from '@angular/core';
 import {DataTable, SelectItem} from "primeng/primeng";
 import {getParticipantMatchForJSON, ParticipantMatch} from "../../models/ParticipantMatch";
 import * as firebase from "firebase/app";
@@ -16,7 +16,9 @@ import WriteBatch = firebase.firestore.WriteBatch;
 @Component({
   selector: 'ot-participant-matches-table',
   templateUrl: './participant-matches-table.component.html',
-  styleUrls: ['./participant-matches-table.component.scss']
+  styleUrls: ['./participant-matches-table.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ParticipantMatchesTableComponent implements OnInit {
 
@@ -50,6 +52,9 @@ export class ParticipantMatchesTableComponent implements OnInit {
 
   protected matchesColRef: CollectionReference;
 
+  @ViewChild('matchesTableFilter') matchesTableFilter: ElementRef;
+  savedParticipantMatches: ParticipantMatch[];
+
   constructor(protected afs: AngularFirestore,
               protected batchService: BatchService,
               protected conService: ConnectivityService,
@@ -58,6 +63,37 @@ export class ParticipantMatchesTableComponent implements OnInit {
 
   ngOnInit() {
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/roundMatches');
+
+
+  }
+
+  filterMatchesTable() {
+
+    if (!this.savedParticipantMatches) {
+      this.savedParticipantMatches = _.cloneDeep(this.participantMatches);
+    }
+
+    const query: string = this.matchesTableFilter.nativeElement.value;
+
+    if (query !== '') {
+
+      console.log('filter: ' + query);
+
+      const filteredMatches = [];
+
+      _.forEach(this.savedParticipantMatches, function (match: ParticipantMatch) {
+        if (_.includes(match.participantOne.name.toLowerCase(), query.toLowerCase()) ||
+          _.includes(match.participantTwo.name.toLowerCase(), query.toLowerCase()) ||
+          match.table + '' === query) {
+          filteredMatches.push(match);
+        }
+      });
+      this.participantMatches = _.cloneDeep(filteredMatches);
+
+    } else {
+      console.log('reset filter' );
+      this.participantMatches = _.cloneDeep(this.savedParticipantMatches);
+    }
 
   }
 
@@ -360,6 +396,7 @@ export class ParticipantMatchesTableComponent implements OnInit {
   }
 
   stopSwapPlayer() {
+    this.swappingPlayer = false;
     this.matchToSwap = null;
     this.playerToSwap = null;
     this.opponentOfPlayerToSwap = null;

@@ -1,13 +1,12 @@
-import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {SelectItem} from "primeng/primeng";
 import {MessageService} from "primeng/components/common/messageservice";
 import {AngularFirestore} from "angularfire2/firestore";
-import {FieldValues, getGameSystems, getGameSystemsAsSelectItems} from "../../models/game-systems";
-import {getPlayerForJSON, Player} from "../../models/Player";
+import {getGameSystems, getGameSystemsAsSelectItems} from "../../models/game-systems";
+import {Player} from "../../models/Player";
 import * as _ from 'lodash';
-import * as firebase from "firebase/app";
-import CollectionReference = firebase.firestore.CollectionReference;
+
 import {UUID} from "angular2-uuid";
 import {ConnectivityService} from "../../services/connectivity-service";
 
@@ -19,7 +18,7 @@ import {ConnectivityService} from "../../services/connectivity-service";
 export class PlayerAddDialogComponent implements OnInit {
 
   @Output() onPlayerSaved = new EventEmitter<any>();
-  @Input() allPlayersToCheck: Player[];
+  @Input() allPlayersNamesMap: {};
 
   protected gameSystemsAsSelectItems: SelectItem[];
   protected gameSystems: string[];
@@ -29,6 +28,12 @@ export class PlayerAddDialogComponent implements OnInit {
 
   protected playerNameAlreadyTaken: boolean;
   protected byeNameTaken: boolean;
+  selectedPlayer: Player;
+  requestDeletePlayer: boolean;
+
+  orgaForm: FormGroup;
+  passwordCorrect: boolean;
+  passwordCheckIncorrect: boolean;
 
   constructor(private fb: FormBuilder,
               private messageService: MessageService,
@@ -40,6 +45,11 @@ export class PlayerAddDialogComponent implements OnInit {
 
   ngOnInit() {
       this.setEmptyForm();
+
+    this.orgaForm = this.fb.group({
+      user: [{value: 'Orga', disabled: true}, Validators.required],
+      password: ['', Validators.required],
+    });
   }
 
   setEmptyForm() {
@@ -59,11 +69,10 @@ export class PlayerAddDialogComponent implements OnInit {
     that.playerNameAlreadyTaken = false;
     that.byeNameTaken = false;
 
-    _.forEach(this.allPlayersToCheck, function (playerToCheck: Player) {
-      if (playerToCheck.name.toLowerCase() === that.playerForm.value.name.toLowerCase().trim()) {
-        that.playerNameAlreadyTaken = true;
-      }
-    });
+
+    if (this.allPlayersNamesMap[that.playerForm.value.name.toLowerCase().trim()]) {
+      that.playerNameAlreadyTaken = true;
+    }
 
     if (that.playerForm.value.name.toLowerCase().trim() === 'bye') {
       that.byeNameTaken = true;
@@ -130,5 +139,64 @@ export class PlayerAddDialogComponent implements OnInit {
   nameChanged() {
 
     this.playerNameAlreadyTaken = false;
+  }
+
+  setPlayer(player: Player) {
+
+    this.selectedPlayer = player;
+
+    this.orgaForm = this.fb.group({
+      user: [{value: 'Orga', disabled: true}, Validators.required],
+      password: ['', Validators.required],
+    });
+  }
+
+  reset() {
+    this.selectedPlayer = undefined;
+    this.passwordCorrect = false;
+    this.requestDeletePlayer = false;
+    this.setEmptyForm();
+  }
+
+  checkIfPasswordCorrect() {
+
+    this.passwordCorrect = false;
+
+    if ((this.orgaForm.get('password').value ? this.orgaForm.get('password').value : "") === "ulf123") {
+      this.passwordCorrect = true;
+    } else {
+      this.passwordCheckIncorrect = true;
+    }
+  }
+
+  deletePlayer() {
+
+    const that = this;
+    this.playerSaving = true;
+
+    if (this.conService.isOnline()) {
+      this.afs.firestore.doc('players/' + this.selectedPlayer.id).delete().then(function () {
+        that.messageService.add({severity: 'success', summary: 'Deletion', detail: 'Player deleted'});
+        that.playerSaving = false;
+        that.onPlayerSaved.emit();
+        that.reset();
+      }).catch(function (error) {
+        console.error("Error deleting Player: ", error);
+        that.messageService.add({severity: 'error', summary: 'Deletion', detail: 'Player creation failed'});
+        that.playerSaving = false;
+      });
+    } else {
+      this.afs.firestore.doc('players/' + this.selectedPlayer.id).delete().then(function () {
+        // ignored offline
+      });
+      that.messageService.add({
+        severity: 'success',
+        summary: 'Deletion',
+        detail: 'ATTENTION Player deleted offline! Go online to sync data'
+      });
+      that.playerSaving = false;
+      that.onPlayerSaved.emit();
+      that.reset();
+    }
   }
 }

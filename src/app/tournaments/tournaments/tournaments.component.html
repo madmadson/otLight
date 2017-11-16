@@ -30,6 +30,8 @@
                [responsive]="true"
                [rows]="10"
                [paginator]="true"
+               [dataKey]="'id'"
+               [immutable]="true"
                [pageLinks]="3"
                [rowsPerPageOptions]="[5,10,20]">
     <p-header>{{selectedGameSystem}} Tournaments</p-header>

@@ -376,6 +376,7 @@ export function getWmHoCasterAsSelectItem(): SelectItem[] {
     {value: 'Sturm & Drang1', label: 'Sturm & Drang1'},
     {value: 'Hexeris1', label: 'Hexeris1'},
     {value: 'Hexeris2', label: 'Hexeris2'},
+    {value: 'Jallam1', label: 'Jallam1'},
     {value: 'Makeda1', label: 'Makeda1'},
     {value: 'Makeda2', label: 'Makeda2'},
     {value: 'Makeda3', label: 'Makeda3'},

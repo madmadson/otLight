@@ -198,24 +198,19 @@ export class TournamentAddDialogComponent implements OnInit {
       });
 
       if (this.selectedTournament.type === 'team') {
-
         const teamsColRef = this.afs.firestore.collection('tournaments/' + this.selectedTournament.id + '/teams');
 
         teamsColRef.get().then(teamsSnapshot => {
           teamsSnapshot.docs.forEach(function (doc) {
             batch.delete(doc.ref);
           });
-
           that.commitTournamentDeletion(batch);
         });
 
       } else {
-
         that.commitTournamentDeletion(batch);
       }
     });
-
-
   }
 
   private commitTournamentDeletion(batch: firebase.firestore.WriteBatch) {

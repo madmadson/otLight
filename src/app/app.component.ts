@@ -8,6 +8,7 @@ import {ConnectivityService} from "./services/connectivity-service";
 import {Router} from "@angular/router";
 import {BatchService, BatchServiceState} from "./services/batch.service";
 import {Subscription} from "rxjs/Subscription";
+import {TopBarMenuService} from "./services/topBarMenu.service";
 
 @Component({
   selector: 'ot-app-root',
@@ -20,18 +21,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
   messages: Message[] = [];
 
-  showSubTopBar: boolean;
+  showDataModified: boolean;
 
   selectedGameSystem: string;
 
   gameSystems: SelectItem[];
   isConnected$: Observable<boolean>;
+  showTopBarMenu: boolean;
   private batchServiceSub: Subscription;
+  private topBarMenuServiceSub: Subscription;
 
   constructor(private afs: AngularFirestore,
               protected router: Router,
               private connectivityServiceSub: ConnectivityService,
               private batchService: BatchService,
+              private topBarMenuService: TopBarMenuService,
               protected gameSystemService: GameSystemService) {
     connectivityServiceSub.subscribe();
 
@@ -60,24 +64,32 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+
+    const that = this;
+
     this.isConnected$ = this.connectivityServiceSub.getConnectionStream();
+    this.topBarMenuServiceSub = this.topBarMenuService.getTopBarMenuVisibilityAsStream()
+      .subscribe((state: boolean) => {
+      that.showTopBarMenu = state;
+    });
 
     this.batchServiceSub = this.batchService.getBatchEventAsStream().subscribe((batchEvent: string) => {
       console.log('batchEvent: ' + batchEvent);
       if (batchEvent === BatchServiceState.SET ||
           batchEvent === BatchServiceState.UPDATE ||
           batchEvent === BatchServiceState.DELETE) {
-        this.showSubTopBar = true;
+        this.showDataModified = true;
       } else if (batchEvent === BatchServiceState.COMMIT_STARTED ||
                  batchEvent === BatchServiceState.COMMIT_COMPLETED) {
-        this.showSubTopBar = false;
+        this.showDataModified = false;
       }
     });
   }
 
   ngOnDestroy() {
-    this.connectivityServiceSub.unSubscribe();
+    this.connectivityServiceSub.unsubscribe();
     this.batchServiceSub.unsubscribe();
+    this.topBarMenuServiceSub.unsubscribe();
   }
 
   openPlayerWithOpenNewPlayerDialog() {

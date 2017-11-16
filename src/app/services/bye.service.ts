@@ -48,6 +48,7 @@ export class ByeService {
     });
 
     const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
+    console.log('byeMatch to update: ' + JSON.stringify(participantTwoToUpdate));
     batch.update(participantDocRef, participantTwoToUpdate);
   }
 
@@ -80,6 +81,8 @@ export class ByeService {
     });
 
     const participantDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
+
+    console.log('byeMatch to update: ' + JSON.stringify(participantOneToUpdate));
     batch.update(participantDocRef, participantOneToUpdate);
   }
 

@@ -269,30 +269,20 @@
       </div>
     </ng-container>
 
-    <div
-      *ngIf="(!loadingPlayers) &&
-             (!loadingParticipants) &&
-             tournament?.actualRound === 0 && possiblePlayersToAdd?.length === 0"
-      class="sub-heading">
-      <i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i> No possible Players found. Please add new players with
-      GameSystem {{tournament?.gameSystem}} in sidebar *NEW PLAYER*
-    </div>
     <button *ngIf="tournament?.actualRound === 0"
             pButton type="button"
             class="table-manage-button"
             (click)="stackedGlobalPlayers = !stackedGlobalPlayers"
             label="Toggle" icon="fa-list">
     </button>
-
-    <div class="flex-container"
-         *ngIf="(!loadingPlayers) && tournament?.actualRound === 0 && possiblePlayersToAdd?.length > 0 ">
-      <p-dataTable [value]="possiblePlayersToAdd"
+    <div class="flex-container" *ngIf="(!loadingPlayers) && tournament?.actualRound === 0">
+      <p-dataTable [value]="allPlayers"
                    [paginator]="true"
                    [pageLinks]="3"
                    [stacked]="stackedGlobalPlayers"
                    [responsive]="true"
                    [rows]="5">
-        <p-header>Global List of Players ({{possiblePlayersToAdd.length}})</p-header>
+        <p-header>Global List of Players ({{allPlayers.length}})</p-header>
         <p-column field="name"
                   header="Name"
                   [sortable]="true"
@@ -329,7 +319,9 @@
             Actions
           </ng-template>
           <ng-template let-player="rowData" pTemplate="body">
-            <button type="button" pButton (click)="addParticipant(player)" icon="fa-plus" label="Add"></button>
+            <span  *ngIf="checkIfPlayerIsInTournament(player)" class="already-in-tournament">ADDED</span>
+            <button *ngIf="!checkIfPlayerIsInTournament(player)" type="button"
+                    pButton (click)="addParticipant(player)" icon="fa-plus" label="Add"></button>
           </ng-template>
         </p-column>
       </p-dataTable>
@@ -405,133 +397,18 @@
       </div>
     </ng-container>
 
-    <button pButton type="button" class="table-manage-button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
-    <button pButton type="button" class="table-manage-button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
-    <!-- Participants List-->
-    <p-dataTable *ngIf="(!loadingParticipants) && (!startingTournament)"
-                 [value]="participants"
-                 [editable]="isOrga"
-                 [stacked]="stackedPlayers"
-                 (onEditComplete)="onEditParticipant($event)"
-                 [responsive]="true"
-                 [rows]="10"
-                 [paginator]="true"
-                 [pageLinks]="3"
-                 [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
-                 [exportFilename]="'Standings_Round_' + shownRound"
-                 #standingsTable>
-      <p-header>{{participants?.length}} Players in Tournament</p-header>
-      <p-column styleClass="col-rank">
-        <ng-template pTemplate="header"></ng-template>
-        <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
-          <div style="text-align: center">
-            <span class="big-text">{{index + 1}}</span>
-          </div>
-        </ng-template>
-      </p-column>
-      <p-column field="name"
-                header="Name"
-                [sortable]="true"
-                [filter]="true"
-                styleClass="break-word"
-                filterPlaceholder="Search">
-      </p-column>
-      <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
-                field="location"
-                header="Location"
-                [sortable]="true"
-                [filter]="true"
-                filterPlaceholder="Search">
-      </p-column>
-      <p-column *ngIf="tournament?.type === 'team'"
-                [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
-                field="team"
-                header="Team"
-                [sortable]="true"
-                [filter]="true"
-                filterPlaceholder="Search">
-        <ng-template let-participant="rowData" pTemplate="body">
-          <ng-container *ngIf="isOrga">
-          <span class="span-team">{{participant?.team ? participant?.team : 'Please select'}}</span>
-          </ng-container>
-          <ng-container *ngIf="!isOrga">
-            {{participant?.team}}
-          </ng-container>
-        </ng-template>
-        <ng-template let-col let-participant="rowData" pTemplate="editor">
-           <p-dropdown placeholder="Please Choose Team"
-                      [(ngModel)]="participant.team"
-                      [options]="teamNameSelectItemList"
-                      (onChange)="changeTeam(participant)"
-                      (onBlur)="updateParticipant()"
-                      [autoWidth]="false"
-                      [style]="{'width':'100%'}">
-          </p-dropdown>
-        </ng-template>
-      </p-column>
+     <ot-participant-table
+      *ngIf="tournament && allPlayers && participants"
+      [tournament]="tournament"
+      [isOrga]="isOrga"
+      [shownRound]="shownRound"
+      [gameSystemConfig]="gameSystemConfig"
+      [participants]="participants"
+      [participantsScoreMap]="participantsScoreMap"
+      (onRemoveParticipant)="handleRemoveParticipant($event)"
+      (onChangeTeamParticipant)="handleChangeTeamParticipant($event)">
+    </ot-participant-table>
 
-      <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
-        <p-column [editable]="isOrga"
-                  styleClass="{{isOrga ? 'editable-column' : ''}}, break-word"
-                  field="{{participantField.field}}"
-                  header="{{participantField.field}}"
-                  [sortable]="true"
-                  [filter]="true"
-                  filterPlaceholder="Search">
-          <ng-template let-col let-participant="rowData" pTemplate="editor">
-            <p-dropdown *ngIf="participantField.type === 'dropDown'"
-                        placeholder="None"
-                        [(ngModel)]="participant[col.field]"
-                        [options]="participantField.fieldValues"
-                        (onChange)="changeParticipant(participant)"
-                        (onBlur)="updateParticipant()"
-                        [autoWidth]="false"
-                        [style]="{'width':'100%'}">
-            </p-dropdown>
-            <p-multiSelect *ngIf="participantField.type === 'multiSelect'"
-                           placeholder="None"
-                           [(ngModel)]="participant[col.field]"
-                           [options]="participantField.fieldValues"
-                           (onChange)="changeParticipant(participant)"
-                           (onPanelHide)="updateParticipant()"
-                           [showToggleAll]=false
-                           [maxSelectedLabels]=3
-                           [style]="{'width':'100%'}">
-            </p-multiSelect>
-          </ng-template>
-        </p-column>
-      </ng-container>
-
-      <p-column *ngIf="tournament?.actualRound > 0" sortable="custom"
-                header="Score"
-                (sortFunction)="sortByScore($event)">
-        <ng-template let-participant="rowData" pTemplate="body">
-          {{getActualScore(participant)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTooltip(participant)}}"></i>
-        </ng-template>
-      </p-column>
-
-      <ng-container *ngFor="let scoreField of gameSystemConfig.standingFields">
-        <p-column header="{{scoreField.field}}" *ngIf="tournament?.actualRound > 0">
-          <ng-template let-participant="rowData" pTemplate="body">
-            {{getScoreFieldValue(scoreField, participant)}}
-            <i class="fa fa-info-circle" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"></i>
-          </ng-template>
-        </p-column>
-      </ng-container>
-
-      <p-column styleClass="col-actions" *ngIf="tournament?.actualRound === 0">
-        <ng-template pTemplate="header">
-          Actions
-        </ng-template>
-        <ng-template let-participant="rowData" pTemplate="body">
-          <button *ngIf="isOrga"
-                  type="button" pButton (click)="removeParticipant(participant)" icon="fa-trash" label="Del">
-          </button>
-        </ng-template>
-      </p-column>
-    </p-dataTable>
   </p-panel>
   <p-panel header="{{getTeamTableHeading()}}" [toggleable]="true"
            *ngIf="tournament.type === 'team'"
