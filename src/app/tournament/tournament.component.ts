@@ -373,7 +373,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
             that.participantsMap[participant.name] = participant;
             that.participantsScoreMap[participant.name] = getScore(participant);
-            orderParticipantsForGameSystem(that.tournament.gameSystem, that.participants, that.participantsScoreMap);
 
             if (that.tournament.type === 'team' && participant.team && oldParticipant.team !== participant.team) {
               console.log('found player with modified team: ' + oldParticipant.team + ' to ' + participant.team);
@@ -392,7 +391,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
             }
           }
         });
-
+        orderParticipantsForGameSystem(that.tournament.gameSystem, clonedParticipants, that.participantsScoreMap);
         that.participants = clonedParticipants;
 
         that.loadingParticipants = false;

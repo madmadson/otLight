@@ -83,32 +83,30 @@ export function getWmHoFieldConfig(): GameSystemConfig {
 export function orderParticipantsForWmHo( participants: Participant[], participantsScoreMap: any): Participant[] {
   return participants.sort((part1, part2) => {
 
-    let result = 0;
-
-    if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
-      result = 1;
-    } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
-      result = -1;
-    } else {
-      if (getSos(part1, participantsScoreMap) < getSos(part2, participantsScoreMap)) {
-        result = 1;
-      } else if (getSos(part1, participantsScoreMap) > getSos(part2, participantsScoreMap)) {
-        result = -1;
-      } else {
-        if (getCP(part1) < getCP(part2)) {
-          result = 1;
-        } else if (getCP(part1) > getCP(part2)) {
-          result = -1;
-        } else {
-          if (getVP(part1) < getVP(part2)) {
-            result = 1;
-          } else if (getVP(part1) > getVP(part2)) {
-            result = -1;
-          }
-        }
-      }
+    if ( participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
+      return 1;
+    } else if ( participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
+      return -1;
     }
-    return result;
+
+    if (getSos(part1, participantsScoreMap) < getSos(part2, participantsScoreMap)) {
+      return 1;
+    } else if (getSos(part1, participantsScoreMap) > getSos(part2, participantsScoreMap)) {
+      return -1;
+    }
+
+    if (getCP(part1) < getCP(part2)) {
+      return 1;
+    } else if (getCP(part1) > getCP(part2)) {
+      return -1;
+    }
+    if (getVP(part1) < getVP(part2)) {
+      return 1;
+    } else if (getVP(part1) > getVP(part2)) {
+      return -1;
+    }
+
+    return 0;
   });
 }
 
@@ -149,7 +147,9 @@ export function getSos(participant: Participant, participantsScoreMap: any) {
 
   let sosSum = 0;
   _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
-    sosSum = sosSum + participantsScoreMap[opponentName];
+    if (opponentName !== 'bye') {
+      sosSum = sosSum + participantsScoreMap[opponentName];
+    }
   });
   return sosSum;
 }
