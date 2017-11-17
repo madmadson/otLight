@@ -121,7 +121,8 @@
       <button *ngIf="tournament?.actualRound === 0 && isOrga"
               type="button" pButton (click)="removeParticipant(participant)" icon="fa-trash" label="Del">
       </button>
-      <button *ngIf="tournament?.actualRound === shownRound && participant.droppedInRound === 0 && isOrga"
+      <button *ngIf="tournament?.actualRound > 0 && tournament?.actualRound === shownRound &&
+                     participant.droppedInRound === 0 && isOrga"
               type="button" pButton (click)="dropParticipant(participant)" icon="fa-trash" label="Drop">
       </button>
       <span class="break-word dropped-span" *ngIf="participant.droppedInRound !== 0">

@@ -4,13 +4,12 @@ import {
 } from '@angular/core';
 import {getParticipantForJSON, Participant} from "../../models/Participant";
 import {FieldValues, getColumnsForStandingsExport, getScore} from "../../models/game-systems";
-import {DataTable} from "primeng/primeng";
+import {DataTable, SelectItem} from "primeng/primeng";
 import * as firebase from "firebase";
 import CollectionReference = firebase.firestore.CollectionReference;
 import {AngularFirestore} from 'angularfire2/firestore';
 import {BatchService} from "../../services/batch.service";
 import * as _ from 'lodash';
-import {Player} from "../../models/Player";
 
 @Component({
   selector: 'ot-participant-table',
@@ -27,6 +26,8 @@ export class ParticipantTableComponent implements OnInit {
   @Input() gameSystemConfig: any;
   @Input() participants: Participant[];
   @Input() participantsScoreMap: {};
+  @Input() teamNameSelectItemList: SelectItem[];
+
 
   @Output() onChangeTeamParticipant = new EventEmitter<Participant>();
   @Output() onRemoveParticipant = new EventEmitter<Participant>();
