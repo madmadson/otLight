@@ -7,6 +7,10 @@
 
 <button pButton type="button" class="table-manage-button" (click)="stackedMatches = !stackedMatches" label="Toggle" icon="fa-list"></button>
 <button pButton type="button" class="table-manage-button" (click)="exportMatches()" label="Export" icon="fa-download"></button>
+<button *ngIf="!showOnlyUnfinishedMatches" pButton type="button"
+        class="table-manage-button" (click)="filterOnlyWithoutTeam()" label="Only unfinished"></button>
+<button *ngIf="showOnlyUnfinishedMatches" pButton type="button"
+        class="table-manage-button" (click)="showAll()" label="All matches"></button>
 <input type="text"
        pInputText
        placeholder="Search for player/table"

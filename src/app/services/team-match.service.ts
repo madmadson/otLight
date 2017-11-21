@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import {createEmptyParticipantMatch, ParticipantMatch} from "../models/ParticipantMatch";
 import {UUID} from "angular2-uuid";
 import {
-  FieldValues, getByeScoring, getGameSystemConfig, getScore, getScoreByGameSystem, getScoreForTeam, ScoreEnum
+  FieldValues, getGameSystemConfig, getScore, getScoreByGameSystem, getScoreForTeam, ScoreEnum
 } from "../models/game-systems";
 
 import {BatchService} from "./batch.service";
@@ -481,6 +481,9 @@ export class TeamMatchService {
 
     if (teamMatch.finishedParticipantGames >= tournament.teamSize) {
       teamMatch.finished = true;
+
+      teamOne.opponentTeamNames[teamMatch.round - 1] = teamTwo.name;
+      teamTwo.opponentTeamNames[teamMatch.round - 1] = teamOne.name;
 
       if (teamMatch.sgwTeamOne > teamMatch.sgwTeamTwo) {
         teamMatch.result = TeamMatchResult.teamOneWin;

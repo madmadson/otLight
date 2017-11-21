@@ -59,54 +59,6 @@
   </form>
 </p-dialog>
 
-<p-dialog [(visible)]="teamCreationDialogVisibility"
-          [contentStyle]="{'overflow':'visible', 'height':'100%'}"
-          [modal]=true
-          [width]="400"
-          [height]="240">
-  <p-header>
-    Create Team
-  </p-header>
-  <form [formGroup]="teamCreationForm" (ngSubmit)="addTeam()" novalidate>
-    <div class="ui-grid ui-grid-pad ui-fluid">
-      <div class="ui-grid-row">
-        <div class="ui-grid-col-4">
-          Team name:
-        </div>
-        <div class="ui-grid-col-8">
-          <input formControlName="teamName" id="teamName" name="teamName"
-                 tabindex="3" type="text" pInputText required>
-        </div>
-      </div>
-      <div class="ui-grid-row"
-           *ngIf="teamNameAlreadyTaken">
-        <div class="ui-grid-col-12">
-          <div class="ui-message ui-messages-error ui-corner-all">
-            Team name already taken
-          </div>
-        </div>
-      </div>
-      <div class="ui-grid-row">
-        <div class="ui-grid-col-4">
-          Location:
-        </div>
-        <div class="ui-grid-col-8">
-          <input id="teamLocation" name="teamLocation"
-                 pInputText
-                 tabindex="4"
-                 formControlName="teamLocation">
-        </div>
-      </div>
-      <div class="ui-grid-row bottom-button">
-        <div class="ui-grid-col-12">
-          <button [disabled]="teamCreationForm.pristine"
-                  tabindex="2" pButton type="submit" class="full-width" label="Add Team"></button>
-        </div>
-      </div>
-    </div>
-  </form>
-</p-dialog>
-
 <p-dialog [(visible)]="pairRoundDialogVisibility"
           [contentStyle]="{'overflow':'visible', 'height':'100%'}"
           [modal]=true
@@ -320,7 +272,7 @@
             Actions
           </ng-template>
           <ng-template let-player="rowData" pTemplate="body">
-            <span  *ngIf="checkIfPlayerIsInTournament(player)" class="already-in-tournament">ADDED</span>
+            <span *ngIf="checkIfPlayerIsInTournament(player)" class="already-in-tournament">ADDED</span>
             <button *ngIf="!checkIfPlayerIsInTournament(player)" type="button"
                     pButton (click)="addParticipant(player)" icon="fa-plus" label="Add"></button>
           </ng-template>
@@ -397,8 +349,7 @@
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
     </ng-container>
-
-     <ot-participant-table
+    <ot-participant-table
       *ngIf="tournament && allPlayers && participants"
       [tournament]="tournament"
       [isOrga]="isOrga"
@@ -422,98 +373,18 @@
         <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
       </div>
     </ng-container>
-
-    <button pButton class="table-manage-button" type="button" (click)="stackedTeams = !stackedTeams" label="Toggle" icon="fa-list"></button>
-
-    <button *ngIf="tournament?.type === 'team'"
-            class="table-manage-button"
-            pButton type="button"
-            label="Add Team" icon="fa-plus"
-            (click)="teamCreationDialogVisibility = true">
-    </button>
-    <button class="table-manage-button" pButton type="button" (click)="exportTeamStandings()" label="Export" icon="fa-download"></button>
-
-    <!-- Team List-->
-    <p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
-                 [value]="teams"
-                 [editable]="isOrga"
-                 [stacked]="stackedTeams"
-                 (onEditComplete)="onEditTeam($event)"
-                 [responsive]="true"
-                 [rows]="10"
-                 [paginator]="true"
-                 [pageLinks]="3"
-                 [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
-                 [exportFilename]="'Team_Standings_Round_' + shownRound"
-                 #teamStandingsTable>
-      <p-header>{{teams?.length}} Teams in Tournament</p-header>
-      <p-column field="name"
-                header="Name"
-                [sortable]="true"
-                [filter]="true"
-                styleClass="break-word"
-                filterPlaceholder="Search">
-      </p-column>
-      <p-column [editable]="isOrga && tournament?.actualRound === 0"
-                styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
-                field="location"
-                header="Location"
-                [sortable]="true"
-                [filter]="true"
-                filterPlaceholder="Search">
-      </p-column>
-      <p-column>
-        <ng-template pTemplate="header">Team Members</ng-template>
-        <ng-template pTemplate="body" let-team="rowData">
-          <ng-container *ngIf="teamMemberMap[team.name]">
-            <div [ngClass]="{'team-over-full': (teamMemberMap[team.name]?.length > tournament?.teamSize),
-                             'team-not-full-color': (teamMemberMap[team.name]?.length <= tournament?.teamSize)}">
-              ({{teamMemberMap[team.name]?.length}} / {{tournament?.teamSize}})
-              <i *ngIf="teamMemberMap[team.name]?.length > tournament?.teamSize"
-                 class="fa fa-exclamation-triangle" pTooltip="Exceeded TeamSize"></i>
-              <i class="fa fa-info-circle" pTooltip="{{getTeamMemberNames(team.name)}}"></i>
-            </div>
-          </ng-container>
-          <ng-container *ngIf="!teamMemberMap[team.name]">
-            No Team Members yet
-          </ng-container>
-        </ng-template>
-      </p-column>
-      <p-column *ngIf="tournament?.actualRound > 0"
-                sortable="custom"
-                header="Score"
-                (sortFunction)="sortByScore($event)">
-        <ng-template let-team="rowData" pTemplate="body">
-          {{getActualTeamScore(team)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTeamTooltip(team)}}"></i>
-        </ng-template>
-      </p-column>
-      <p-column *ngIf="tournament?.actualRound > 0" header="sgw">
-        <ng-template let-team="rowData" pTemplate="body">
-          {{getSgwSum(team)}} <i class="fa fa-info-circle" pTooltip="{{getSgwSumTooltip(team)}}"></i>
-        </ng-template>
-      </p-column>
-      <ng-container *ngFor="let standingField of gameSystemConfig.standingFields">
-        <ng-container *ngIf="standingField.isTeam && tournament?.actualRound > 0">
-          <p-column header="{{standingField.field}}">
-            <ng-template let-team="rowData" pTemplate="body">
-              {{getTeamStandingFieldValue(standingField, team)}}
-              <i class="fa fa-info-circle" pTooltip="{{getTeamStandingFieldValueTooltip(standingField, team)}}"></i>
-            </ng-template>
-          </p-column>
-        </ng-container>
-      </ng-container>
-
-      <p-column styleClass="col-actions" *ngIf="tournament?.actualRound === 0">
-        <ng-template pTemplate="header">
-          Actions
-        </ng-template>
-        <ng-template let-team="rowData" pTemplate="body">
-          <button *ngIf="!teamMemberMap[team.name] && isOrga"
-                  type="button" pButton (click)="removeTeam(team)" icon="fa-trash" label="Remove Team">
-          </button>
-        </ng-template>
-      </p-column>
-    </p-dataTable>
+    <ot-team-table
+      *ngIf="tournament && teams && teamsMemberMap"
+      [tournament]="tournament"
+      [isOrga]="isOrga"
+      [shownRound]="shownRound"
+      [gameSystemConfig]="gameSystemConfig"
+      [teams]="teams"
+      [teamsMemberMap]="teamsMemberMap"
+      [teamsScoreMap]="teamsScoreMap"
+      (onAddTeam)="handleAddTeam($event)"
+      (onRemoveTeam)="handleRemoveTeam($event)">
+    </ot-team-table>
   </p-panel>
 
   <ng-container *ngIf="!(shownRound > tournament?.actualRound)">
@@ -558,16 +429,27 @@
         </div>
       </ng-container>
 
-      <button pButton class="table-manage-button" type="button" (click)="stackedTeamMatches = !stackedTeamMatches" label="Toggle" icon="fa-list"></button>
-      <button pButton class="table-manage-button" type="button" (click)="exportTeamMatches()" label="Export" icon="fa-download"></button>
-      <button pButton class="table-manage-button" type="button" (click)="expandTeamMatches()" label="Expand All" icon="fa-expand"></button>
-      <button pButton class="table-manage-button" type="button" (click)="collapseTeamMatches()" label="Collapse All" icon="fa-compress"></button>
+      <ng-container *ngIf="(swappingTeam)">
+        <div class="heading">Swap Team...</div>
+        <div class="centered-content-container">
+          <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+        </div>
+      </ng-container>
+
+      <button pButton class="table-manage-button" type="button" (click)="stackedTeamMatches = !stackedTeamMatches"
+              label="Toggle" icon="fa-list"></button>
+      <button pButton class="table-manage-button" type="button" (click)="exportTeamMatches()" label="Export"
+              icon="fa-download"></button>
+      <button pButton class="table-manage-button" type="button" (click)="expandTeamMatches()" label="Expand All"
+              icon="fa-expand"></button>
+      <button pButton class="table-manage-button" type="button" (click)="collapseTeamMatches()" label="Collapse All"
+              icon="fa-compress"></button>
       <p-dataTable
         *ngIf="(!startingTournament) &&
                (!deletingRound) &&
                (!pairingAgain) &&
                (!creatingNextRound) &&
-               (!swappingPlayer)"
+               (!swappingTeam)"
         [value]="teamMatches"
         [editable]="isOrga"
         (onEditComplete)="onEditMatch($event)"
@@ -587,7 +469,9 @@
         #teamMatchesTable>
         <p-header>{{teamMatches?.length}} TeamMatches</p-header>
 
-        <ng-template let-teamMatch let-index="rowIndex" pTemplate="rowexpansion">
+        <ng-template let-teamMatch let-index="rowIndex" pTemplate="rowexpansion"
+                     styleClass="participant-team-matches-container">
+
           <ot-participant-team-matches-table
             [teamMatch]="teamMatch"
             [isOrga]="isOrga"
@@ -598,6 +482,7 @@
             [participantsChoosePlayedMap]="participantsChoosePlayedMap"
             [shownRound]="shownRound">
           </ot-participant-team-matches-table>
+
         </ng-template>
 
         <p-column expander="true" styleClass="col-expand"></p-column>
@@ -615,7 +500,10 @@
                   [filter]="true"
                   filterPlaceholder="Search">
           <ng-template let-teamMatch="rowData" pTemplate="body">
-            <div  [ngClass]="{
+            <div
+              pTooltip="{{getToolTipForSwap(teamMatch, teamMatch.teamOne, teamMatch.teamTwo)}}"
+              (click)="dropTeam(teamMatch, teamMatch.teamOne, teamMatch.teamTwo, 'one')"
+              [ngClass]="{
                      'swappable-item': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'swap'),
                      'not-intended-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'not'),
                      'impossible-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'impo'),
@@ -631,6 +519,14 @@
                     ({{getScoreTillRoundForTeam(teamMatch.teamOne)}})
                     {{teamMatch.teamOne.name}}
               </span>
+              <i *ngIf="teamMatch?.finishedParticipantGames === 0 && isOrga && !teamToSwap && !tournamentFinished"
+                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Team1"
+                 (click)="swapTeamOne(teamMatch)">
+              </i>
+              <i *ngIf="teamToSwap && isOrga"
+                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+                 (click)="stopSwapTeam()">
+              </i>
             </div>
           </ng-template>
         </p-column>
@@ -664,7 +560,10 @@
                   [filter]="true"
                   filterPlaceholder="Search">
           <ng-template let-teamMatch="rowData" pTemplate="body">
-            <div  [ngClass]="{
+            <div
+              pTooltip="{{getToolTipForSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne)}}"
+              (click)="dropTeam(teamMatch, teamMatch.teamTwo, teamMatch.teamOne, 'two')"
+              [ngClass]="{
                      'swappable-item': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'swap'),
                      'not-intended-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'not'),
                      'impossible-to-swap': (teamToSwap && checkSwap(teamMatch, teamMatch.teamTwo, teamMatch.teamOne) === 'impo'),
@@ -680,6 +579,14 @@
                     ({{getScoreTillRoundForTeam(teamMatch.teamTwo)}})
                     {{teamMatch.teamTwo.name}}
               </span>
+              <i *ngIf="teamMatch?.finishedParticipantGames === 0 && isOrga && !teamToSwap && !tournamentFinished"
+                 class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Team2"
+                 (click)="swapTeamTwo(teamMatch)">
+              </i>
+              <i *ngIf="teamToSwap && isOrga"
+                 class="fa fa-times fa-2x light-fail-color clickable" aria-hidden="true" pTooltip="Stop Swapping"
+                 (click)="stopSwapTeam()">
+              </i>
             </div>
           </ng-template>
         </p-column>

@@ -55,6 +55,10 @@ export class ParticipantMatchesTableComponent implements OnInit {
   @ViewChild('matchesTableFilter') matchesTableFilter: ElementRef;
   savedParticipantMatches: ParticipantMatch[];
 
+
+  allParticipantMatches: ParticipantMatch[];
+  showOnlyUnfinishedMatches: boolean;
+
   constructor(protected afs: AngularFirestore,
               protected batchService: BatchService,
               protected conService: ConnectivityService,
@@ -109,6 +113,34 @@ export class ParticipantMatchesTableComponent implements OnInit {
 
   exportMatches() {
     this.matchesTable.exportCSV();
+  }
+
+  showOnlyUnfinished() {
+
+    this.showOnlyUnfinishedMatches = true;
+
+    if (!this.allParticipantMatches) {
+      this.allParticipantMatches = _.cloneDeep(this.participantMatches);
+    }
+
+    const filteredMatches = [];
+
+    _.forEach(this.savedParticipantMatches, function (match: ParticipantMatch) {
+      if (!match.finished) {
+        filteredMatches.push(match);
+      }
+    });
+    this.participantMatches = _.cloneDeep(filteredMatches);
+
+  }
+
+  showAll() {
+
+    this.showOnlyUnfinishedMatches = false;
+
+    if (this.allParticipantMatches) {
+      this.participantMatches = _.cloneDeep(this.allParticipantMatches);
+    }
   }
 
   onEditMatch(event: any) {

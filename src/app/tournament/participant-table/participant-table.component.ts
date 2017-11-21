@@ -4,12 +4,13 @@ import {
 } from '@angular/core';
 import {getParticipantForJSON, Participant} from "../../models/Participant";
 import {FieldValues, getColumnsForStandingsExport, getScore} from "../../models/game-systems";
-import {DataTable, SelectItem} from "primeng/primeng";
+import {DataTable, OverlayPanel, SelectItem} from "primeng/primeng";
 import * as firebase from "firebase";
 import CollectionReference = firebase.firestore.CollectionReference;
 import {AngularFirestore} from 'angularfire2/firestore';
 import {BatchService} from "../../services/batch.service";
 import * as _ from 'lodash';
+import {ParticipantMatch} from "../../models/ParticipantMatch";
 
 @Component({
   selector: 'ot-participant-table',
@@ -38,13 +39,48 @@ export class ParticipantTableComponent implements OnInit {
   protected participantsColRef: CollectionReference;
   protected participantToChange: Participant;
 
+  scoreToShow: string;
+
+  savedParticipants: Participant[];
+  showOnlyPartisWithoutTeam: boolean;
 
   constructor(protected afs: AngularFirestore,
-              protected batchService: BatchService) {}
+              protected batchService: BatchService) {
+  }
 
   ngOnInit() {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/participants');
   }
+
+  showScore(event, scoreToShow: string, overlayPanel: OverlayPanel) {
+    this.scoreToShow = scoreToShow;
+    overlayPanel.toggle(event);
+  }
+
+  filterOnlyWithoutTeam() {
+
+    if (!this.savedParticipants) {
+      this.savedParticipants = _.cloneDeep(this.participants);
+    }
+
+    this.showOnlyPartisWithoutTeam = true;
+    const filteredPartis = [];
+
+    _.forEach(this.savedParticipants, function (parti: Participant) {
+      if (!parti.team || parti.team === '') {
+
+        filteredPartis.push(parti);
+      }
+    });
+    this.participants = _.cloneDeep(filteredPartis);
+
+  }
+
+  showAllParticipants() {
+    this.showOnlyPartisWithoutTeam = false;
+    this.participants = _.cloneDeep(this.savedParticipants);
+  }
+
 
   onEditParticipant(event: any) {
 
@@ -74,7 +110,12 @@ export class ParticipantTableComponent implements OnInit {
     }
   }
 
-  changeTeam(participant: Participant) {
+  changeTeamForParticipant(participant: Participant) {
+
+    console.log("change participant : " + JSON.stringify(participant));
+
+    const participantDocRef = this.participantsColRef.doc(participant.id);
+    this.batchService.update(participantDocRef, participant);
 
     this.onChangeTeamParticipant.emit(participant);
   }
@@ -106,7 +147,7 @@ export class ParticipantTableComponent implements OnInit {
     let scoreTooltip = '';
     _.forEach(participant.roundScores, function (score: number, index) {
       scoreTooltip = scoreTooltip.concat(
-        'Round' + (index + 1) + ': ' + score + ' VS ' + participant.opponentParticipantsNames[index] + '\n');
+        'Round' + (index + 1) + ':' + score + ' VS ' + participant.opponentParticipantsNames[index] + '\n');
     });
     return scoreTooltip;
   }
@@ -137,7 +178,7 @@ export class ParticipantTableComponent implements OnInit {
       _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
         if (opponentName !== 'bye') {
           scoreTooltip = scoreTooltip.concat(
-            'Round' + (index + 1) + ': ' + that.participantsScoreMap[opponentName] + '(' + opponentName + ')\n');
+            'Round' + (index + 1) + ':' + that.participantsScoreMap[opponentName] + '(' + opponentName + ')\n');
         }
       });
     } else {
@@ -183,6 +224,7 @@ export class ParticipantTableComponent implements OnInit {
   removeParticipant(participant: Participant) {
     this.onRemoveParticipant.emit(participant);
 
+    this.showOnlyPartisWithoutTeam = false;
   }
 
   dropParticipant(participant: Participant) {

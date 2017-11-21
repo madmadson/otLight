@@ -12,13 +12,9 @@
   (onEditComplete)="onEditMatch($event)"
   [responsive]="true"
   [rowStyleClass]="getStyleForMatchesRow"
-  [rows]="20"
-  [paginator]="true"
-  [pageLinks]="3"
   [dataKey]="'id'"
   [immutable]="true"
   [stacked]="stackedMatches"
-  [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
   #matchesTable>
   <p-header>{{teamMatch.teamOne.name + ' VS ' + teamMatch.teamTwo.name}}</p-header>
   <p-column styleClass="col-result" *ngIf="isOrga">

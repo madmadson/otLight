@@ -1,12 +1,22 @@
+<p-overlayPanel #selectedScoreOverlayPanel>
+  <ng-container *ngIf="scoreToShow">
+    <div style="width: 200px" class="break-word">{{scoreToShow}}</div>
+  </ng-container>
+</p-overlayPanel>
+
 <button pButton type="button" class="table-manage-button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
 <button pButton type="button" class="table-manage-button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
+<button *ngIf="tournament?.type ==='team' && !showOnlyPartisWithoutTeam && tournament?.actualRound === 0"
+        pButton type="button" class="table-manage-button" (click)="filterOnlyWithoutTeam()" label="Show without team"></button>
+<button *ngIf="tournament?.type ==='team' && showOnlyPartisWithoutTeam"
+        pButton type="button" class="table-manage-button" (click)="showAllParticipants()" label="Show all"></button>
 <!-- Participants List-->
 <p-dataTable [value]="participants"
              [editable]="isOrga"
              [stacked]="stackedPlayers"
              (onEditComplete)="onEditParticipant($event)"
              [responsive]="true"
-             [rows]="50"
+             [rows]="10"
              [paginator]="true"
              [pageLinks]="3"
              [rowsPerPageOptions]="[5, 10, 20, 50, 100, 300]"
@@ -56,8 +66,7 @@
       <p-dropdown placeholder="Please Choose Team"
                   [(ngModel)]="participant.team"
                   [options]="teamNameSelectItemList"
-                  (onChange)="changeTeam(participant)"
-                  (onBlur)="updateParticipant()"
+                  (onChange)="changeTeamForParticipant(participant)"
                   [autoWidth]="false"
                   [style]="{'width':'100%'}">
       </p-dropdown>
@@ -100,7 +109,9 @@
             header="Score"
             (sortFunction)="sortByScore($event)">
     <ng-template let-participant="rowData" pTemplate="body">
-      {{getActualScore(participant)}} <i class="fa fa-info-circle" pTooltip="{{getScoreTooltip(participant)}}"></i>
+      {{getActualScore(participant)}}
+      <i class="fa fa-info-circle clickable" pTooltip="{{getScoreTooltip(participant)}}"
+         (click)="showScore($event, getScoreTooltip(participant) , selectedScoreOverlayPanel);"></i>
     </ng-template>
   </p-column>
 
@@ -108,7 +119,8 @@
     <p-column header="{{scoreField.field}}" *ngIf="tournament?.actualRound > 0">
       <ng-template let-participant="rowData" pTemplate="body">
         {{getScoreFieldValue(scoreField, participant)}}
-        <i class="fa fa-info-circle" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"></i>
+        <i class="fa fa-info-circle clickable" pTooltip="{{getScoreFieldValueTooltip(scoreField, participant)}}"
+           (click)="showScore($event, getScoreFieldValueTooltip(scoreField, participant) , selectedScoreOverlayPanel);"></i>
       </ng-template>
     </p-column>
   </ng-container>

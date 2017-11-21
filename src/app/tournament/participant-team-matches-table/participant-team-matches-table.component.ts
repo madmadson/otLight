@@ -263,7 +263,6 @@ export class ParticipantTeamMatchesTableComponent implements OnInit {
         .doc('tournaments/' + this.tournament.id + '/participants/' + participantTwoToUpdate.id);
       batch.update(participantTwoDocRef, participantTwoToUpdate);
     }
-
   }
 
   getScoreTillRoundForParticipant(participant: Participant) {
