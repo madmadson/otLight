@@ -52,6 +52,17 @@ export class TeamMatchService {
         roundScores: [],
         sgw: []
       });
+
+      teamMemberMap['bye'] =  {};
+      for (let i = 0; i < tournament.teamSize; i ++) {
+        teamMemberMap['bye'][i] = {
+          name: 'bye',
+          opponentParticipantsNames: [],
+          roundScores: [],
+          droppedInRound: 0
+        };
+      }
+
     }
     // console.log('orderedParticipants: ' + JSON.stringify(orderedParticipants));
     let newRoundTeamMatches: TeamMatch[] = [];
@@ -72,6 +83,8 @@ export class TeamMatchService {
     const batch = this.afs.firestore.batch();
     const listOfSections = _.range(1, (newRoundTeamMatches.length + 1));
     _.forEach(newRoundTeamMatches, function (newTeamMatch: TeamMatch) {
+
+      console.log(JSON.stringify(newTeamMatch.teamOne.name) + ' VS ' + JSON.stringify(newTeamMatch.teamTwo.name));
 
       const uuid = UUID.UUID();
       newTeamMatch.id = uuid;
@@ -117,7 +130,7 @@ export class TeamMatchService {
       newTeamMatch.section = sectionNumber;
       newTeamMatch.participantMatches = participantMatches;
 
-      console.log('setTeamMatch: ' + JSON.stringify(newTeamMatch ));
+      // console.log('setTeamMatch: ' + JSON.stringify(newTeamMatch ));
 
       batch.set(teamMatchDocRef, newTeamMatch);
 
@@ -282,6 +295,7 @@ export class TeamMatchService {
     console.log(partiMatch + ' PlayerOneWon');
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
+    const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
 
     // TeamOne
     const teamOneToUpdate: Team = teamsMap[partiMatch.participantOne.team];
@@ -308,11 +322,25 @@ export class TeamMatchService {
       teamMatch.finishedParticipantGames = teamMatch.finishedParticipantGames + 1;
     }
 
-    participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
-    participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
+    if (participantOneToUpdate) {
+      participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
+      participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
 
-    participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
-    participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantOneToUpdate[scoreField.field][partiMatch.round - 1] = participantOneToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantOneToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
+    if (participantTwoToUpdate) {
+      participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
+      participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = participantTwoToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantTwoToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
+
 
     partiMatch.scoreParticipantOne = scorePerGameSystem[ScoreEnum.WON];
     partiMatch.scoreParticipantTwo = scorePerGameSystem[ScoreEnum.LOOSE];
@@ -328,6 +356,7 @@ export class TeamMatchService {
     console.log(partiMatch + ' PlayerTwoWon');
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
+    const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
 
     // TeamOne
     const teamOneToUpdate: Team = teamsMap[partiMatch.participantOne.team];
@@ -353,11 +382,25 @@ export class TeamMatchService {
       teamMatch.finishedParticipantGames = teamMatch.finishedParticipantGames + 1;
     }
 
-    participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
-    participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
+    if (participantOneToUpdate) {
+      participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
+      participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
 
-    participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
-    participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantOneToUpdate[scoreField.field][partiMatch.round - 1] = participantOneToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantOneToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
+
+    if (participantTwoToUpdate) {
+      participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
+      participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = participantTwoToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantTwoToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
 
     partiMatch.scoreParticipantOne = scorePerGameSystem[ScoreEnum.LOOSE];
     partiMatch.scoreParticipantTwo = scorePerGameSystem[ScoreEnum.WON];
@@ -373,6 +416,7 @@ export class TeamMatchService {
     console.log(partiMatch + ' DRAW');
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
+    const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
 
     // TeamOne
     const teamOneToUpdate: Team = teamsMap[partiMatch.participantOne.team];
@@ -400,11 +444,25 @@ export class TeamMatchService {
       teamMatch.finishedParticipantGames = teamMatch.finishedParticipantGames + 1;
     }
 
-    participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
-    participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
+    if (participantOneToUpdate) {
+      participantOneToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
+      participantOneToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantTwo.name;
 
-    participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
-    participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantOneToUpdate[scoreField.field][partiMatch.round - 1] = participantOneToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantOneToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
+
+    if (participantTwoToUpdate) {
+      participantTwoToUpdate.roundScores[partiMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
+      participantTwoToUpdate.opponentParticipantsNames[partiMatch.round - 1] = partiMatch.participantOne.name;
+
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = participantTwoToUpdate[scoreField.field][partiMatch.round - 1] ?
+          participantTwoToUpdate[scoreField.field][partiMatch.round - 1] : scoreField.defaultValue;
+      });
+    }
 
     partiMatch.scoreParticipantOne = scorePerGameSystem[ScoreEnum.DRAW];
     partiMatch.scoreParticipantTwo = scorePerGameSystem[ScoreEnum.DRAW];
@@ -431,37 +489,66 @@ export class TeamMatchService {
     // PlayerTwo
     const participantTwoToUpdate: Participant = participantsMap[partiMatch.participantTwo.name];
 
-    participantOneToUpdate.roundScores.splice(teamMatch.round - 1, 1);
-    participantOneToUpdate.opponentParticipantsNames.splice(teamMatch.round - 1, 1);
+    if (participantOneToUpdate) {
+      participantOneToUpdate.roundScores.splice(teamMatch.round - 1, 1);
+      participantOneToUpdate.opponentParticipantsNames.splice(teamMatch.round - 1, 1);
 
-    _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
-      participantOneToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
-    });
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantOneToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
+      });
+    }
 
-    participantTwoToUpdate.roundScores.splice(teamMatch.round - 1, 1);
-    participantTwoToUpdate.opponentParticipantsNames.splice(teamMatch.round - 1, 1);
+    if (participantTwoToUpdate) {
+      participantTwoToUpdate.roundScores.splice(teamMatch.round - 1, 1);
+      participantTwoToUpdate.opponentParticipantsNames.splice(teamMatch.round - 1, 1);
 
-    _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
-      participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
-    });
+      _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+        participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
+      });
+    }
 
     if (partiMatch.result === 'p1') {
       teamMatch.sgwTeamOne = teamMatch.sgwTeamOne ? (teamMatch.sgwTeamOne - 1) : 0;
 
-      teamOneToUpdate.sgw[teamMatch.round - 1] = teamOneToUpdate.sgw[teamMatch.round - 1] ?
-        (teamOneToUpdate.sgw[teamMatch.round - 1] - 1) : 0;
+      if (teamOneToUpdate) {
+        teamOneToUpdate.sgw[teamMatch.round - 1] = teamOneToUpdate.sgw[teamMatch.round - 1] ?
+          (teamOneToUpdate.sgw[teamMatch.round - 1] - 1) : 0;
+      }
 
     } else if (partiMatch.result === 'p2') {
       teamMatch.sgwTeamTwo = teamMatch.sgwTeamTwo ? (teamMatch.sgwTeamTwo - 1) : 0;
 
-      teamTwoToUpdate.sgw[teamMatch.round - 1] = teamTwoToUpdate.sgw[teamMatch.round - 1] ?
-        (teamTwoToUpdate.sgw[teamMatch.round - 1] - 1) : 0;
+      if (teamTwoToUpdate) {
+        teamTwoToUpdate.sgw[teamMatch.round - 1] = teamTwoToUpdate.sgw[teamMatch.round - 1] ?
+          (teamTwoToUpdate.sgw[teamMatch.round - 1] - 1) : 0;
+      }
     }
     _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
       if (standingField.isTeam) {
-        teamOneToUpdate[standingField.field][partiMatch.round - 1] = standingField.defaultValue;
-        teamTwoToUpdate[standingField.field][partiMatch.round - 1] = standingField.defaultValue;
+        if (teamOneToUpdate) {
+          teamOneToUpdate[standingField.field][partiMatch.round - 1] = standingField.defaultValue;
+        }
+        if (teamTwoToUpdate) {
+          teamTwoToUpdate[standingField.field][partiMatch.round - 1] = standingField.defaultValue;
+        }
       }
+    });
+
+    _.forEach(gameSystemConfig.scoreFields, function (scoreField: FieldValues) {
+      partiMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
+      partiMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
+
+      if (participantOneToUpdate) {
+        participantOneToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
+      }
+      if (participantTwoToUpdate) {
+        participantTwoToUpdate[scoreField.field][partiMatch.round - 1] = scoreField.defaultValue;
+      }
+    });
+
+    _.forEach(gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
+      partiMatch[choosePlayed.fieldPlayerOne] = choosePlayed.defaultValue;
+      partiMatch[choosePlayed.fieldPlayerTwo] = choosePlayed.defaultValue;
     });
     partiMatch.scoreParticipantOne = 0;
     partiMatch.scoreParticipantTwo = 0;
@@ -514,18 +601,26 @@ export class TeamMatchService {
   private updateTeamMatch(tournament: Tournament, teamOneToUpdate: Team,
                           teamTwoToUpdate: Team, participantOneToUpdate: Participant,
                           participantTwoToUpdate: Participant, teamMatch: TeamMatch) {
-    const teamOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/teams/' + teamOneToUpdate.id);
-    this.batchService.update(teamOneDocRef, teamOneToUpdate);
 
-    const teamTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/teams/' + teamTwoToUpdate.id);
-    this.batchService.update(teamTwoDocRef, teamTwoToUpdate);
+    if (teamOneToUpdate) {
+      const teamOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/teams/' + teamOneToUpdate.id);
+      this.batchService.update(teamOneDocRef, teamOneToUpdate);
+    }
 
-    const participantOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
-    this.batchService.update(participantOneDocRef, participantOneToUpdate);
+    if (teamTwoToUpdate) {
+      const teamTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/teams/' + teamTwoToUpdate.id);
+      this.batchService.update(teamTwoDocRef, teamTwoToUpdate);
+    }
 
-    const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
-    this.batchService.update(participantTwoDocRef, participantTwoToUpdate);
+    if (participantOneToUpdate) {
+      const participantOneDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantOneToUpdate.id);
+      this.batchService.update(participantOneDocRef, participantOneToUpdate);
+    }
 
+    if (participantTwoToUpdate) {
+      const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/participants/' + participantTwoToUpdate.id);
+      this.batchService.update(participantTwoDocRef, participantTwoToUpdate);
+    }
     const teamMatchDocRef = this.afs.firestore.doc('tournaments/' + tournament.id + '/teamMatches/' + teamMatch.id);
     this.batchService.update(teamMatchDocRef, teamMatch);
   }

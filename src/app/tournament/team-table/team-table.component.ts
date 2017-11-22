@@ -75,7 +75,8 @@ export class TeamTableComponent implements OnInit {
     const filteredTeams = [];
 
     _.forEach(this.savedTeams, function (team: Team) {
-      if (that.teamsMemberMap[team.name].length < that.tournament.teamSize) {
+      if (!that.teamsMemberMap[team.name] ||
+        that.teamsMemberMap[team.name].length < that.tournament.teamSize) {
 
         filteredTeams.push(team);
       }

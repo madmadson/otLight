@@ -1,5 +1,5 @@
 import {
-  ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewChild,
+  ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild,
   ViewEncapsulation
 } from '@angular/core';
 import {getParticipantForJSON, Participant} from "../../models/Participant";
@@ -19,7 +19,8 @@ import {ParticipantMatch} from "../../models/ParticipantMatch";
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ParticipantTableComponent implements OnInit {
+export class ParticipantTableComponent implements OnInit, OnChanges {
+
 
   @Input() tournament: any;
   @Input() isOrga: boolean;
@@ -28,7 +29,6 @@ export class ParticipantTableComponent implements OnInit {
   @Input() participants: Participant[];
   @Input() participantsScoreMap: {};
   @Input() teamNameSelectItemList: SelectItem[];
-
 
   @Output() onChangeTeamParticipant = new EventEmitter<Participant>();
   @Output() onRemoveParticipant = new EventEmitter<Participant>();
@@ -50,6 +50,17 @@ export class ParticipantTableComponent implements OnInit {
 
   ngOnInit() {
     this.participantsColRef = this.afs.firestore.collection('tournaments/' + this.tournament.id + '/participants');
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    for (const propName in changes) {
+      if (changes.hasOwnProperty(propName)) {
+        const change = changes[propName];
+        if (propName === 'participants' && this.savedParticipants) {
+          this.savedParticipants = change.currentValue;
+        }
+      }
+    }
   }
 
   showScore(event, scoreToShow: string, overlayPanel: OverlayPanel) {
@@ -116,6 +127,8 @@ export class ParticipantTableComponent implements OnInit {
 
     const participantDocRef = this.participantsColRef.doc(participant.id);
     this.batchService.update(participantDocRef, participant);
+
+    this.showOnlyPartisWithoutTeam = false;
 
     this.onChangeTeamParticipant.emit(participant);
   }

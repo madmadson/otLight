@@ -291,9 +291,18 @@
               (click)="pairRound(false)"
               label="Start Tournament">
       </button>
+      <ng-container *ngIf="teamOverloaded">
+        <div class="sub-heading fail-color">1+ Teams overloaded</div>
+      </ng-container>
+      <ng-container *ngIf="playerWithoutTeam">
+        <div class="sub-heading fail-color">1+ Player without Team</div>
+      </ng-container>
+
       <button *ngIf="tournament?.type === 'team' &&
                      tournament?.actualRound === 0 &&
                      fullyLoadedTeams === teams?.length &&
+                     !teamOverloaded &&
+                     !playerWithoutTeam &&
                      teams?.length >= 2 &&
                      (!loadingTeams)"
               pButton type="button"
@@ -519,6 +528,7 @@
                     ({{getScoreTillRoundForTeam(teamMatch.teamOne)}})
                     {{teamMatch.teamOne.name}}
               </span>
+              <span class="very-big-text" *ngIf="teamMatch.teamOne.name === 'bye'">BYE</span>
               <i *ngIf="teamMatch?.finishedParticipantGames === 0 && isOrga && !teamToSwap && !tournamentFinished"
                  class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Team1"
                  (click)="swapTeamOne(teamMatch)">
@@ -579,6 +589,7 @@
                     ({{getScoreTillRoundForTeam(teamMatch.teamTwo)}})
                     {{teamMatch.teamTwo.name}}
               </span>
+              <span class="very-big-text" *ngIf="teamMatch.teamTwo.name === 'bye'">BYE</span>
               <i *ngIf="teamMatch?.finishedParticipantGames === 0 && isOrga && !teamToSwap && !tournamentFinished"
                  class="fa fa-arrows-v fa-2x light-success-color clickable" aria-hidden="true" pTooltip="Swap Team2"
                  (click)="swapTeamTwo(teamMatch)">

@@ -137,7 +137,7 @@
         <ng-template let-team="rowData" pTemplate="body">
           {{getTeamStandingFieldValue(standingField, team)}}
           <i class="fa fa-info-circle clickable" pTooltip="{{getTeamStandingFieldValueTooltip(standingField, team)}}"
-             (click)="showScore($event, getTeamStandingFieldValueTooltip(team) , showDialogOverlayPanel);"></i>
+             (click)="showScore($event, getTeamStandingFieldValueTooltip(standingField, team) , showDialogOverlayPanel);"></i>
         </ng-template>
       </p-column>
     </ng-container>

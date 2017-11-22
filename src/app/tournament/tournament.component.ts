@@ -81,6 +81,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   stackedGlobalPlayers: boolean;
   fullyLoadedTeams: number;
+  teamOverloaded: boolean;
+  playerWithoutTeam: boolean;
 
   protected teamsColRef: CollectionReference;
   protected teams: Team[] = [];
@@ -306,6 +308,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     that.teamsMemberMap = {};
     that.fullyLoadedTeams = 0;
+    that.teamOverloaded = false;
+    that.playerWithoutTeam = false;
 
     if (that.participantsUnsubscribeFunction) {
       that.participantsUnsubscribeFunction();
@@ -339,29 +343,36 @@ export class TournamentComponent implements OnInit, OnDestroy {
               that.participantsMap[participant.name] = participant;
               that.participantsScoreMap[participant.name] = getScore(participant);
 
-              if (that.tournament.type === 'team' && participant.team) {
+              if (that.tournament.type === 'team') {
                 // console.log('found player ' + participant.name + ' with team: ' + participant.team);
 
-                if (clonedTeamsMemberMap[participant.team]) {
-                  clonedTeamsMemberMap[participant.team] =
-                    _.concat(clonedTeamsMemberMap[participant.team], participant);
+                if (participant.team !== '') {
+                  if (clonedTeamsMemberMap[participant.team]) {
+                    clonedTeamsMemberMap[participant.team] =
+                      _.concat(clonedTeamsMemberMap[participant.team], participant);
 
-                  const teamMembers = clonedTeamsMemberMap[participant.team];
+                    const teamMembers = clonedTeamsMemberMap[participant.team];
 
-                  if (teamMembers.length >= that.tournament.teamSize) {
-                    console.log('found fully loaded team: ' + participant.team);
-                    that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+                    if (teamMembers.length >= that.tournament.teamSize) {
+                      console.log('found fully loaded team: ' + participant.team);
+                      that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+                    }
+                    if (teamMembers.length > that.tournament.teamSize) {
+                      console.log('found teamOverloaded: ' + participant.team);
+                      that.teamOverloaded = true;
+                    }
+                  } else {
+                    console.log('found player with team: ' + participant.team);
+                    clonedTeamsMemberMap[participant.team] = [participant];
                   }
                 } else {
-                  console.log('found player with team: ' + participant.team);
-                  clonedTeamsMemberMap[participant.team] = [participant];
+                  that.playerWithoutTeam = true;
                 }
               }
             }
           }
           if (change.type === "modified") {
             const participant = getParticipantForJSON(change.doc.id, change.doc.data(), that.gameSystemConfig);
-
             _.forEach(that.gameSystemConfig.choosePlayed, function (choosePlayed: FieldValues) {
 
               const items: SelectItem[] = [];
@@ -372,15 +383,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
             });
 
             const index = _.findIndex(clonedParticipants, ['id', change.doc.id]);
-            const oldParticipant = clonedParticipants[index];
             clonedParticipants[index] = participant;
 
             that.participantsMap[participant.name] = participant;
             that.participantsScoreMap[participant.name] = getScore(participant);
-
-            if (that.tournament.type === 'team' && participant.team && oldParticipant.team !== participant.team) {
-              console.log('found player with modified team: ' + oldParticipant.team + ' to ' + participant.team);
-            }
           }
           if (change.type === "removed") {
 
@@ -393,6 +399,12 @@ export class TournamentComponent implements OnInit, OnDestroy {
             if (clonedTeamsMemberMap[change.doc.data().name]) {
               delete clonedTeamsMemberMap[change.doc.data().name];
             }
+
+            _.forEach(clonedTeamsMemberMap[change.doc.data().team], function (member: Participant, i: number) {
+              if (member.name === change.doc.data().name) {
+                clonedTeamsMemberMap[change.doc.data().team].splice(i, 1);
+              }
+            });
           }
         });
         orderParticipantsForGameSystem(that.tournament.gameSystem, clonedParticipants, that.participantsScoreMap);
@@ -403,9 +415,18 @@ export class TournamentComponent implements OnInit, OnDestroy {
         if (that.tournament.actualRound === 0 && that.allPlayers.length === 0) {
           console.log('round 0: subscribeOnPlayers');
           that.subscribeOnPlayers();
+
+          if (that.tournament.type === 'team') {
+            console.log('round 0: subscribeOnTeams');
+            that.subscribeOnTeams();
+          }
         } else {
           console.log('round > 0: sort participants  with scoring');
           orderParticipantsForGameSystem(that.tournament.gameSystem, that.participants, that.participantsScoreMap);
+          if (that.tournament.type === 'team') {
+            console.log('round > 0: sort teams  with scoring');
+            orderTeamsForGameSystem(that.tournament.gameSystem, that.teams, that.teamsScoreMap);
+          }
         }
 
       });
@@ -450,6 +471,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     that.loadingTeams = true;
     that.teams = [];
+    that.teamsMap = {};
     that.teamNameSelectItemList = [];
 
     if (that.teamsUnsubscribeFunction) {
@@ -464,17 +486,21 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
         snapshot.docChanges.forEach(function (change) {
           if (change.type === "added") {
-            const team = getTeamForJSON(change.doc.id, change.doc.data());
 
-            _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-              if (standingValue.isTeam) {
-                team[standingValue.field] = change.doc.data()[standingValue.field];
-              }
-            });
-            clonedTeams.splice(0, 0, team);
-            that.teamNameSelectItemList.push({value: team.name, label: team.name});
-            that.teamsMap[team.name] = team;
-            that.teamsScoreMap[team.name] = getScoreForTeam(team);
+            const team = getTeamForJSON(change.doc.id, change.doc.data());
+            if (!that.teamsMap[team.name]) {
+
+              _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+                if (standingValue.isTeam) {
+                  team[standingValue.field] = change.doc.data()[standingValue.field];
+                }
+              });
+              clonedTeams.push(team);
+
+              that.teamNameSelectItemList.push({value: team.name, label: team.name});
+              that.teamsMap[team.name] = team;
+              that.teamsScoreMap[team.name] = getScoreForTeam(team);
+            }
           }
           if (change.type === "modified") {
             const team = getTeamForJSON(change.doc.id, change.doc.data());
@@ -507,7 +533,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
         that.loadingTeams = false;
         that.teams = clonedTeams;
-        if (that.tournament.actualRound > 0 ) {
+        that.teamNameSelectItemList.sort(function (a, b) {
+          return a.value < b.value  ? -1 : 1;
+        });
+        if (that.tournament.actualRound > 0) {
           orderTeamsForGameSystem(that.tournament.gameSystem, that.teams, that.teamsScoreMap);
         }
       });
@@ -680,11 +709,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
           }
         });
 
-        if (that.isOrga) {
-          setTimeout(() => {
-            that.expandTeamMatches();
-          }, 100);
-        }
+        // if (that.isOrga) {
+        //   setTimeout(() => {
+        //     that.expandTeamMatches();
+        //   }, 100);
+        // }
       });
   }
 
@@ -742,41 +771,44 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     this.batchService.set(this.participantsColRef.doc(uuid), participant);
 
-    // modify both lists
     const clonedParticipants = _.cloneDeep(that.participants);
-    const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
-    clonedParticipants.splice(indexParticipants, 0, participant);
+    clonedParticipants.push(participant);
     that.participants = clonedParticipants;
 
     that.participantsMap[participant.name] = participant;
 
-    if (this.tournament.type === 'team' && participant.team) {
+    if (this.tournament.type === 'team') {
 
-      if (!this.teamsMemberMap[participant.team]) {
-        console.log("create team of participant  ", playerToAdd);
 
-        const team: Team = {
-          name: participant.team,
-          location: participant.team ? participant.team : "",
-          sgw: [0],
-          opponentTeamNames: [],
-          roundScores: []
-        };
+      if (participant.team !== '') {
+        if (!this.teamsMemberMap[participant.team]) {
+          console.log("create team of participant  ", playerToAdd);
 
-        _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
-          team[standingValue.field] = [standingValue.defaultValue];
-        });
+          const team: Team = {
+            name: participant.team,
+            location: participant.team ? participant.team : "",
+            sgw: [0],
+            opponentTeamNames: [],
+            roundScores: []
+          };
 
-        const teamUuid = UUID.UUID();
-        team.id = teamUuid;
+          _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {
+            team[standingValue.field] = [standingValue.defaultValue];
+          });
 
-        this.batchService.set(this.teamsColRef.doc(teamUuid), team);
-      } else {
-        const clonedTeamsMemberMap = _.cloneDeep(that.teamsMemberMap);
-        clonedTeamsMemberMap[participant.team] =
-          _.concat(clonedTeamsMemberMap[participant.team], participant);
+          const teamUuid = UUID.UUID();
+          team.id = teamUuid;
 
-        that.teamsMemberMap = clonedTeamsMemberMap;
+          this.batchService.set(this.teamsColRef.doc(teamUuid), team);
+
+          const newTeams = _.cloneDeep(that.teams);
+          newTeams.push(team);
+          that.teams = newTeams;
+
+          that.teamNameSelectItemList.push({value: team.name, label: team.name});
+          that.teamsMap[team.name] = team;
+        }
+        this.calculateTeamCapacities();
       }
     }
 
@@ -804,6 +836,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
     that.teamNameSelectItemList.push({value: team.name, label: team.name});
     that.teamsMap[team.name] = team;
     that.addingTeam = false;
+
+    this.calculateTeamCapacities();
   }
 
   handleRemoveParticipant(participant: Participant) {
@@ -815,18 +849,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     this.batchService.delete(participantDocRef);
 
-    // modify both lists
     const clonedParticipants = _.cloneDeep(that.participants);
     const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
     clonedParticipants.splice(indexParticipants, 1);
     that.participants = clonedParticipants;
 
     if (that.participantsMap[participant.name]) {
-      const clonedTeamsMemberMap = _.cloneDeep(that.teamsMemberMap);
-      delete clonedTeamsMemberMap[participant.name];
-
-      that.teamsMemberMap = clonedTeamsMemberMap;
-
+      const clonedParticipantMap = _.cloneDeep(that.participantsMap);
+      delete clonedParticipantMap[participant.name];
+      that.participantsMap = clonedParticipantMap;
     }
 
     that.messageService.add({
@@ -834,6 +865,10 @@ export class TournamentComponent implements OnInit, OnDestroy {
       summary: 'Update', detail: 'Player removed. Save to start tournament and publish new list of participants'
     });
     that.removingPlayer = false;
+
+    if (this.tournament.type === 'team') {
+      this.calculateTeamCapacities();
+    }
   }
 
   handleRemoveTeam(team: Team) {
@@ -856,9 +891,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     _.forEach(that.teamNameSelectItemList, function (obj, index) {
       if (obj.value === team.name) {
-         const clonedSelectList = _.cloneDeep(that.teamNameSelectItemList);
-         clonedSelectList.splice(index, 1);
-         that.teamNameSelectItemList = clonedSelectList;
+        const clonedSelectList = _.cloneDeep(that.teamNameSelectItemList);
+        clonedSelectList.splice(index, 1);
+        that.teamNameSelectItemList = clonedSelectList;
       }
     });
 
@@ -866,6 +901,31 @@ export class TournamentComponent implements OnInit, OnDestroy {
       severity: 'success',
       summary: 'Update', detail: 'Team removed.'
     });
+
+    this.calculateTeamCapacities();
+  }
+
+  handleChangeTeamParticipant(participant: Participant) {
+
+    const that = this;
+
+    console.log("change team of participant : " + JSON.stringify(participant));
+
+    const clonedParticipants = _.cloneDeep(that.participants);
+    const indexParticipants = _.findIndex(that.participants, ['id', participant.id]);
+    clonedParticipants[indexParticipants] = participant;
+    that.participants = clonedParticipants;
+
+    if (that.participantsMap[participant.name]) {
+      const clonedParticipantMap = _.cloneDeep(that.participantsMap);
+      clonedParticipantMap[participant.name] = participant;
+      that.participantsMap = clonedParticipantMap;
+    }
+
+    if (this.tournament.type === 'team') {
+      this.calculateTeamCapacities();
+    }
+
   }
 
   onEditMatch(event: any) {
@@ -879,22 +939,36 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   }
 
-  handleChangeTeamParticipant(participant: Participant) {
-
+  private calculateTeamCapacities() {
     const that = this;
-
-    console.log("change team of participant : " + JSON.stringify(participant));
-    this.participantToChange = participant;
-
     const newEmptyMap = {};
 
+    that.fullyLoadedTeams = 0;
+    that.teamOverloaded = false;
+    that.playerWithoutTeam = false;
+
     _.forEach(that.participants, function (parti: Participant) {
-      if (newEmptyMap[parti.team]) {
-        newEmptyMap[parti.team] =
-          _.concat(newEmptyMap[parti.team], parti);
+      if (parti.team !== '') {
+        if (newEmptyMap[parti.team]) {
+          newEmptyMap[parti.team] =
+            _.concat(newEmptyMap[parti.team], parti);
+
+          const teamMembers = newEmptyMap[parti.team];
+          if (teamMembers.length === that.tournament.teamSize) {
+            console.log('team now is  fully loaded: ' + parti.team);
+            that.fullyLoadedTeams = that.fullyLoadedTeams + 1;
+          }
+          if (teamMembers.length > that.tournament.teamSize) {
+            console.log('found teamOverloaded: ' + parti.team);
+            that.teamOverloaded = true;
+          }
+        } else {
+          newEmptyMap[parti.team] = [parti];
+        }
       } else {
-        newEmptyMap[parti.team] = [parti];
+        that.playerWithoutTeam = true;
       }
+
     });
     that.teamsMemberMap = newEmptyMap;
   }
@@ -1337,7 +1411,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     if (this.teamToSwap) {
       if (teamToCheck.name === this.teamToSwap.name) {
         return 'impo';
-      }  else if (match.finishedParticipantGames > 0) {
+      } else if (match.finishedParticipantGames > 0) {
         return 'impo';
       } else if (teamToCheck.name === this.opponentOfTeamToSwap.name) {
         return 'impo';
@@ -1354,7 +1428,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
   }
 
   dropTeam(droppedMatch: TeamMatch, droppedTeam: Team,
-             opponentOfDropped: Team, witchTeamDropped: string) {
+           opponentOfDropped: Team, witchTeamDropped: string) {
 
     if (this.teamToSwap) {
       const that = this;

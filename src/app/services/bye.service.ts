@@ -99,6 +99,8 @@ export class ByeService {
     match.finished = true;
     match.scoreTeamTwo = byeScoring.score;
     match.result = 'p2';
+    match.finishedParticipantGames = tournament.teamSize;
+    match.sgwTeamTwo = tournament.teamSize;
 
     _.forEach(gameConfig.scoreFields, function (scoreField: FieldValues) {
       match[scoreField.fieldPlayerTwo] = (byeScoring[scoreField.field] * tournament.teamSize);
@@ -110,6 +112,7 @@ export class ByeService {
 
     teamTwoToUpdate.roundScores[match.round - 1] = scorePerGameSystem[0];
     teamTwoToUpdate.opponentTeamNames[match.round - 1] = 'bye';
+    teamTwoToUpdate.sgw[match.round - 1] = tournament.teamSize;
 
     _.forEach(gameConfig.scoreFields, function (scoreField: FieldValues) {
       teamTwoToUpdate[scoreField.field][match.round - 1] = (byeScoring[scoreField.field] * tournament.teamSize);
@@ -131,6 +134,8 @@ export class ByeService {
     match.finished = true;
     match.scoreTeamOne = byeScoring.score;
     match.result = 'p1';
+    match.finishedParticipantGames = tournament.teamSize;
+    match.sgwTeamOne = tournament.teamSize;
 
     _.forEach(gameConfig.scoreFields, function (scoreField: FieldValues) {
       match[scoreField.fieldPlayerOne] = (byeScoring[scoreField.field] * tournament.teamSize);
@@ -142,6 +147,7 @@ export class ByeService {
 
     teamOneToUpdate.roundScores[match.round - 1] = scorePerGameSystem[0];
     teamOneToUpdate.opponentTeamNames[match.round - 1] = 'bye';
+    teamOneToUpdate.sgw[match.round - 1] = tournament.teamSize;
 
     _.forEach(gameConfig.scoreFields, function (scoreField: FieldValues) {
       teamOneToUpdate[scoreField.field][match.round - 1] = (byeScoring[scoreField.field] * tournament.teamSize);

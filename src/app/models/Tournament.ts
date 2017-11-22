@@ -23,6 +23,6 @@ export function getTournamentForJSON(id: string, json: any): Tournament {
     actualRound: json.actualRound ? json.actualRound : 0,
     publishedRound: json.publishedRound ? json.publishedRound : 0,
     state: json.state ? json.state : 'CREATED',
-    teamSize: json.teamSize ? json.teamSize : 3
+    teamSize: json.teamSize ? parseInt(json.teamSize, 10) : 3
   };
 }
