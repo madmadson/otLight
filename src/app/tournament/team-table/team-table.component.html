@@ -69,8 +69,7 @@
         pButton type="button" class="table-manage-button" (click)="showAllTeams()" label="Show all"></button>
 
 <!-- Team List-->
-<p-dataTable *ngIf="(!loadingTeams) && (!startingTournament)"
-             [value]="teams"
+<p-dataTable [value]="teams"
              [editable]="isOrga"
              [stacked]="stackedTeams"
              (onEditComplete)="onEditTeam($event)"

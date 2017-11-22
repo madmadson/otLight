@@ -9,7 +9,7 @@ import {getParticipantForJSON, Participant} from "../models/Participant";
 import CollectionReference = firebase.firestore.CollectionReference;
 import {getPlayerForJSON, Player} from "../models/Player";
 import {
-  FieldValues, GameSystemConfig, getColumnsForStandingsExport, getColumnsForTeamStandingsExport, getGameSystemConfig,
+  FieldValues, GameSystemConfig, getGameSystemConfig,
   getScore,
   getScoreForTeam, orderParticipantsForGameSystem, orderTeamsForGameSystem
 } from "../models/game-systems";
@@ -71,7 +71,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
   protected tournamentUnsubscribeFunction: () => void;
   tournament: Tournament;
 
-  protected participantToChange: Participant;
   protected participants: Participant[] = [];
   protected participantsColRef: CollectionReference;
   protected participantsUnsubscribeFunction: () => void;
@@ -157,7 +156,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
     this.teamsColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teams');
     this.matchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/roundMatches');
     this.teamMatchesColRef = this.afs.firestore.collection('tournaments/' + this.tournamentId + '/teamMatches');
-    this.isOrga = true;
+    // this.isOrga = true;
 
     this.orgaForm = this.formBuilder.group({
       user: [{value: 'Orga', disabled: true}, Validators.required],

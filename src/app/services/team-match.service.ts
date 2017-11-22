@@ -565,12 +565,25 @@ export class TeamMatchService {
   private handleTeamMatchFinished(teamOne: Team, teamTwo: Team, teamMatch: TeamMatch, tournament: Tournament) {
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
+    const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
 
     if (teamMatch.finishedParticipantGames >= tournament.teamSize) {
       teamMatch.finished = true;
 
       teamOne.opponentTeamNames[teamMatch.round - 1] = teamTwo.name;
+
+      _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
+        if (standingField.isTeam) {
+          teamOne[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
+        }
+      });
+
       teamTwo.opponentTeamNames[teamMatch.round - 1] = teamOne.name;
+      _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
+        if (standingField.isTeam) {
+          teamTwo[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
+        }
+      });
 
       if (teamMatch.sgwTeamOne > teamMatch.sgwTeamTwo) {
         teamMatch.result = TeamMatchResult.teamOneWin;
