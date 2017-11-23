@@ -5,7 +5,8 @@
 </p-overlayPanel>
 
 <button pButton type="button" class="table-manage-button" (click)="stackedPlayers = !stackedPlayers" label="Toggle" icon="fa-list"></button>
-<button pButton type="button" class="table-manage-button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
+<button *ngIf="tournament?.actualRound !== 0"
+        pButton type="button" class="table-manage-button" (click)="exportStandings()" label="Export" icon="fa-download"></button>
 <button *ngIf="tournament?.type ==='team' && !showOnlyPartisWithoutTeam && tournament?.actualRound === 0"
         pButton type="button" class="table-manage-button" (click)="filterOnlyWithoutTeam()" label="Show without team"></button>
 <button *ngIf="tournament?.type ==='team' && showOnlyPartisWithoutTeam"

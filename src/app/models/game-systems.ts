@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import {getJudgementFieldConfig, orderParticipantsForJudgement, orderTeamsForJudgement} from "./game-systems/Judgement";
 import {Team} from "./Team";
 import {getMalifauxFieldConfig, orderParticipantsForMalifaux, orderTeamsForMalifaux} from "./game-systems/Malifaux";
+import {getGuildBallFieldConfig, orderParticipantsForGuildBall, orderTeamsForGuildBall} from "./game-systems/GuildBall";
 
 export function getGameSystemsAsSelectItems(): SelectItem[] {
   return [{
@@ -64,6 +65,8 @@ export function getGameSystemConfig(system: string): GameSystemConfig {
     return getJudgementFieldConfig();
   } else if (system === 'Malifaux') {
     return getMalifauxFieldConfig();
+  } else if (system === 'GuildBall') {
+    return getGuildBallFieldConfig();
   } else {
     return {
       participantFields: [],
@@ -83,6 +86,8 @@ export function orderParticipantsForGameSystem(gameSystem: string, participants:
     return orderParticipantsForJudgement(participants, participantsScoreMap);
   } else if (gameSystem === 'Malifaux') {
     return orderParticipantsForMalifaux(participants, participantsScoreMap);
+  } else if (gameSystem === 'GuildBall') {
+    return orderParticipantsForGuildBall(participants, participantsScoreMap);
   } else {
     return participants.sort((part1, part2) => {
 
@@ -106,6 +111,8 @@ export function orderTeamsForGameSystem(gameSystem: string, teams: Team[], teams
     return orderTeamsForJudgement(teams, teamsScoreMap);
   } else if (gameSystem === 'Malifaux') {
     return orderTeamsForMalifaux(teams, teamsScoreMap);
+  } else if (gameSystem === 'GuildBall') {
+    return orderTeamsForGuildBall(teams, teamsScoreMap);
   } else {
     return teams.sort((team1, team2) => {
 
@@ -124,34 +131,40 @@ export function orderTeamsForGameSystem(gameSystem: string, teams: Team[], teams
 export function getColumnsForStandingsExport(gameSystem: string): number[] {
 
   if (gameSystem === 'WmHo') {
-    // name, location, faction, armyLists, score, sos, cp, vp
-    return [1, 2, 3, 4, 5, 6, 7, 8];
+    // rank, name, location, faction, armyLists, score, sos, cp, vp
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   } else if (gameSystem === 'Judgement') {
-    // name, location, warband, score, souls, levels
-    return [1, 2, 3, 4, 5, 6];
+    // rank, name, location, warband, score, souls, levels
+    return [1, 2, 3, 4, 5, 6, 7];
   } else if (gameSystem === 'Malifaux') {
-    // name, location, mfFaction, score, diff, vp
-    return [1, 2, 3, 4, 5, 6];
+    // rank, name, location, mfFaction, score, diff, vp
+    return [1, 2, 3, 4, 5, 6, 7];
+  } else if (gameSystem === 'GuildBall') {
+    // rank, name, location, gbFaction, score, sos, vp
+    return [1, 2, 3, 4, 5, 6, 7];
   } else {
-    // name, location, score
-    return [1, 2, 3];
+    // rank, name, location, score
+    return [1, 2, 3, 4];
   }
 }
 
 export function getColumnsForTeamStandingsExport(gameSystem: string): number[] {
 
   if (gameSystem === 'WmHo') {
-    // name, location, members, score, sgw, cp, vp
-    return [1, 2, 3, 4, 5, 6, 7];
+    // rank, name, location, members, score, sgw, cp, vp
+    return [1, 2, 3, 4, 5, 6, 7, 8];
   } else if (gameSystem === 'Judgement') {
-    // name, location, members, score, sgw, souls, levels
-    return [1, 2, 3, 4, 5, 6, 7];
+    // rank, name, location, members, score, sgw, souls, levels
+    return [1, 2, 3, 4, 5, 6, 7, 8];
   } else if (gameSystem === 'Malifaux') {
-    // name, location, members, score, sgw, diff, vp
+    // rank, name, location, members, score, sgw, diff, vp
+    return [1, 2, 3, 4, 5, 6, 7, 8];
+  } else if (gameSystem === 'GuildBall') {
+    // rank, name, location, members, score, sgw, vp
     return [1, 2, 3, 4, 5, 6, 7];
   } else {
-    // name, location, score, members, sgw
-    return [1, 2, 3, 4, 5];
+    // rank, name, location, score, members, sgw
+    return [1, 2, 3, 4, 5, 6];
   }
 }
 
@@ -173,6 +186,8 @@ export function getScoreByGameSystem(gameSystem: string): number[] {
     return [1, 0, 0];
   } else if (gameSystem === 'Judgement') {
     return [1, 0, 0];
+  } else if (gameSystem === 'GuildBall') {
+    return [1, 0, 0];
   } else if (gameSystem === 'Malifaux') {
     return [3, 0, 1];
   } else {
@@ -186,6 +201,8 @@ export function getByeScoring(gameSystem: string): any {
     return {'score': 1, 'cp': 3, 'vp': 38};
   } else if (gameSystem === 'Judgement') {
     return {'score': 1, 'souls': 2, 'levels': 6};
+  } else if (gameSystem === 'GuildBall') {
+    return {'score': 1, 'vp': 0};
   } else if (gameSystem === 'Malifaux') {
     return {'score': 1, 'diff': 5, 'vp': 10};
   } else {

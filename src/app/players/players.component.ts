@@ -157,8 +157,6 @@ export class PlayersComponent implements OnInit, OnDestroy  {
             if (that.displayedPlayerNamesMap[player.name.toLowerCase()]) {
               const indexForSelected = _.findIndex(clonedPlayersForSelectedGameSystem, ['id', change.doc.id]);
               clonedPlayersForSelectedGameSystem[indexForSelected] = player;
-              clonedPlayersForSelectedGameSystem.push(player);
-
             }
           }
           if (change.type === "removed") {

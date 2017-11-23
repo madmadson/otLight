@@ -27,6 +27,7 @@ export class ParticipantTableComponent implements OnInit, OnChanges {
   @Input() shownRound: number;
   @Input() gameSystemConfig: any;
   @Input() participants: Participant[];
+  @Input() participantsMap: {};
   @Input() participantsScoreMap: {};
   @Input() teamNameSelectItemList: SelectItem[];
 
@@ -169,12 +170,44 @@ export class ParticipantTableComponent implements OnInit, OnChanges {
 
     const that = this;
     let scoreFieldSum = 0;
-    if (scoreField.field === 'sos') {
-      _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
+    if (scoreField.field === 'o-sos') {
+      _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
         if (opponentName !== 'bye') {
-          scoreFieldSum = scoreFieldSum + that.participantsScoreMap[opponentName];
+          const opponent: Participant = that.participantsMap[opponentName];
+
+          scoreFieldSum = scoreFieldSum + that.getScoreFieldValue({defaultValue: 0, type: 'number', field: 'sos'}, opponent);
+
+        } else {
+          // bye is always 0.333
+          scoreFieldSum = scoreFieldSum + (0.3333);
         }
       });
+      scoreFieldSum = scoreFieldSum / that.tournament.actualRound;
+      scoreFieldSum = Math.round(scoreFieldSum * 100) / 100;
+    } else if (scoreField.field === 'sos') {
+      if (that.tournament.gameSystem === 'GuildBall') {
+        _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
+          if (opponentName !== 'bye') {
+
+            let opponentWinRate = that.participantsScoreMap[opponentName] / that.tournament.actualRound;
+            if (opponentWinRate < 0.3333) {
+              opponentWinRate = 0.3333;
+            }
+            scoreFieldSum = scoreFieldSum + opponentWinRate;
+          } else {
+            // bye is always 0.333
+            scoreFieldSum = scoreFieldSum + (0.3333);
+          }
+        });
+        scoreFieldSum = scoreFieldSum / that.tournament.actualRound;
+        scoreFieldSum = Math.round(scoreFieldSum * 100) / 100;
+      } else {
+        _.forEach(participant.opponentParticipantsNames, function (opponentName: string) {
+          if (opponentName !== 'bye') {
+            scoreFieldSum = scoreFieldSum + that.participantsScoreMap[opponentName];
+          }
+        });
+      }
     } else {
       _.forEach(participant[scoreField.field], function (score: number) {
         scoreFieldSum = scoreFieldSum + score;
@@ -187,13 +220,54 @@ export class ParticipantTableComponent implements OnInit, OnChanges {
   getScoreFieldValueTooltip(scoreField: FieldValues, participant: Participant) {
     const that = this;
     let scoreTooltip = '';
-    if (scoreField.field === 'sos') {
+    if (scoreField.field === 'o-sos') {
       _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
         if (opponentName !== 'bye') {
+          const opponent: Participant = that.participantsMap[opponentName];
+
           scoreTooltip = scoreTooltip.concat(
-            'Round' + (index + 1) + ':' + that.participantsScoreMap[opponentName] + '(' + opponentName + ')\n');
+            'Round' + (index + 1) + ':' + opponent.name + '\n');
+
+          const opponentSos = that.getScoreFieldValue({defaultValue: 0, type: 'number', field: 'sos'}, opponent);
+          scoreTooltip = scoreTooltip.concat(
+            'O-Sos= ' + opponentSos + '\n');
+        } else {
+          scoreTooltip = scoreTooltip.concat(
+            'Round' + (index + 1) + ': 0.33 (BYE)\n');
         }
       });
+
+    } else if (scoreField.field === 'sos') {
+
+      if (that.tournament.gameSystem === 'GuildBall') {
+        _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
+          if (opponentName !== 'bye') {
+
+            const opponentWinRate = that.participantsScoreMap[opponentName] / that.tournament.actualRound;
+
+            if (opponentWinRate < 0.33) {
+              scoreTooltip = scoreTooltip.concat(
+                'Round' + (index + 1) + ':' + opponentWinRate + ' -> 0.33 (gbSpecial) (' + opponentName + ')\n');
+            } else {
+              scoreTooltip = scoreTooltip.concat(
+                'Round' + (index + 1) + ':' + opponentWinRate + '(' + opponentName + ')\n');
+            }
+          } else {
+            scoreTooltip = scoreTooltip.concat(
+              'Round' + (index + 1) + ': 0.33 (BYE)\n');
+          }
+        });
+      } else {
+        _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
+          if (opponentName !== 'bye') {
+            scoreTooltip = scoreTooltip.concat(
+              'Round' + (index + 1) + ':' + that.participantsScoreMap[opponentName] + '(' + opponentName + ')\n');
+          } else {
+            scoreTooltip = scoreTooltip.concat(
+              'Round' + (index + 1) + ': 0 (BYE)\n');
+          }
+        });
+      }
     } else {
       _.forEach(participant[scoreField.field], function (score: number, index) {
         scoreTooltip = scoreTooltip.concat(

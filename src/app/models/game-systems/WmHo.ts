@@ -113,32 +113,31 @@ export function orderParticipantsForWmHo( participants: Participant[], participa
 export function orderTeamsForWmHo( teams: Team[], teamsScoreMap: any): Team[] {
   return teams.sort((team1, team2) => {
 
-    let result = 0;
 
     if (teamsScoreMap[team1.name] < teamsScoreMap[team2.name]) {
-      result = 1;
+      return 1;
     } else if (teamsScoreMap[team1.name] > teamsScoreMap[team2.name]) {
-      result = -1;
-    } else {
-      if (getSgw(team1) < getSgw(team2)) {
-        result = 1;
-      } else if (getSgw(team1) > getSgw(team2)) {
-        result = -1;
-      } else {
-        if (getCP(team1) < getCP(team2)) {
-          result = 1;
-        } else if (getCP(team1) > getCP(team2)) {
-          result = -1;
-        } else {
-          if (getVP(team1) < getVP(team2)) {
-            result = 1;
-          } else if (getVP(team1) > getVP(team2)) {
-            result = -1;
-          }
-        }
-      }
+      return -1;
     }
-    return result;
+
+    if (getSgw(team1) < getSgw(team2)) {
+      return 1;
+    } else if (getSgw(team1) > getSgw(team2)) {
+      return -1;
+    }
+
+    if (getCP(team1) < getCP(team2)) {
+      return 1;
+    } else if (getCP(team1) > getCP(team2)) {
+      return -1;
+    }
+    if (getVP(team1) < getVP(team2)) {
+      return 1;
+    } else if (getVP(team1) > getVP(team2)) {
+      return -1;
+    }
+
+    return 0;
   });
 }
 

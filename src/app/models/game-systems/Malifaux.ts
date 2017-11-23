@@ -73,59 +73,56 @@ export function getMalifauxFactionsAsSelectItems(): SelectItem[] {
 export function orderParticipantsForMalifaux( participants: Participant[], participantsScoreMap: any): Participant[] {
   return participants.sort((part1, part2) => {
 
-    let result = 0;
-
-    if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
-      result = 1;
-    } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
-      result = -1;
-    } else {
-      if (getDiff(part1) < getDiff(part2)) {
-        result = 1;
-      } else if (getDiff(part1) > getDiff(part2)) {
-        result = -1;
-      } else {
-        if (getVP(part1) < getVP(part2)) {
-          result = 1;
-        } else if (getVP(part1) > getVP(part2)) {
-          result = -1;
-        }
-      }
-
+    if ( participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
+      return 1;
+    } else if ( participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
+      return -1;
     }
-    return result;
+
+    if (getDiff(part1) < getDiff(part2)) {
+      return 1;
+    } else if (getDiff(part1) > getDiff(part2)) {
+      return -1;
+    }
+
+    if (getVP(part1) < getVP(part2)) {
+      return 1;
+    } else if (getVP(part1) > getVP(part2)) {
+      return -1;
+    }
+
+    return 0;
   });
 }
 
 export function orderTeamsForMalifaux( teams: Team[], teamsScoreMap: any): Team[] {
   return teams.sort((team1, team2) => {
 
-    let result = 0;
-
     if (teamsScoreMap[team1.name] < teamsScoreMap[team2.name]) {
-      result = 1;
+      return 1;
     } else if (teamsScoreMap[team1.name] > teamsScoreMap[team2.name]) {
-      result = -1;
-    } else {
-      if (getSgw(team1) < getSgw(team2)) {
-        result = 1;
-      } else if (getSgw(team1) > getSgw(team2)) {
-        result = -1;
-      } else {
-        if (getDiff(team1) < getDiff(team2)) {
-          result = 1;
-        } else if (getDiff(team1) > getDiff(team2)) {
-          result = -1;
-        } else {
-          if (getVP(team1) < getVP(team2)) {
-            result = 1;
-          } else if (getVP(team1) > getVP(team2)) {
-            result = -1;
-          }
-        }
-      }
+      return -1;
     }
-    return result;
+
+    if (getSgw(team1) < getSgw(team2)) {
+      return 1;
+    } else if (getSgw(team1) > getSgw(team2)) {
+      return -1;
+    }
+
+    if (getDiff(team1) < getDiff(team2)) {
+      return 1;
+    } else if (getDiff(team1) > getDiff(team2)) {
+      return -1;
+    }
+
+    if (getVP(team1) < getVP(team2)) {
+      return 1;
+    } else if (getVP(team1) > getVP(team2)) {
+      return -1;
+    }
+
+    return 0;
   });
 }
 

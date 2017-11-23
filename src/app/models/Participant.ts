@@ -27,6 +27,10 @@ export interface Participant {
   mfDiff?: number[];
   mfVp?: number[];
   MfFaction?: string[];
+
+  // GuildBall
+  gbVp?: number[];
+  gbFaction?: string[];
 }
 
 

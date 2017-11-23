@@ -440,7 +440,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     that.playersUnsubscribeFunction = that.afs.firestore.collection('players')
       .where('gameSystems.' + that.tournament.gameSystem, '==', true)
-      .orderBy('name', 'asc')
       .onSnapshot(function (playerCol) {
         that.allPlayers = [];
 
@@ -620,8 +619,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
         });
 
         clonedMatches.sort(function (m1: ParticipantMatch, m2: ParticipantMatch) {
-          return (that.getScoreTillRoundForParticipant(m1.participantOne) + that.getScoreTillRoundForParticipant(m2.participantTwo)) <
-          (that.getScoreTillRoundForParticipant(m1.participantOne) + that.getScoreTillRoundForParticipant(m2.participantTwo)) ? 1 : -1;
+          return (that.getScoreTillRoundForParticipant(m1.participantOne) + that.getScoreTillRoundForParticipant(m1.participantTwo)) <
+          (that.getScoreTillRoundForParticipant(m2.participantOne) + that.getScoreTillRoundForParticipant(m2.participantTwo)) ? 1 : -1;
         });
 
         that.participantMatches = clonedMatches;

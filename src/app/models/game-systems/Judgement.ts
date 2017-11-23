@@ -66,58 +66,55 @@ export function getJudgementFieldConfig(): GameSystemConfig {
 export function orderParticipantsForJudgement( participants: Participant[], participantsScoreMap: any): Participant[] {
   return participants.sort((part1, part2) => {
 
-    let result = 0;
-
-    if (participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
-      result = 1;
-    } else if (participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
-      result = -1;
-    } else {
-      if (getSouls(part1) < getSouls(part2)) {
-        result = 1;
-      } else if (getSouls(part1) > getSouls(part2)) {
-        result = -1;
-      } else {
-        if (getLevels(part1) < getLevels(part2)) {
-          result = 1;
-        } else if (getLevels(part1) > getLevels(part2)) {
-          result = -1;
-        }
-      }
+    if ( participantsScoreMap[part1.name] < participantsScoreMap[part2.name]) {
+      return 1;
+    } else if ( participantsScoreMap[part1.name] > participantsScoreMap[part2.name]) {
+      return -1;
     }
-    return result;
+
+    if (getSouls(part1) < getSouls(part2)) {
+      return 1;
+    } else if (getSouls(part1) > getSouls(part2)) {
+      return -1;
+    }
+
+    if (getLevels(part1) < getLevels(part2)) {
+      return 1;
+    } else if (getLevels(part1) > getLevels(part2)) {
+      return -1;
+    }
+    return 0;
   });
 }
 
 export function orderTeamsForJudgement( teams: Team[], teamsScoreMap: any): Team[] {
   return teams.sort((team1, team2) => {
 
-    let result = 0;
-
     if (teamsScoreMap[team1.name] < teamsScoreMap[team2.name]) {
-      result = 1;
+      return 1;
     } else if (teamsScoreMap[team1.name] > teamsScoreMap[team2.name]) {
-      result = -1;
-    } else {
-      if (getSgw(team1) < getSgw(team2)) {
-        result = 1;
-      } else if (getSgw(team1) > getSgw(team2)) {
-        result = -1;
-      } else {
-        if (getSouls(team1) < getSouls(team2)) {
-          result = 1;
-        } else if (getSouls(team1) > getSouls(team2)) {
-          result = -1;
-        } else {
-          if (getLevels(team1) < getLevels(team2)) {
-            result = 1;
-          } else if (getLevels(team1) > getLevels(team2)) {
-            result = -1;
-          }
-        }
-      }
+      return -1;
     }
-    return result;
+
+    if (getSgw(team1) < getSgw(team2)) {
+      return 1;
+    } else if (getSgw(team1) > getSgw(team2)) {
+      return -1;
+    }
+
+    if (getSouls(team1) < getSouls(team2)) {
+      return 1;
+    } else if (getSouls(team1) > getSouls(team2)) {
+      return -1;
+    }
+
+    if (getLevels(team1) < getLevels(team2)) {
+      return 1;
+    } else if (getLevels(team1) > getLevels(team2)) {
+      return -1;
+    }
+
+    return 0;
   });
 }
 
