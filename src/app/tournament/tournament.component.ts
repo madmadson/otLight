@@ -266,11 +266,9 @@ export class TournamentComponent implements OnInit, OnDestroy {
     if (this.teamMatchesUnsubscribeFunction) {
       this.teamMatchesUnsubscribeFunction();
     }
-
     if (this.teamsUnsubscribeFunction) {
       this.teamsUnsubscribeFunction();
     }
-
     if (this.batchServiceSub) {
       this.batchServiceSub.unsubscribe();
     }
@@ -292,8 +290,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
         this.accessAsOrga = false;
       }
     });
-
-
   }
 
   protected subscribeOnParticipants() {
@@ -622,6 +618,12 @@ export class TournamentComponent implements OnInit, OnDestroy {
             clonedMatches.splice(index, 1);
           }
         });
+
+        clonedMatches.sort(function (m1: ParticipantMatch, m2: ParticipantMatch) {
+          return (that.getScoreTillRoundForParticipant(m1.participantOne) + that.getScoreTillRoundForParticipant(m2.participantTwo)) <
+          (that.getScoreTillRoundForParticipant(m1.participantOne) + that.getScoreTillRoundForParticipant(m2.participantTwo)) ? 1 : -1;
+        });
+
         that.participantMatches = clonedMatches;
 
         _.forEach(that.participantMatches, function (match: ParticipantMatch) {
@@ -698,6 +700,11 @@ export class TournamentComponent implements OnInit, OnDestroy {
         that.loadingTeamMatches = false;
         that.updateData = false;
 
+        cloneTeamMatches.sort(function (tm1: TeamMatch, tm2: TeamMatch) {
+          return (that.getScoreTillRoundForTeam(tm1.teamOne) + that.getScoreTillRoundForTeam(tm1.teamTwo)) <
+                 (that.getScoreTillRoundForTeam(tm2.teamOne) + that.getScoreTillRoundForTeam(tm2.teamTwo)) ? 1 : -1;
+        });
+
         that.teamMatches = cloneTeamMatches;
 
         _.forEach(that.teamMatches, function (match: TeamMatch) {
@@ -734,6 +741,15 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     let scoreSum = 0;
     _.forEach(team.roundScores, function (score: number) {
+      scoreSum = scoreSum + score;
+    });
+    return scoreSum;
+  }
+
+  getScoreTillRoundForParticipant(participant: Participant) {
+
+    let scoreSum = 0;
+    _.forEach(participant.roundScores, function (score: number) {
       scoreSum = scoreSum + score;
     });
     return scoreSum;
@@ -1307,6 +1323,33 @@ export class TournamentComponent implements OnInit, OnDestroy {
     console.log("collapse all: ");
     this.expandedRowsTeamMatchTable = [];
     this.teamMatchesTable.handleDataChange();
+  }
+
+  randomResultAllGames() {
+    const that = this;
+    console.log("random results");
+
+    _.forEach(this.teamMatches, function (teamMatch: TeamMatch) {
+      _.forEach(teamMatch.participantMatches, function (partiMatch: ParticipantMatch) {
+
+        if (!partiMatch.finished) {
+          const random = that.getRandomIntInclusive(0, 1);
+          console.log("random result: " + random);
+
+          if (random === 0) {
+            that.teamMatchService.playerOneWon(that.tournament, teamMatch, partiMatch, that.participantsMap, that.teamsMap);
+          } else {
+            that.teamMatchService.playerTwoWon(that.tournament, teamMatch, partiMatch, that.participantsMap, that.teamsMap);
+          }
+        }
+      });
+    });
+  }
+
+  private getRandomIntInclusive(min: number, max: number) {
+    const _min = Math.ceil(min);
+    const _max = Math.floor(max);
+    return Math.floor(Math.random() * (_max - _min + 1)) + _min;
   }
 
 

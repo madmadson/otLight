@@ -348,6 +348,30 @@
       </button>
     </div>
   </p-panel>
+  <!-- TEAM-PANEL -->
+  <p-panel header="{{getTeamTableHeading()}}" [toggleable]="true"
+           *ngIf="tournament.type === 'team'"
+           [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
+
+    <ng-container *ngIf="(loadingTeams)">
+      <div class="heading">Load Teams...</div>
+      <div class="centered-content-container">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+      </div>
+    </ng-container>
+    <ot-team-table
+      *ngIf="tournament && teams && teamsMemberMap"
+      [tournament]="tournament"
+      [isOrga]="isOrga"
+      [shownRound]="shownRound"
+      [gameSystemConfig]="gameSystemConfig"
+      [teams]="teams"
+      [teamsMemberMap]="teamsMemberMap"
+      [teamsScoreMap]="teamsScoreMap"
+      (onAddTeam)="handleAddTeam($event)"
+      (onRemoveTeam)="handleRemoveTeam($event)">
+    </ot-team-table>
+  </p-panel>
   <!-- PARTICIPANT-PANEL -->
   <p-panel header="{{getPlayerTableHeading()}}" [toggleable]="true"
            [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
@@ -372,29 +396,7 @@
     </ot-participant-table>
 
   </p-panel>
-  <p-panel header="{{getTeamTableHeading()}}" [toggleable]="true"
-           *ngIf="tournament.type === 'team'"
-           [collapsed]="!(shownRound === 0 || shownRound > tournament?.actualRound)">
 
-    <ng-container *ngIf="(loadingTeams)">
-      <div class="heading">Load Teams...</div>
-      <div class="centered-content-container">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
-      </div>
-    </ng-container>
-    <ot-team-table
-      *ngIf="tournament && teams && teamsMemberMap"
-      [tournament]="tournament"
-      [isOrga]="isOrga"
-      [shownRound]="shownRound"
-      [gameSystemConfig]="gameSystemConfig"
-      [teams]="teams"
-      [teamsMemberMap]="teamsMemberMap"
-      [teamsScoreMap]="teamsScoreMap"
-      (onAddTeam)="handleAddTeam($event)"
-      (onRemoveTeam)="handleRemoveTeam($event)">
-    </ot-team-table>
-  </p-panel>
 
   <ng-container *ngIf="!(shownRound > tournament?.actualRound)">
     <p-panel *ngIf="shownRound > 0 &&
@@ -453,6 +455,8 @@
               icon="fa-expand"></button>
       <button pButton class="table-manage-button" type="button" (click)="collapseTeamMatches()" label="Collapse All"
               icon="fa-compress"></button>
+      <button pButton class="table-manage-button" type="button" (click)="randomResultAllGames()" label="Random"
+              icon="fa-random"></button>
       <p-dataTable
         *ngIf="(!startingTournament) &&
                (!deletingRound) &&

@@ -292,7 +292,7 @@ export class TeamMatchService {
 
   playerOneWon(tournament: Tournament, teamMatch: TeamMatch,
              partiMatch: ParticipantMatch, participantsMap: any, teamsMap: any) {
-    console.log(partiMatch + ' PlayerOneWon');
+    console.log('PlayerOneWon');
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
     const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
@@ -353,7 +353,7 @@ export class TeamMatchService {
 
   playerTwoWon(tournament: Tournament, teamMatch: TeamMatch,
                partiMatch: ParticipantMatch, participantsMap: any, teamsMap: any) {
-    console.log(partiMatch + ' PlayerTwoWon');
+    console.log('PlayerTwoWon');
 
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
     const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
@@ -571,6 +571,9 @@ export class TeamMatchService {
       teamMatch.finished = true;
 
       teamOne.opponentTeamNames[teamMatch.round - 1] = teamTwo.name;
+      if (!teamOne['sgw'][teamMatch.round - 1]) {
+        teamOne['sgw'][teamMatch.round - 1] = 0;
+      }
 
       _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
         if (standingField.isTeam) {
@@ -579,6 +582,9 @@ export class TeamMatchService {
       });
 
       teamTwo.opponentTeamNames[teamMatch.round - 1] = teamOne.name;
+      if (!teamTwo['sgw'][teamMatch.round - 1]) {
+        teamTwo['sgw'][teamMatch.round - 1] = 0;
+      }
       _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
         if (standingField.isTeam) {
           teamTwo[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
@@ -607,7 +613,7 @@ export class TeamMatchService {
         teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
         teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
       }
-      console.log('team match finished: ' + JSON.stringify(teamMatch));
+       // console.log('team match finished: ' + JSON.stringify(teamMatch));
     }
   }
 
