@@ -1,2 +1,9 @@
 @import '../../styles';
 
+.remove-list-icon{
+  color: $fail_color;
+}
+.remove-list-icon:hover{
+  cursor: pointer;
+  color: $color_info;
+}

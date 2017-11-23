@@ -25,7 +25,7 @@ import {PlayerAddDialogComponent} from "./player-add-dialog/player-add-dialog.co
   templateUrl: './players.component.html',
   styleUrls: ['./players.component.scss']
 })
-export class PlayersComponent implements OnInit, OnDestroy  {
+export class PlayersComponent implements OnInit, OnDestroy {
 
   stacked: boolean;
   playersLoaded: boolean;
@@ -65,7 +65,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     this.gameSystemsAsSelectItems = getGameSystemsAsSelectItems();
     this.gameSystems = getGameSystems();
 
-    this.routerSub  = this.route
+    this.routerSub = this.route
       .paramMap
       .map(params => {
         console.log('params: ' + JSON.stringify(params));
@@ -102,7 +102,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     that.allPlayers = [];
     that.allPlayersForSelectedGameSystem = [];
     that.playerNamesMap = {};
-    that.displayedPlayerNamesMap   = {};
+    that.displayedPlayerNamesMap = {};
 
     if (this.playersUnsubscribeFunction) {
       this.playersUnsubscribeFunction();
@@ -217,19 +217,25 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   }
 
   addLinkToPlayer(player: Player) {
-    console.log('link: ' + this.linkInput.nativeElement.value);
-    console.log('link: ' + JSON.stringify(player));
 
-    if (!player.links) {
-      player.links = {};
-    }
-    if (!player.links[this.selectedGameSystem]) {
-      player.links[this.selectedGameSystem] = [];
-    }
-    player.links[this.selectedGameSystem].push(this.linkInput.nativeElement.value);
+    const linkValue = this.linkInput.nativeElement.value;
 
-    const playerDocRef = this.playersColRef.doc(player.id);
-    this.batchService.set(playerDocRef, player);
+    if (linkValue && linkValue !== '') {
+      console.log('link: ' + linkValue);
+
+      if (!player.links) {
+        player.links = {};
+      }
+      if (!player.links[this.selectedGameSystem]) {
+        player.links[this.selectedGameSystem] = [];
+      }
+      player.links[this.selectedGameSystem].push(linkValue);
+
+      const playerDocRef = this.playersColRef.doc(player.id);
+      this.batchService.set(playerDocRef, player);
+
+      this.linkInput.nativeElement.value = '';
+    }
   }
 
   changeGameSystems(event: any, player: Player) {
