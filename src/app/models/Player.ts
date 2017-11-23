@@ -1,7 +1,7 @@
 
 
 
-import {AllGameSystems} from "./game-systems";
+import {AllGameSystems, GameSystemLinks} from "./game-systems";
 
 export interface Player {
   id?: string;
@@ -11,6 +11,7 @@ export interface Player {
   gameSystems: AllGameSystems;
   myGameSystems?: string[];
   password?: string;
+  links?: GameSystemLinks;
 
   // WARMACHINE
   Faction?: string;
@@ -26,7 +27,8 @@ export function getPlayerForJSON(id: string, json: any): Player {
     name: json.name,
     location: json.location ? json.location : '',
     team: json.team ? json.team : '',
-    gameSystems: json.gameSystems ? json.gameSystems : [],
+    gameSystems: json.gameSystems ? json.gameSystems : {},
     password: json.password ? json.password : '',
+    links: json.links ? json.links : {},
   };
 }

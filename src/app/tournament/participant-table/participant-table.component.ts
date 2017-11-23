@@ -243,7 +243,9 @@ export class ParticipantTableComponent implements OnInit, OnChanges {
         _.forEach(participant.opponentParticipantsNames, function (opponentName: string, index) {
           if (opponentName !== 'bye') {
 
-            const opponentWinRate = that.participantsScoreMap[opponentName] / that.tournament.actualRound;
+            let opponentWinRate = that.participantsScoreMap[opponentName] / that.tournament.actualRound;
+
+            opponentWinRate = Math.round(opponentWinRate * 100) / 100;
 
             if (opponentWinRate < 0.33) {
               scoreTooltip = scoreTooltip.concat(

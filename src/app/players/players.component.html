@@ -87,7 +87,8 @@
     </p-column>
 
     <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
-      <p-column [editable]="true"
+      <p-column *ngIf="playerField.type !== 'links'"
+                [editable]="true"
                 styleClass="{{'editable-column'}}, break-word"
                 field="{{playerField.field}}"
                 header="{{playerField.field}}"
@@ -113,6 +114,22 @@
                          [showToggleAll]=false
                          [maxSelectedLabels]=3>
           </p-multiSelect>
+        </ng-template>
+      </p-column>
+      <p-column *ngIf="playerField.type === 'links'"
+                [editable]="true"
+                styleClass="col-links"
+                header="Links to Lists">
+        <ng-template let-player="rowData" pTemplate="body">
+          <li *ngFor="let link of player.links[selectedGameSystem]; let i = index">
+           <a href="{{link}}">Link {{i + 1}}</a>  <i class="fa fa-delete"></i>
+          </li>
+        </ng-template>
+        <ng-template let-col let-player="rowData" pTemplate="editor">
+          <div *ngIf="player.links[selectedGameSystem]?.length >= 5">Maximum links reached</div>
+          <input *ngIf="player.links[selectedGameSystem]?.length < 5"
+                 type="text" pInputText placeholder="Add Link to external Tool" #linkInput
+                 (blur)="addLinkToPlayer(player)">
         </ng-template>
       </p-column>
     </ng-container>

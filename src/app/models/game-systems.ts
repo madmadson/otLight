@@ -8,6 +8,7 @@ import {getJudgementFieldConfig, orderParticipantsForJudgement, orderTeamsForJud
 import {Team} from "./Team";
 import {getMalifauxFieldConfig, orderParticipantsForMalifaux, orderTeamsForMalifaux} from "./game-systems/Malifaux";
 import {getGuildBallFieldConfig, orderParticipantsForGuildBall, orderTeamsForGuildBall} from "./game-systems/GuildBall";
+import {getXWingFieldConfig, orderParticipantsForXWing, orderTeamsForXWing} from "./game-systems/XWing";
 
 export function getGameSystemsAsSelectItems(): SelectItem[] {
   return [{
@@ -34,6 +35,14 @@ export interface AllGameSystems {
   Judgement?: boolean;
   XWing?: boolean;
   Malifaux?: boolean;
+}
+
+export interface GameSystemLinks {
+  WmHo?: string[];
+  GuildBall?:  string[];
+  Judgement?:  string[];
+  XWing?:  string[];
+  Malifaux?:  string[];
 }
 
 export interface GameSystemConfig {
@@ -67,6 +76,8 @@ export function getGameSystemConfig(system: string): GameSystemConfig {
     return getMalifauxFieldConfig();
   } else if (system === 'GuildBall') {
     return getGuildBallFieldConfig();
+  } else if (system === 'XWing') {
+    return getXWingFieldConfig();
   } else {
     return {
       participantFields: [],
@@ -88,6 +99,8 @@ export function orderParticipantsForGameSystem(gameSystem: string, participants:
     return orderParticipantsForMalifaux(participants, participantsScoreMap);
   } else if (gameSystem === 'GuildBall') {
     return orderParticipantsForGuildBall(participants, participantsScoreMap);
+  } else if (gameSystem === 'XWing') {
+    return orderParticipantsForXWing(participants, participantsScoreMap);
   } else {
     return participants.sort((part1, part2) => {
 
@@ -113,6 +126,8 @@ export function orderTeamsForGameSystem(gameSystem: string, teams: Team[], teams
     return orderTeamsForMalifaux(teams, teamsScoreMap);
   } else if (gameSystem === 'GuildBall') {
     return orderTeamsForGuildBall(teams, teamsScoreMap);
+  } else if (gameSystem === 'XWing') {
+    return orderTeamsForXWing(teams, teamsScoreMap);
   } else {
     return teams.sort((team1, team2) => {
 
@@ -142,6 +157,9 @@ export function getColumnsForStandingsExport(gameSystem: string): number[] {
   } else if (gameSystem === 'GuildBall') {
     // rank, name, location, gbFaction, score, sos, vp
     return [1, 2, 3, 4, 5, 6, 7];
+  } else if (gameSystem === 'XWing') {
+    // rank, name, location, xwFaction, score, sos, mov
+    return [1, 2, 3, 4, 5, 6, 7];
   } else {
     // rank, name, location, score
     return [1, 2, 3, 4];
@@ -161,6 +179,9 @@ export function getColumnsForTeamStandingsExport(gameSystem: string): number[] {
     return [1, 2, 3, 4, 5, 6, 7, 8];
   } else if (gameSystem === 'GuildBall') {
     // rank, name, location, members, score, sgw, vp
+    return [1, 2, 3, 4, 5, 6, 7];
+  } else if (gameSystem === 'XWing') {
+    // rank, name, location, members, score, sgw, mov
     return [1, 2, 3, 4, 5, 6, 7];
   } else {
     // rank, name, location, score, members, sgw
@@ -190,6 +211,8 @@ export function getScoreByGameSystem(gameSystem: string): number[] {
     return [1, 0, 0];
   } else if (gameSystem === 'Malifaux') {
     return [3, 0, 1];
+  } else if (gameSystem === 'XWing') {
+    return [1, 0, 0];
   } else {
     return [1, 0, 0];
   }
@@ -205,6 +228,8 @@ export function getByeScoring(gameSystem: string): any {
     return {'score': 1, 'vp': 0};
   } else if (gameSystem === 'Malifaux') {
     return {'score': 1, 'diff': 5, 'vp': 10};
+  } else if (gameSystem === 'XWing') {
+    return {'score': 1, 'mov': 150};
   } else {
     return {'score': 1};
   }

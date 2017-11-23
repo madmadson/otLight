@@ -31,6 +31,10 @@ export interface Participant {
   // GuildBall
   gbVp?: number[];
   gbFaction?: string[];
+
+  // XWing
+  mov?: number[];
+  xwFaction?: string[];
 }
 
 

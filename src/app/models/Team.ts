@@ -19,6 +19,9 @@ export interface Team {
   // JUDGEMENT
   levels?: number[];
   souls?: number[];
+
+  // XWing
+  mov?: number[];
 }
 
 

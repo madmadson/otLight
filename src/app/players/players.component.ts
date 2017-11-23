@@ -33,6 +33,7 @@ export class PlayersComponent implements OnInit, OnDestroy  {
   selectedGameSystem: string;
 
   @ViewChild('playerDialog') playerDialog: PlayerAddDialogComponent;
+  @ViewChild('linkInput') linkInput: any;
 
   protected allPlayers: Player[] = [];
   protected allPlayersForSelectedGameSystem: Player[] = [];
@@ -213,6 +214,22 @@ export class PlayersComponent implements OnInit, OnDestroy  {
     delete player.myGameSystems;
 
     that.batchService.set(playerDocRef, player);
+  }
+
+  addLinkToPlayer(player: Player) {
+    console.log('link: ' + this.linkInput.nativeElement.value);
+    console.log('link: ' + JSON.stringify(player));
+
+    if (!player.links) {
+      player.links = {};
+    }
+    if (!player.links[this.selectedGameSystem]) {
+      player.links[this.selectedGameSystem] = [];
+    }
+    player.links[this.selectedGameSystem].push(this.linkInput.nativeElement.value);
+
+    const playerDocRef = this.playersColRef.doc(player.id);
+    this.batchService.set(playerDocRef, player);
   }
 
   changeGameSystems(event: any, player: Player) {

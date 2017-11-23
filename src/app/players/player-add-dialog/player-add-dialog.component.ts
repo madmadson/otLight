@@ -86,7 +86,8 @@ export class PlayerAddDialogComponent implements OnInit {
         name: this.playerForm.value.name,
         location: this.playerForm.value.location,
         team: this.playerForm.value.team,
-        gameSystems: {}
+        gameSystems: {},
+        links: {}
       };
 
       _.forEach(this.gameSystems, function (gameSystem: string) {
