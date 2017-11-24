@@ -25,6 +25,7 @@
     "@angular/router": "^5.0.1",
     "angular2-uuid": "^1.1.1",
     "angularfire2": "^5.0.0-rc.3",
+    "chart.js": "^2.7.1",
     "core-js": "^2.5.1",
     "firebase": "^4.6.1",
     "font-awesome": "^4.7.0",

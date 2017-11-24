@@ -12,7 +12,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AngularFirestoreModule} from "angularfire2/firestore";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {
-  AutoCompleteModule, ConfirmationService, ConfirmDialogModule, DataListModule,
+  AutoCompleteModule, ChartModule, ConfirmationService, ConfirmDialogModule,
   DataTableModule, DialogModule, DropdownModule, GrowlModule, InputSwitchModule, InputTextModule, MessagesModule,
   MultiSelectModule, OverlayPanelModule,
   PanelModule, RadioButtonModule,
@@ -39,6 +39,7 @@ import {ParticipantTeamMatchesTableComponent} from "./tournament/participant-tea
 import { ParticipantTableComponent } from './tournament/participant-table/participant-table.component';
 import {TopBarMenuService} from "./services/topBarMenu.service";
 import { TeamTableComponent } from './tournament/team-table/team-table.component';
+import { TournamentChartComponent } from './charts/tournament-chart/tournament-chart.component';
 
 
 export const firebaseConfig = environment.firebaseConfig;
@@ -55,7 +56,8 @@ export const firebaseConfig = environment.firebaseConfig;
     ParticipantMatchesTableComponent,
     ParticipantTeamMatchesTableComponent,
     ParticipantTableComponent,
-    TeamTableComponent
+    TeamTableComponent,
+    TournamentChartComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -85,7 +87,8 @@ export const firebaseConfig = environment.firebaseConfig;
     SpinnerModule,
     ConfirmDialogModule,
     InputSwitchModule,
-    OverlayPanelModule
+    OverlayPanelModule,
+    ChartModule
   ],
   providers: [
     WindowRefService,

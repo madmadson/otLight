@@ -26,7 +26,9 @@
         "../node_modules/primeng/resources/themes/darkness/theme.css",
         "../node_modules/primeng/resources/primeng.css"
       ],
-      "scripts": [],
+      "scripts": [
+        "../node_modules/chart.js/dist/Chart.js"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

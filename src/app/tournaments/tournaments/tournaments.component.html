@@ -47,6 +47,8 @@
       <ng-template let-tournament="rowData" pTemplate="body">
         <button type="button" class="table-manage-button" pButton (click)="router.navigate(['/tournament', tournament?.id]);"  icon="fa-eye" label="Show"></button>
         <button type="button" class="table-manage-button" pButton (click)="openTournamentEdit(tournament)" pButton icon="fa-edit" label="Edit"></button>
+        <button *ngIf="tournament?.state === 'FINISHED'" type="button" class="table-manage-button" pButton
+                (click)="router.navigate(['/charts/tournament', tournament?.id]);" pButton icon="fa-bar-chart" label="Charts"></button>
        </ng-template>
     </p-column>
   </p-dataTable>
