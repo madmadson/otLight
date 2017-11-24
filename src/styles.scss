@@ -99,7 +99,7 @@ input.ng-invalid.ng-dirty{
 }
 
 .editable-col {
-  box-shadow: inset 0 0 12px $color_secondary;
+  box-shadow: inset 0 0 12px $color_info;
 }
 
 .swappable-item {
@@ -168,10 +168,7 @@ input.ng-invalid.ng-dirty{
   width: 5%;
   text-align: center !important;
 }
-.col-table:hover {
-  cursor: pointer;
-  color: $hover_color;
-}
+
 
 .col-result {
   width: 10%;
@@ -271,4 +268,17 @@ input.ng-invalid.ng-dirty{
   :hover {
     cursor: pointer;
   }
+}
+
+.remove-list-icon{
+  color: $fail_color;
+}
+.remove-list-icon:hover{
+  cursor: pointer;
+  color: $color_info;
+}
+
+.input-link{
+  width: 100%;
+  margin-bottom: $halve_tick;
 }

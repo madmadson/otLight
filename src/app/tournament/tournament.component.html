@@ -259,12 +259,22 @@
                   filterPlaceholder="Search">
         </p-column>
         <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
-          <p-column styleClass="break-word"
+          <p-column *ngIf="playerField.type !== 'links'"
+                    styleClass="break-word"
                     field="{{playerField.field}}"
                     header="{{playerField.field}}"
                     [sortable]="true"
                     [filter]="true"
                     filterPlaceholder="Search">
+          </p-column>
+          <p-column *ngIf="playerField.type === 'links'"
+                    styleClass="links-col"
+                    header="Links to Lists">
+            <ng-template let-player="rowData" pTemplate="body">
+              <li *ngFor="let link of player?.links[tournament?.gameSystem]; let i = index">
+                <a href="{{link}}">List {{i + 1}}</a>
+              </li>
+            </ng-template>
           </p-column>
         </ng-container>
         <p-column styleClass="col-actions">
@@ -456,8 +466,8 @@
               icon="fa-expand"></button>
       <button pButton class="table-manage-button" type="button" (click)="collapseTeamMatches()" label="Collapse All"
               icon="fa-compress"></button>
-      <button pButton class="table-manage-button" type="button" (click)="randomResultAllGames()" label="Random"
-              icon="fa-random"></button>
+      <!--<button pButton class="table-manage-button" type="button" (click)="randomResultAllGames()" label="Random"-->
+              <!--icon="fa-random"></button>-->
       <p-dataTable
         *ngIf="(!startingTournament) &&
                (!deletingRound) &&

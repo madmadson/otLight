@@ -52,7 +52,7 @@
     </p-column>
     <p-column field="location"
               header="Location"
-              styleClass="{{'editable-column'}}, break-word"
+              styleClass="location-col"
               [editable]="true"
               [sortable]="true"
               [filter]="true"
@@ -60,13 +60,13 @@
     </p-column>
     <p-column field="team"
               header="Team"
-              styleClass="{{'editable-column'}}, break-word"
+              styleClass="team-col"
               [editable]="true"
               [sortable]="true"
               [filter]="true"
               filterPlaceholder="Search">
     </p-column>
-    <p-column styleClass="{{'editable-column'}}, break-word"
+    <p-column styleClass="break-word"
               [sortable]="true"
               [header]="'GameSystems'"
               [filter]="true"
@@ -89,7 +89,7 @@
     <ng-container *ngFor="let playerField of gameSystemConfig.playerFields">
       <p-column *ngIf="playerField.type !== 'links'"
                 [editable]="true"
-                styleClass="{{'editable-column'}}, break-word"
+                styleClass="playerField-col"
                 field="{{playerField.field}}"
                 header="{{playerField.field}}"
                 [sortable]="true"
@@ -117,19 +117,18 @@
         </ng-template>
       </p-column>
       <p-column *ngIf="playerField.type === 'links'"
-                [editable]="true"
-                styleClass="col-links"
+                styleClass="links-col"
                 header="Links to Lists">
         <ng-template let-player="rowData" pTemplate="body">
-          <li *ngFor="let link of player.links[selectedGameSystem]; let i = index">
-           <a href="{{link}}">Link {{i + 1}}</a>  <i class="fa fa-remove remove-list-icon"></i>
-          </li>
-        </ng-template>
-        <ng-template let-col let-player="rowData" pTemplate="editor">
           <div *ngIf="player.links[selectedGameSystem]?.length >= 5">Maximum links reached</div>
           <input *ngIf="player.links[selectedGameSystem]?.length < 5"
-                 type="text" pInputText placeholder="Add Link to external Tool" #linkInput
-                 (blur)="addLinkToPlayer(player)">
+                 class="input-link"
+                 type="text" pInputText placeholder="Add Link to external Tool"
+                 (blur)="addLinkToPlayer($event, player)">
+          <li *ngFor="let link of player.links[selectedGameSystem]; let i = index">
+           <a href="{{link}}">Link {{i + 1}}</a>
+           <i class="fa fa-remove remove-list-icon" (click)="removeList($event, player, i)"></i>
+          </li>
         </ng-template>
       </p-column>
     </ng-container>

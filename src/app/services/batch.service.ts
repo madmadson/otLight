@@ -103,6 +103,12 @@ export class BatchService {
     this.batch = this.afs.firestore.batch();
   }
 
+  discard() {
+    if (this.batch) {
+      this.batch = this.afs.firestore.batch();
+      window.location.reload();
+    }
+  }
 }
 export enum BatchServiceState {
   UPDATE = 'update',

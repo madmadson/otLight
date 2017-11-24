@@ -1,9 +1,39 @@
 @import '../../styles';
 
-.remove-list-icon{
-  color: $fail_color;
+.location-col{
+  box-shadow: inset 0 0 12px $color_info;
+  word-wrap: break-word;
+  width: 15%;
 }
-.remove-list-icon:hover{
+
+.location-col:hover {
   cursor: pointer;
-  color: $color_info;
+  background-color: $hover_color;
+}
+
+.team-col{
+  box-shadow: inset 0 0 12px $color_info;
+  word-wrap: break-word;
+  width: 15%;
+}
+
+.team-col:hover {
+  cursor: pointer;
+  background-color: $hover_color;
+}
+
+.playerField-col{
+  box-shadow: inset 0 0 12px $color_info;
+  word-wrap: break-word;
+  width: 10%;
+}
+
+.playerField-col:hover {
+  cursor: pointer;
+  background-color: $hover_color;
+}
+
+.links-col{
+  word-wrap: break-word;
+  width: 10%;
 }

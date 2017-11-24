@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {AngularFirestore} from "angularfire2/firestore";
 import * as firebase from "firebase/app";
@@ -35,7 +35,8 @@ import WriteBatch = firebase.firestore.WriteBatch;
 @Component({
   selector: 'ot-tournament',
   templateUrl: './tournament.component.html',
-  styleUrls: ['./tournament.component.scss']
+  styleUrls: ['./tournament.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class TournamentComponent implements OnInit, OnDestroy {
 
@@ -333,7 +334,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
                 that.participantsChoosePlayedMap[participant.name] = items;
               });
 
-              clonedParticipants.splice(0, 0, participant);
+              clonedParticipants.push(participant);
 
               that.participantsMap[participant.name] = participant;
               that.participantsScoreMap[participant.name] = getScore(participant);
@@ -447,7 +448,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
           const player: Player = getPlayerForJSON(playerDoc.id, playerDoc.data());
 
           _.forEach(that.gameSystemConfig.playerFields, function (playerField: FieldValues) {
-            player[playerField.field] = playerDoc.data()[playerField.field];
+            const fieldValue = playerDoc.data()[playerField.field] ? playerDoc.data()[playerField.field] : playerField.defaultValue;
+            player[playerField.field] = fieldValue;
           });
 
           that.allPlayers.push(player);
@@ -772,8 +774,13 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     let field;
     _.forEach(that.gameSystemConfig.participantFields, function (participantField: FieldValues) {
-      field = playerToAdd[participantField.field] ? playerToAdd[participantField.field] : participantField.defaultValue;
-      participant[participantField.field] = field;
+      if (participantField.field === 'links') {
+        field = playerToAdd.links[that.tournament.gameSystem] ? playerToAdd.links[that.tournament.gameSystem] : [];
+        participant.links = field;
+      } else {
+        field = playerToAdd[participantField.field] ? playerToAdd[participantField.field] : participantField.defaultValue;
+        participant[participantField.field] = field;
+      }
     });
 
     _.forEach(that.gameSystemConfig.standingFields, function (standingValue: FieldValues) {

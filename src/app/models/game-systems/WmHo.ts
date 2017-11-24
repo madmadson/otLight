@@ -19,6 +19,10 @@ export function getWmHoFieldConfig(): GameSystemConfig {
     type: 'multiSelect',
     field: 'ArmyLists',
     fieldValues: getWmHoCasterAsSelectItem()
+  }, {
+    defaultValue: '',
+    type: 'links',
+    field: 'links'
   });
   gameConfig.participantFields.push({
     defaultValue: '',
@@ -30,6 +34,10 @@ export function getWmHoFieldConfig(): GameSystemConfig {
     type: 'multiSelect',
     field: 'ArmyLists',
     fieldValues: getWmHoCasterAsSelectItem()
+  }, {
+    defaultValue: '',
+    type: 'links',
+    field: 'links'
   });
 
   gameConfig.standingFields.push({

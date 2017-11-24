@@ -26,6 +26,10 @@ export function getXWingFieldConfig(): GameSystemConfig {
     type: 'dropDown',
     field: 'Faction',
     fieldValues: getXWingFactionsAsSelectItems()
+  }, {
+    defaultValue: '',
+    type: 'links',
+    field: 'links'
   });
 
   gameConfig.standingFields.push({

@@ -112,4 +112,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.batchService.commit();
   }
+
+  discardUpdates() {
+
+    this.batchService.discard();
+  }
 }

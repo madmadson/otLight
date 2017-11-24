@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
 import {AngularFirestore} from "angularfire2/firestore";
 import {GameSystemService} from "../services/game-system.service";
 import {getPlayerForJSON, Player} from "../models/Player";
@@ -12,8 +12,6 @@ import {
   getGameSystemsAsSelectItems
 } from "../models/game-systems";
 import {SelectItem} from "primeng/primeng";
-import {ConnectivityService} from "../services/connectivity-service";
-import {MessageService} from "primeng/components/common/messageservice";
 import {ActivatedRoute} from "@angular/router";
 import {BatchService} from "../services/batch.service";
 import {TopBarMenuService} from "../services/topBarMenu.service";
@@ -23,7 +21,8 @@ import {PlayerAddDialogComponent} from "./player-add-dialog/player-add-dialog.co
 @Component({
   selector: 'ot-players',
   templateUrl: './players.component.html',
-  styleUrls: ['./players.component.scss']
+  styleUrls: ['./players.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class PlayersComponent implements OnInit, OnDestroy {
 
@@ -33,7 +32,6 @@ export class PlayersComponent implements OnInit, OnDestroy {
   selectedGameSystem: string;
 
   @ViewChild('playerDialog') playerDialog: PlayerAddDialogComponent;
-  @ViewChild('linkInput') linkInput: any;
 
   protected allPlayers: Player[] = [];
   protected allPlayersForSelectedGameSystem: Player[] = [];
@@ -216,9 +214,10 @@ export class PlayersComponent implements OnInit, OnDestroy {
     that.batchService.set(playerDocRef, player);
   }
 
-  addLinkToPlayer(player: Player) {
+  addLinkToPlayer(event, player: Player) {
+    console.log('addLinkToPlayer: ' + JSON.stringify(player));
 
-    const linkValue = this.linkInput.nativeElement.value;
+    const linkValue = event.target.value;
 
     if (linkValue && linkValue !== '') {
       console.log('link: ' + linkValue);
@@ -234,8 +233,21 @@ export class PlayersComponent implements OnInit, OnDestroy {
       const playerDocRef = this.playersColRef.doc(player.id);
       this.batchService.set(playerDocRef, player);
 
-      this.linkInput.nativeElement.value = '';
+      event.target.value = '';
     }
+  }
+
+  removeList(event, player: Player, index: number) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log('removeList: ' + index);
+
+    player.links[this.selectedGameSystem].splice(index, 1);
+    const playerDocRef = this.playersColRef.doc(player.id);
+    this.batchService.set(playerDocRef, player);
+
   }
 
   changeGameSystems(event: any, player: Player) {

@@ -21,7 +21,6 @@ import {ParticipantMatch} from "../../models/ParticipantMatch";
 })
 export class ParticipantTableComponent implements OnInit, OnChanges {
 
-
   @Input() tournament: any;
   @Input() isOrga: boolean;
   @Input() shownRound: number;
@@ -328,4 +327,36 @@ export class ParticipantTableComponent implements OnInit, OnChanges {
     this.batchService.update(participantDocRef, this.participantToChange);
   }
 
+  addLinkToParticipant(event, participant: Participant) {
+    console.log('addLinkToParticipant: ' + JSON.stringify(participant));
+
+    const linkValue = event.target.value;
+
+    if (linkValue && linkValue !== '') {
+      console.log('link: ' + linkValue);
+
+      if (!participant.links) {
+        participant.links = [];
+      }
+
+      participant.links.push(linkValue);
+
+      const participantDocRef = this.participantsColRef.doc(participant.id);
+      this.batchService.set(participantDocRef, participant);
+
+      event.target.value = '';
+    }
+  }
+
+  removeList(event, participant: Participant, index: number) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log('removeList: ' + index);
+
+    participant.links.splice(index, 1);
+    const participantDocRef = this.participantsColRef.doc(participant.id);
+    this.batchService.set(participantDocRef, participant);
+  }
 }

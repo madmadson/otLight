@@ -1,4 +1,4 @@
-import {FieldValues, GameSystemConfig} from "./game-systems";
+import {FieldValues, GameSystemConfig, GameSystemLinks} from "./game-systems";
 import * as _ from 'lodash';
 import {SelectItem} from "primeng/primeng";
 
@@ -11,6 +11,7 @@ export interface Participant {
 
   opponentParticipantsNames: string[];
   roundScores: number[];
+  links?: string[];
 
   // WARMACHINE
   cp?: number[];
@@ -46,6 +47,7 @@ export function getParticipantForJSON(id: string, json: any, gameSystemConfig: G
     location: json.location ? json.location : '',
     team: json.team ? json.team : '',
     droppedInRound: json.droppedInRound ? json.droppedInRound : 0,
+    links: json.links ? json.links : [],
 
     opponentParticipantsNames: json.opponentParticipantsNames ? json.opponentParticipantsNames : [],
     roundScores: json.roundScores ? json.roundScores : [],

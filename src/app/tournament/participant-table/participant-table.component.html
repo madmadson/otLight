@@ -40,7 +40,7 @@
             filterPlaceholder="Search">
   </p-column>
   <p-column [editable]="isOrga && tournament?.actualRound === 0"
-            styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
+            styleClass="{{isOrga && tournament?.actualRound === 0 ? 'participant-location-col' : 'break-word'}}"
             field="location"
             header="Location"
             [sortable]="true"
@@ -49,7 +49,7 @@
   </p-column>
   <p-column *ngIf="tournament?.type === 'team'"
             [editable]="isOrga && tournament?.actualRound === 0"
-            styleClass="{{isOrga && tournament?.actualRound === 0 ? 'editable-column' : ''}}, break-word"
+            styleClass="{{isOrga && tournament?.actualRound === 0 ? 'participant-team-col' : 'break-word'}}"
             field="team"
             header="Team"
             [sortable]="true"
@@ -75,8 +75,9 @@
   </p-column>
 
   <ng-container *ngFor="let participantField of gameSystemConfig.participantFields">
-    <p-column [editable]="isOrga"
-              styleClass="{{isOrga ? 'editable-column' : ''}}, break-word"
+    <p-column *ngIf="participantField.type !== 'links'"
+              [editable]="isOrga"
+              styleClass="{{isOrga ? 'participantField-col' : 'break-word'}}"
               field="{{participantField.field}}"
               header="{{participantField.field}}"
               [sortable]="true"
@@ -102,6 +103,21 @@
                        [maxSelectedLabels]=3
                        [style]="{'width':'100%'}">
         </p-multiSelect>
+      </ng-template>
+    </p-column>
+    <p-column *ngIf="participantField.type === 'links'"
+              styleClass="participant-links-col"
+              header="Links to Lists">
+      <ng-template let-participant="rowData" pTemplate="body">
+        <div *ngIf="participant.links?.length >= 5 && shownRound === 0">Maximum links reached</div>
+        <input *ngIf="participant.links?.length < 5 && shownRound === 0"
+               class="input-link"
+               type="text" pInputText placeholder="Add Link to external Tool"
+               (blur)="addLinkToParticipant($event, participant)">
+        <li *ngFor="let link of participant.links; let i = index">
+          <a href="{{link}}">List {{i + 1}}</a>
+          <i *ngIf="shownRound === 0" class="fa fa-remove remove-list-icon" (click)="removeList($event, participant, i)"></i>
+        </li>
       </ng-template>
     </p-column>
   </ng-container>
