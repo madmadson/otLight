@@ -469,12 +469,21 @@ export class ParticipantMatchesTableComponent implements OnInit {
     const participantToUpdate: Participant = this.participantsMap[partiMatch.participantOne.name];
 
     if (participantToUpdate) {
-      participantToUpdate[field][this.shownRound - 1] = value;
-      const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
-      this.batchService.update(participantTwoDocRef, participantToUpdate);
+
+      const currentValue =  participantToUpdate[field][this.shownRound - 1];
+
+      if (currentValue !== value) {
+
+        participantToUpdate[field][this.shownRound - 1] = value;
+
+        const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
+        this.batchService.update(participantTwoDocRef, participantToUpdate);
+
+        const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
+        this.batchService.update(matchDocRef, partiMatch);
+      }
     }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
-    this.batchService.update(matchDocRef, partiMatch);
+
 
   }
 
@@ -484,14 +493,18 @@ export class ParticipantMatchesTableComponent implements OnInit {
     const participantToUpdate: Participant = this.participantsMap[partiMatch.participantTwo.name];
 
     if (participantToUpdate) {
-      participantToUpdate[field][this.shownRound - 1] = value;
 
-      const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
-      this.batchService.update(participantTwoDocRef, participantToUpdate);
+      const currentValue =  participantToUpdate[field][this.shownRound - 1];
+      if (currentValue !== value) {
 
+        participantToUpdate[field][this.shownRound - 1] = value;
+
+        const participantTwoDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/participants/' + participantToUpdate.id);
+        this.batchService.update(participantTwoDocRef, participantToUpdate);
+
+        const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
+        this.batchService.update(matchDocRef, partiMatch);
+      }
     }
-    const matchDocRef = this.afs.firestore.doc('tournaments/' + this.tournament.id + '/roundMatches/' + partiMatch.id);
-    this.batchService.update(matchDocRef, partiMatch);
-
   }
 }

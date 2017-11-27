@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
 
 import {AngularFirestore} from "angularfire2/firestore";
 import * as _ from 'lodash';
@@ -20,7 +20,8 @@ import {TopBarMenuService} from "../../services/topBarMenu.service";
 @Component({
   selector: 'ot-tournaments',
   templateUrl: './tournaments.component.html',
-  styleUrls: ['./tournaments.component.scss']
+  styleUrls: ['./tournaments.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class TournamentsComponent implements OnInit, OnDestroy {
 

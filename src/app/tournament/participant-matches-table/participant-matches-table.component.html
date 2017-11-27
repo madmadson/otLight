@@ -36,12 +36,13 @@
   <p-header>{{participantMatches?.length}} Matches</p-header>
   <p-column styleClass="col-result" *ngIf="isOrga">
     <ng-template pTemplate="header">Result</ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData"  let-ri="rowIndex">
       <div style="text-align: center">
         <p-dropdown
           [autoWidth]="false"
           [style]="{'width':'100%'}"
           placeholder="Undone"
+          tabindex="{{(((ri +1) * 100) *  gameSystemConfig.scoreFields.length) + 1}}"
           [(ngModel)]="roundMatch['result']"
           [options]="winningOptions"
           (onChange)="changeWinner($event, roundMatch)">
@@ -75,7 +76,7 @@
              class="ui-column-filter"
              (keyup)="filterParticipantOneMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData"  let-ri="rowIndex">
       <div style="text-align: center"
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantOne, roundMatch.participantTwo)}}"
            (click)="dropPlayer(roundMatch, roundMatch.participantOne, roundMatch.participantTwo, 'one')"
@@ -109,6 +110,7 @@
             [(ngModel)]="roundMatch[chooseField.fieldPlayerOne]"
             [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
             [autoWidth]="false"
+            tabindex="{{((((ri + 1) * 100) *  gameSystemConfig.scoreFields.length) + 2)}}"
             (onChange)="saveChoosePlayed(roundMatch)"
             [style]="{'width':'100%'}">
           </p-dropdown>
@@ -119,6 +121,7 @@
             [options]="participantsChoosePlayedMap[roundMatch.participantOne.name]"
             (onPanelHide)="saveChoosePlayed(roundMatch)"
             [showToggleAll]=false
+            tabindex="{{((((ri + 1) * 100) *  gameSystemConfig.scoreFields.length) + 2)}}"
             [maxSelectedLabels]=3
             [style]="{'width':'100%'}">
           </p-multiSelect>
@@ -152,7 +155,7 @@
              class="ui-column-filter"
              (keyup)="filterParticipantTwoMatchesTable()"/>
     </ng-template>
-    <ng-template pTemplate="body" let-roundMatch="rowData">
+    <ng-template pTemplate="body" let-roundMatch="rowData" let-ri="rowIndex">
       <div style="text-align: center"
            pTooltip="{{getToolTipForSwap(roundMatch, roundMatch.participantTwo, roundMatch.participantOne)}}"
            (click)="dropPlayer(roundMatch, roundMatch.participantTwo, roundMatch.participantOne, 'two')"
@@ -187,6 +190,7 @@
             [(ngModel)]="roundMatch[chooseField.fieldPlayerTwo]"
             [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
             [autoWidth]="false"
+            tabindex="{{((((ri + 1) * 100) *  gameSystemConfig.scoreFields.length) + 3)}}"
             (onChange)="saveChoosePlayed(roundMatch)"
             [style]="{'width':'100%'}">
           </p-dropdown>
@@ -197,6 +201,7 @@
             [options]="participantsChoosePlayedMap[roundMatch.participantTwo.name]"
             (onPanelHide)="saveChoosePlayed(roundMatch)"
             [showToggleAll]=false
+            tabindex="{{((((ri +1) * 100) *  gameSystemConfig.scoreFields.length) + 3)}}"
             [maxSelectedLabels]=3
             [style]="{'width':'100%'}">
           </p-multiSelect>
@@ -210,20 +215,20 @@
     </ng-template>
   </p-column>
 
-  <ng-container *ngFor="let scoreField of gameSystemConfig.scoreFields">
+  <ng-container *ngFor="let scoreField of gameSystemConfig.scoreFields; let i = index">
     <p-column *ngIf="isOrga"
               styleClass="col-scoring break-word">
       <ng-template pTemplate="header">
         {{scoreField.field}}
       </ng-template>
-      <ng-template let-col let-roundMatch="rowData" pTemplate="body">
+      <ng-template let-col let-roundMatch="rowData" pTemplate="body" let-ri="rowIndex">
         <div>
           <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
                  [(ngModel)]="roundMatch[scoreField.fieldPlayerOne]"
                  size="50"
+                 tabindex="{{((((ri +1) * 100) + 4) *  gameSystemConfig.scoreFields.length) + i}}"
                  (blur)="changeScoringForPlayerOne(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerOne])"
-                 (keyup.enter)="forceBlurForScore($event)"
-          />
+                 (keyup.enter)="forceBlurForScore($event)"/>
           <span class="small-text"> {{scoreField.field}} {{roundMatch.participantOne.name}}</span>
         </div>
         <div class="breaking-line"></div>
@@ -231,9 +236,9 @@
           <input type="number" min="{{scoreField.min}}" max="{{scoreField.max}}" pInputText
                  [(ngModel)]="roundMatch[scoreField.fieldPlayerTwo]"
                  size="50"
+                 tabindex="{{((((ri +1) * 100) + 5) *  gameSystemConfig.scoreFields.length) + i}}"
                  (blur)="changeScoringPlayerTwo(roundMatch, scoreField.field, roundMatch[scoreField.fieldPlayerTwo])"
-                 (keyup.enter)="forceBlurForScore($event)"
-          />
+                 (keyup.enter)="forceBlurForScore($event)"/>
           <span class="small-text">{{scoreField.field}} {{roundMatch.participantTwo.name}}</span>
         </div>
       </ng-template>

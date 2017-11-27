@@ -36,19 +36,23 @@
                [rowsPerPageOptions]="[5,10,20]">
     <p-header>{{selectedGameSystem}} Tournaments</p-header>
 
-    <p-column field="name" header="Name" [sortable]="true" [filter]="true" filterPlaceholder="Search"></p-column>
-    <p-column field="gameSystem" header="GameSystem"></p-column>
-    <p-column field="state" header="Status"></p-column>
-    <p-column field="type" header="Type"></p-column>
-    <p-column styleClass="col-actions">
+    <p-column styleClass="name-col" field="name" header="Name" [sortable]="true" [filter]="true" filterPlaceholder="Search"></p-column>
+    <p-column styleClass="gameSystem-col" field="gameSystem" header="GameSystem"></p-column>
+    <p-column styleClass="state-col" field="state" header="Status"></p-column>
+    <p-column styleClass="type-col" header="Type">
+      <ng-template let-tournament="rowData" pTemplate="body">
+        {{tournament.type.toUpperCase()}}
+      </ng-template>
+    </p-column>
+    <p-column styleClass="actions-col">
       <ng-template pTemplate="header">
         Actions
       </ng-template>
       <ng-template let-tournament="rowData" pTemplate="body">
         <button type="button" class="table-manage-button" pButton (click)="router.navigate(['/tournament', tournament?.id]);"  icon="fa-eye" label="Show"></button>
         <button type="button" class="table-manage-button" pButton (click)="openTournamentEdit(tournament)" pButton icon="fa-edit" label="Edit"></button>
-        <button *ngIf="tournament?.state === 'FINISHED'" type="button" class="table-manage-button" pButton
-                (click)="router.navigate(['/charts/tournament', tournament?.id]);" pButton icon="fa-bar-chart" label="Charts"></button>
+        <!--<button *ngIf="tournament?.state === 'FINISHED'" type="button" class="table-manage-button" pButton-->
+                <!--(click)="router.navigate(['/charts/tournament', tournament?.id]);" pButton icon="fa-bar-chart" label="Charts"></button>-->
        </ng-template>
     </p-column>
   </p-dataTable>
