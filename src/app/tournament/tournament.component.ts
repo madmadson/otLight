@@ -9,7 +9,7 @@ import {getParticipantForJSON, Participant} from "../models/Participant";
 import CollectionReference = firebase.firestore.CollectionReference;
 import {getPlayerForJSON, Player} from "../models/Player";
 import {
-  FieldValues, GameSystemConfig, getGameSystemConfig,
+  FieldValues, GameSystemConfig, getColumnsForTeamStandingsExport, getGameSystemConfig,
   getScore,
   getScoreForTeam, orderParticipantsForGameSystem, orderTeamsForGameSystem
 } from "../models/game-systems";
@@ -406,6 +406,8 @@ export class TournamentComponent implements OnInit, OnDestroy {
         orderParticipantsForGameSystem(that.tournament.gameSystem, clonedParticipants, that.participantsScoreMap);
         that.participants = clonedParticipants;
         that.teamsMemberMap = clonedTeamsMemberMap;
+
+        // console.log('teamsMemberMap: ' + JSON.stringify(that.teamsMemberMap));
 
         that.loadingParticipants = false;
         if (that.tournament.actualRound === 0 && that.allPlayers.length === 0) {
@@ -806,7 +808,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
           console.log("create team of participant  ", playerToAdd);
 
           const team: Team = {
-            name: participant.team,
+            name: participant.team.trim(),
             location: participant.team ? participant.team : "",
             sgw: [0],
             opponentTeamNames: [],
@@ -1311,7 +1313,38 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
 
   exportTeamMatches() {
-    this.teamMatchesTable.exportCSV();
+
+      // table, team1, team2
+      const columns: number[] = [2, 3, 7];
+
+      let headerString = '';
+      const headers = this.teamMatchesTable.el.nativeElement.querySelectorAll('.ui-column-title');
+      for (const column of columns) {
+        headerString += headers[column - 1].innerText + ';';
+      }
+      const tableRows = this.teamMatchesTable.el.nativeElement.querySelectorAll('TR');
+      const rowsString: string[] = [];
+      for (let i = 1; i < tableRows.length; i++) {
+        let rowString = '';
+        const tableRow = tableRows[i].querySelectorAll('.ui-cell-data');
+
+
+        rowString += tableRow[0].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+        rowString += tableRow[1].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+        rowString += tableRow[5].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+
+        rowsString.push(rowString);
+      }
+      let csv = headerString + '\n';
+      for (const row of rowsString) {
+        csv += row + '\n';
+      }
+      const blob = new Blob(['\uFEFF', csv], {type: 'text/csv'});
+      const link = document.createElement('a');
+      link.setAttribute('href', window.URL.createObjectURL(blob));
+      link.setAttribute('download', 'Team_Pairings_Round_' + this.shownRound + '.csv');
+      document.body.appendChild(link); // Required for FF
+      link.click();
   }
 
   expandTeamMatches() {
@@ -1592,7 +1625,6 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
     const that = this;
 
-
     // TeamOne
     const teamOneToUpdate: Team = teamMatch.teamOne;
     // TeamTwo
@@ -1602,17 +1634,25 @@ export class TournamentComponent implements OnInit, OnDestroy {
       teamMatch[scoreField.fieldPlayerOne] = scoreField.defaultValue;
       teamMatch[scoreField.fieldPlayerTwo] = scoreField.defaultValue;
 
-      teamOneToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
-      teamTwoToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
+      if (teamOneToUpdate[scoreField.field]) {
+        teamOneToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
+      }
+      if (teamTwoToUpdate[scoreField.field]) {
+        teamTwoToUpdate[scoreField.field][that.shownRound - 1] = scoreField.defaultValue;
+      }
     });
 
-    const teamOneDocRef = this.afs.firestore
-      .doc('tournaments/' + this.tournament.id + '/teams/' + teamOneToUpdate.id);
-    batch.update(teamOneDocRef, teamOneToUpdate);
+    if (teamOneToUpdate.name !== 'bye') {
+      const teamOneDocRef = this.afs.firestore
+        .doc('tournaments/' + this.tournament.id + '/teams/' + teamOneToUpdate.id);
+      batch.update(teamOneDocRef, teamOneToUpdate);
+    }
 
-    const teamTwoDocRef = this.afs.firestore
-      .doc('tournaments/' + this.tournament.id + '/teams/' + teamTwoToUpdate.id);
-    batch.update(teamTwoDocRef, teamTwoToUpdate);
+    if (teamTwoToUpdate.name !== 'bye') {
+      const teamTwoDocRef = this.afs.firestore
+        .doc('tournaments/' + this.tournament.id + '/teams/' + teamTwoToUpdate.id);
+      batch.update(teamTwoDocRef, teamTwoToUpdate);
+    }
 
     _.forEach(teamMatch.participantMatches, function (partiMatch: ParticipantMatch) {
 

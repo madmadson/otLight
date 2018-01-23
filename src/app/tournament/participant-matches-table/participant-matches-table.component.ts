@@ -115,25 +115,6 @@ export class ParticipantMatchesTableComponent implements OnInit {
     this.matchesTable.exportCSV();
   }
 
-  showOnlyUnfinished() {
-
-    this.showOnlyUnfinishedMatches = true;
-
-    if (!this.allParticipantMatches) {
-      this.allParticipantMatches = _.cloneDeep(this.participantMatches);
-    }
-
-    const filteredMatches = [];
-
-    _.forEach(this.savedParticipantMatches, function (match: ParticipantMatch) {
-      if (!match.finished) {
-        filteredMatches.push(match);
-      }
-    });
-    this.participantMatches = _.cloneDeep(filteredMatches);
-
-  }
-
   showAll() {
 
     this.showOnlyUnfinishedMatches = false;

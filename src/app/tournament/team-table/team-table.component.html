@@ -81,6 +81,14 @@
              [exportFilename]="'Team_Standings_Round_' + shownRound"
              #teamStandingsTable>
   <p-header>{{teams?.length}} Teams in Tournament</p-header>
+  <p-column styleClass="col-rank">
+    <ng-template pTemplate="header"></ng-template>
+    <ng-template pTemplate="body" let-roundMatch="rowData" let-index="rowIndex">
+      <div style="text-align: center">
+        <span class="big-text">{{index + 1}}</span>
+      </div>
+    </ng-template>
+  </p-column>
   <p-column field="name"
             header="Name"
             [sortable]="true"

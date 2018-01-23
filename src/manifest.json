@@ -1,24 +1,21 @@
 {
-  "name": "OpenTournament",
-  "short_name": "OpenTournament",
-  "icons": [
-    {
-      "src": "assets/icon_final_192.png",
-      "sizes": "192x192",
-      "type": "image\/png"
-    }, {
-      "src": "assets/icon-final_256.png",
-      "sizes": "256x256",
-      "type": "image\/png"
-    }, {
-      "src" : "assets/icon-final_512.png",
-      "sizes" : "512x512",
-      "type" : "image\/png"
-    }
-  ],
-  "display": "standalone",
-  "theme_color": "#512DA8",
-  "background_color": "#ffffff",
-  "orientation": "portrait",
-  "start_url": "./?utm_source=web_app_manifest"
+    "name": "OpenTournamentLight",
+    "short_name": "OTLight",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "assets/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "display": "standalone",
+    "theme_color": "#f58400",
+    "background_color": "#ffffff",
+    "orientation": "portrait"
 }

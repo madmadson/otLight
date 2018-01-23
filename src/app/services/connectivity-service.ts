@@ -2,9 +2,12 @@
 
 
 import {Injectable} from "@angular/core";
-import {Observable} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import {WindowRefService} from "./window-ref-service";
 import {Subscription} from "rxjs/Subscription";
+import 'rxjs/add/observable/merge';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/fromEvent';
 
 @Injectable()
 export class ConnectivityService {

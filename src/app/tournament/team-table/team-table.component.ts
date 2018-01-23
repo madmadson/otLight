@@ -250,10 +250,10 @@ export class TeamTableComponent implements OnInit {
 
       let teamName: string;
       for (let j = 0; j < columns.length; j++) {
-        if (j === 0) {
-          teamName = tableRow[0].innerText;
+        if (j === 1) {
+          teamName = tableRow[1].innerText;
         }
-        if (j === 2) {
+        if (j === 3) {
           console.log('Team ' + teamName + ' members: ' + this.teamsMemberMap[teamName].map((par: Participant) => par.name).join(', '));
           rowString += this.teamsMemberMap[teamName] ?
             this.teamsMemberMap[teamName].map((par: Participant) => par.name) + ';' : 'No members yet' + ';';

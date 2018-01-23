@@ -3,7 +3,7 @@ import {AngularFirestore} from "angularfire2/firestore";
 import {getGameSystemsAsSelectItems} from "./models/game-systems";
 import {Message, SelectItem} from "primeng/primeng";
 import {GameSystemService} from "./services/game-system.service";
-import {Observable} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import {ConnectivityService} from "./services/connectivity-service";
 import {Router} from "@angular/router";
 import {BatchService, BatchServiceState} from "./services/batch.service";
