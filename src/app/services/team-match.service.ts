@@ -564,6 +564,13 @@ export class TeamMatchService {
 
   private handleTeamMatchFinished(teamOne: Team, teamTwo: Team, teamMatch: TeamMatch, tournament: Tournament) {
 
+    if (!teamOne) {
+      teamOne = { name: 'bye', opponentTeamNames: [], roundScores: [], sgw: []};
+    }
+    if (!teamTwo) {
+      teamTwo = { name: 'bye', opponentTeamNames: [], roundScores: [], sgw: []};
+    }
+
     const scorePerGameSystem = getScoreByGameSystem(tournament.gameSystem);
     const gameSystemConfig = getGameSystemConfig(tournament.gameSystem);
 
@@ -575,43 +582,57 @@ export class TeamMatchService {
         teamOne['sgw'][teamMatch.round - 1] = 0;
       }
 
-      _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
-        if (standingField.isTeam) {
-          teamOne[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
-        }
-      });
-
+      if (teamOne.name !== 'bye') {
+        _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
+          if (standingField.isTeam) {
+            teamOne[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
+          }
+        });
+      }
       teamTwo.opponentTeamNames[teamMatch.round - 1] = teamOne.name;
       if (!teamTwo['sgw'][teamMatch.round - 1]) {
         teamTwo['sgw'][teamMatch.round - 1] = 0;
       }
-      _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
-        if (standingField.isTeam) {
-          teamTwo[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
-        }
-      });
+      if (teamTwo.name !== 'bye') {
+        _.forEach(gameSystemConfig.standingFields, function (standingField: FieldValues) {
+          if (standingField.isTeam) {
+            teamTwo[standingField.field][teamMatch.round - 1] = standingField.defaultValue;
+          }
+        });
+      }
 
       if (teamMatch.sgwTeamOne > teamMatch.sgwTeamTwo) {
         teamMatch.result = TeamMatchResult.teamOneWin;
         teamMatch.scoreTeamOne = scorePerGameSystem[ScoreEnum.WON];
         teamMatch.scoreTeamTwo = scorePerGameSystem[ScoreEnum.LOOSE];
 
-        teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
-        teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
+        if (teamOne.name !== 'bye') {
+          teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
+        }
+        if (teamTwo.name !== 'bye') {
+          teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
+        }
       } else if (teamMatch.sgwTeamOne < teamMatch.sgwTeamTwo) {
         teamMatch.result = TeamMatchResult.teamTwoWin;
         teamMatch.scoreTeamOne = scorePerGameSystem[ScoreEnum.LOOSE];
         teamMatch.scoreTeamTwo = scorePerGameSystem[ScoreEnum.WON];
 
-        teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
-        teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
+        if (teamOne.name !== 'bye') {
+          teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.LOOSE];
+        }
+        if (teamTwo.name !== 'bye') {
+          teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.WON];
+        }
       } else {
         teamMatch.result = TeamMatchResult.draw;
         teamMatch.scoreTeamOne = scorePerGameSystem[ScoreEnum.DRAW];
         teamMatch.scoreTeamTwo = scorePerGameSystem[ScoreEnum.DRAW];
-
-        teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
-        teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
+        if (teamOne.name !== 'bye') {
+          teamOne.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
+        }
+        if (teamTwo.name !== 'bye') {
+          teamTwo.roundScores[teamMatch.round - 1] = scorePerGameSystem[ScoreEnum.DRAW];
+        }
       }
        // console.log('team match finished: ' + JSON.stringify(teamMatch));
     }

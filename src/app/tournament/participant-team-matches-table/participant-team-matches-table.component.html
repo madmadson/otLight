@@ -64,7 +64,6 @@
                      'draw-label': (partiMatch.scoreParticipantOne === partiMatch.scoreParticipantTwo && partiMatch.finished)
                   }">
               <span class="very-big-text break-word" *ngIf="partiMatch.participantOne.name !== 'bye'">
-                ({{getScoreTillRoundForParticipant(partiMatch.participantOne)}})
                 {{partiMatch.participantOne.name}}
               </span>
         <span class="very-big-text" *ngIf="partiMatch.participantOne.name === 'bye'">BYE</span>
@@ -138,7 +137,6 @@
                   }">
 
               <span class="very-big-text break-word" *ngIf="partiMatch.participantTwo.name !== 'bye'">
-                    ({{getScoreTillRoundForParticipant(partiMatch.participantTwo)}})
                     {{partiMatch.participantTwo.name}}
               </span>
         <span class="very-big-text" *ngIf="partiMatch.participantTwo.name === 'bye'">BYE</span>

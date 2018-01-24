@@ -532,7 +532,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
         that.loadingTeams = false;
         that.teams = clonedTeams;
         that.teamNameSelectItemList.sort(function (a, b) {
-          return a.value < b.value  ? -1 : 1;
+          return a.value < b.value ? -1 : 1;
         });
         if (that.tournament.actualRound > 0) {
           orderTeamsForGameSystem(that.tournament.gameSystem, that.teams, that.teamsScoreMap);
@@ -705,7 +705,7 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
         cloneTeamMatches.sort(function (tm1: TeamMatch, tm2: TeamMatch) {
           return (that.getScoreTillRoundForTeam(tm1.teamOne) + that.getScoreTillRoundForTeam(tm1.teamTwo)) <
-                 (that.getScoreTillRoundForTeam(tm2.teamOne) + that.getScoreTillRoundForTeam(tm2.teamTwo)) ? 1 : -1;
+          (that.getScoreTillRoundForTeam(tm2.teamOne) + that.getScoreTillRoundForTeam(tm2.teamTwo)) ? 1 : -1;
         });
 
         that.teamMatches = cloneTeamMatches;
@@ -1314,37 +1314,37 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
   exportTeamMatches() {
 
-      // table, team1, team2
-      const columns: number[] = [2, 3, 7];
+    // table, team1, team2
+    const columns: number[] = [2, 3, 7];
 
-      let headerString = '';
-      const headers = this.teamMatchesTable.el.nativeElement.querySelectorAll('.ui-column-title');
-      for (const column of columns) {
-        headerString += headers[column - 1].innerText + ';';
-      }
-      const tableRows = this.teamMatchesTable.el.nativeElement.querySelectorAll('TR');
-      const rowsString: string[] = [];
-      for (let i = 1; i < tableRows.length; i++) {
-        let rowString = '';
-        const tableRow = tableRows[i].querySelectorAll('.ui-cell-data');
+    let headerString = '';
+    const headers = this.teamMatchesTable.el.nativeElement.querySelectorAll('.ui-column-title');
+    for (const column of columns) {
+      headerString += headers[column - 1].innerText + ';';
+    }
+    const tableRows = this.teamMatchesTable.el.nativeElement.querySelectorAll('TR');
+    const rowsString: string[] = [];
+    for (let i = 1; i < tableRows.length; i++) {
+      let rowString = '';
+      const tableRow = tableRows[i].querySelectorAll('.ui-cell-data');
 
 
-        rowString += tableRow[0].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
-        rowString += tableRow[1].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
-        rowString += tableRow[5].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+      rowString += tableRow[0].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+      rowString += tableRow[1].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
+      rowString += tableRow[5].innerText.replace(/[\n\r]+/g, '').replace(/\s{2,}/g, ' ').trim() + ';';
 
-        rowsString.push(rowString);
-      }
-      let csv = headerString + '\n';
-      for (const row of rowsString) {
-        csv += row + '\n';
-      }
-      const blob = new Blob(['\uFEFF', csv], {type: 'text/csv'});
-      const link = document.createElement('a');
-      link.setAttribute('href', window.URL.createObjectURL(blob));
-      link.setAttribute('download', 'Team_Pairings_Round_' + this.shownRound + '.csv');
-      document.body.appendChild(link); // Required for FF
-      link.click();
+      rowsString.push(rowString);
+    }
+    let csv = headerString + '\n';
+    for (const row of rowsString) {
+      csv += row + '\n';
+    }
+    const blob = new Blob(['\uFEFF', csv], {type: 'text/csv'});
+    const link = document.createElement('a');
+    link.setAttribute('href', window.URL.createObjectURL(blob));
+    link.setAttribute('download', 'Team_Pairings_Round_' + this.shownRound + '.csv');
+    document.body.appendChild(link); // Required for FF
+    link.click();
   }
 
   expandTeamMatches() {
@@ -1533,14 +1533,31 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           _.forEach(this.teamsMemberMap[this.matchToSwap.teamOne.name], function (teamParticipant: Participant, index: number) {
             that.matchToSwap.participantMatches[index].participantOne = teamParticipant;
-            that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            if (that.matchToSwap.teamTwo.name !== 'bye') {
+              that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            } else {
+              that.matchToSwap.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
 
           _.forEach(this.teamsMemberMap[droppedMatch.teamOne.name], function (teamParticipant: Participant, index: number) {
             droppedMatch.participantMatches[index].participantOne = teamParticipant;
-            droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            if (droppedMatch.teamTwo.name !== 'bye') {
+              droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            } else {
+              droppedMatch.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
-
           // o VS x
           // x VS o
         } else if (this.teamTwoSwapped && witchTeamDropped === 'one') {
@@ -1549,12 +1566,30 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           _.forEach(this.teamsMemberMap[this.matchToSwap.teamOne.name], function (teamParticipant: Participant, index: number) {
             that.matchToSwap.participantMatches[index].participantOne = teamParticipant;
-            that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            if (that.matchToSwap.teamTwo.name !== 'bye') {
+              that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            } else {
+              that.matchToSwap.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
 
           _.forEach(this.teamsMemberMap[droppedMatch.teamOne.name], function (teamParticipant: Participant, index: number) {
             droppedMatch.participantMatches[index].participantOne = teamParticipant;
-            droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            if (droppedMatch.teamTwo.name !== 'bye') {
+              droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            } else {
+              droppedMatch.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
           // x VS o
           // o VS x
@@ -1564,12 +1599,30 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           _.forEach(this.teamsMemberMap[this.matchToSwap.teamOne.name], function (teamParticipant: Participant, index: number) {
             that.matchToSwap.participantMatches[index].participantOne = teamParticipant;
-            that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            if (that.matchToSwap.teamTwo.name !== 'bye') {
+              that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            } else {
+              that.matchToSwap.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
 
           _.forEach(this.teamsMemberMap[droppedMatch.teamOne.name], function (teamParticipant: Participant, index: number) {
             droppedMatch.participantMatches[index].participantOne = teamParticipant;
-            droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            if (droppedMatch.teamTwo.name !== 'bye') {
+              droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            } else {
+              droppedMatch.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
           // o VS x
           // o VS x
@@ -1579,12 +1632,31 @@ export class TournamentComponent implements OnInit, OnDestroy {
 
           _.forEach(this.teamsMemberMap[this.matchToSwap.teamOne.name], function (teamParticipant: Participant, index: number) {
             that.matchToSwap.participantMatches[index].participantOne = teamParticipant;
-            that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            if (that.matchToSwap.teamTwo.name !== 'bye') {
+              that.matchToSwap.participantMatches[index].participantTwo = that.teamsMemberMap[that.matchToSwap.teamTwo.name][index];
+            } else {
+              that.matchToSwap.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
 
           _.forEach(this.teamsMemberMap[droppedMatch.teamOne.name], function (teamParticipant: Participant, index: number) {
             droppedMatch.participantMatches[index].participantOne = teamParticipant;
-            droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+
+            if (droppedMatch.teamTwo.name !== 'bye') {
+              droppedMatch.participantMatches[index].participantTwo = that.teamsMemberMap[droppedMatch.teamTwo.name][index];
+            } else {
+              droppedMatch.participantMatches[index].participantTwo = {
+                name: 'bye',
+                opponentParticipantsNames: [],
+                roundScores: [],
+                droppedInRound: 0
+              };
+            }
           });
         }
 
